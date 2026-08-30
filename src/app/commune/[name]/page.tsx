@@ -6,6 +6,7 @@ import Link from 'next/link';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../../../lib/supabase';
+import { escapeHtml } from '../../../lib/html';
 
 const COMMUNE_DETAILS: Record<string, {
   tagline: string;
@@ -346,8 +347,8 @@ export default function CommuneDetailPage() {
 
       const popup = new maplibregl.Popup({ offset: 20 }).setHTML(`
         <div style="color: #0f172a; font-family: system-ui; padding: 4px;">
-          <h4 style="margin:0 0 4px 0; font-weight:800;">${p.name}</h4>
-          <p style="margin:0; font-size:11px; color:#475569;">${p.description || ''}</p>
+          <h4 style="margin:0 0 4px 0; font-weight:800;">${escapeHtml(p.name)}</h4>
+          <p style="margin:0; font-size:11px; color:#475569;">${escapeHtml(p.description || '')}</p>
         </div>
       `);
 

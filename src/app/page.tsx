@@ -4,6 +4,7 @@ import Link from 'next/link';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../lib/supabase';
+import { escapeHtml } from '../lib/html';
 import communesData from '../data/communes.json';
 
 const VERTICALS = [
@@ -244,25 +245,25 @@ places.forEach((place) => {
   el.style.gap = '4px';
   el.style.whiteSpace = 'nowrap';
 
-  el.innerHTML = `<span>${pinIcon}</span> <span>${place.name}</span> <span style="color:#ef4444;">❤️ ${place.likes || 0}</span>`;
+  el.innerHTML = `<span>${pinIcon}</span> <span>${escapeHtml(place.name)}</span> <span style="color:#ef4444;">❤️ ${place.likes || 0}</span>`;
 
-  const imageHtml = place.image_url ? 
-    `<img src="${place.image_url}" alt="${place.name}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 6px; margin: 6px 0;" />` : '';
+  const imageHtml = place.image_url ?
+    `<img src="${escapeHtml(place.image_url)}" alt="${escapeHtml(place.name)}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 6px; margin: 6px 0;" />` : '';
 
-  const mapsLinkHtml = place.google_maps_url ? 
-    `<a href="${place.google_maps_url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 4px; font-size: 11px; font-weight: bold; color: #2563eb; text-decoration: none;">📍 Google Maps Itinéraire →</a>` : '';
+  const mapsLinkHtml = place.google_maps_url ?
+    `<a href="${escapeHtml(place.google_maps_url)}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 4px; font-size: 11px; font-weight: bold; color: #2563eb; text-decoration: none;">📍 Google Maps Itinéraire →</a>` : '';
 
   const popupHtml = `
     <div style="color: #0f172a; font-family: system-ui, sans-serif; padding: 2px; max-width: 200px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 9px; font-weight: bold; color: #2563eb; text-transform: uppercase;">
-          ★ ${place.commune}
+          ★ ${escapeHtml(place.commune)}
         </span>
         <span style="font-size: 10px; font-weight: bold; color: #ef4444;">❤️ ${place.likes || 0}</span>
       </div>
-      <h4 style="margin: 2px 0; font-size: 13px; font-weight: 800; color: #020617;">${place.name}</h4>
+      <h4 style="margin: 2px 0; font-size: 13px; font-weight: 800; color: #020617;">${escapeHtml(place.name)}</h4>
       ${imageHtml}
-      <p style="margin: 0; font-size: 11px; color: #334155;">${place.description || ''}</p>
+      <p style="margin: 0; font-size: 11px; color: #334155;">${escapeHtml(place.description || '')}</p>
       ${mapsLinkHtml}
     </div>
   `;
