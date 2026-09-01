@@ -1,12 +1,14 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../lib/supabase';
 import { escapeHtml } from '../lib/html';
 import communesData from '../data/communes.json';
 import { IconHeart, IconChat, IconExternalLink, IconUser, IconPin, IconGlobe } from '../components/icons';
+import { SiteHeader } from '../components/SiteHeader';
+import { SiteFooter } from '../components/SiteFooter';
+import { Button } from '../components/Button';
 
 const VERTICALS = [
   { id: 'all', label: 'TOUT KIN' },
@@ -291,81 +293,86 @@ export default function HomePage() {
   }, [places, likedPlaceIds]);
 
   return (
-    <main className="min-h-screen bg-brand-navy text-brand-cream p-3">
+    <main className="min-h-screen bg-brand-navy text-brand-cream flex flex-col">
+      <SiteHeader />
 
-      {/* Header */}
-      <nav className="flex flex-col items-start gap-3 max-w-[1650px] mx-auto mb-4 border-b border-brand-navy-border pb-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <span className="block text-[10px] text-brand-gold font-bold tracking-[1.5px] uppercase">Le Média-Guide de Recommandation</span>
-          <h1 className="text-xl font-black text-brand-cream m-0">KINSHASA LABEL</h1>
-        </div>
-
-        <Link href="/backoffice" className="inline-flex items-center gap-1.5 bg-brand-gold text-brand-navy px-3.5 py-2 rounded-lg no-underline font-bold text-[11px] uppercase hover:bg-brand-gold-light transition-colors">
-          <IconPin size={13} /> Proposer un Lieu
-        </Link>
-      </nav>
-
-      {/* Hero Banner */}
-      <div className="flex flex-col items-start gap-3 max-w-[1650px] mx-auto mb-4 bg-brand-navy-light border border-brand-navy-border rounded-xl px-[18px] py-3.5 md:flex-row md:items-center md:justify-between">
-        <div>
-          <span className="bg-brand-gold text-brand-navy text-[9px] font-bold px-1.5 py-0.5 rounded uppercase mr-2">#001</span>
-          <strong className="text-[13px] text-brand-cream">&quot;Tu Connais Kin ?&quot; — Guide Curation des 100 Meilleurs Lieux</strong>
-        </div>
-        <span className="text-brand-gold-light text-[11px] font-bold">Recommandé ★</span>
-      </div>
-
-      {/* Filter Bar */}
-      <div className="flex gap-2 overflow-x-auto pb-1.5 max-w-[1650px] mx-auto mb-4">
-        {VERTICALS.map((v) => (
-          <button
-            key={v.id}
-            onClick={() => setActiveVertical(v.id)}
-            className={`shrink-0 whitespace-nowrap border border-brand-navy-border px-3.5 py-2 rounded-full text-[11px] font-bold cursor-pointer transition-colors ${
-              activeVertical === v.id ? 'bg-brand-gold text-brand-navy' : 'bg-brand-navy-light text-brand-cream hover:border-brand-gold'
-            }`}
-          >
-            {v.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 gap-4 max-w-[1650px] mx-auto md:grid-cols-[minmax(0,7fr)_minmax(340px,4.5fr)]">
-
-        {/* MAP */}
-        <section className="bg-brand-navy-light rounded-2xl border border-brand-navy-border p-3.5">
-          <div className="flex justify-between items-center mb-2.5 flex-wrap gap-2">
-            <span className="text-[11px] text-brand-muted uppercase font-bold">
-              Carte ({markersRef.current.length} Marqueurs Visibles)
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-brand-green font-bold">
-                {selectedCommune ? `Commune: ${selectedCommune}` : 'Tout Kinshasa'}
+      {/* HERO */}
+      <section className="border-b border-brand-navy-border">
+        <div className="max-w-[1650px] mx-auto px-4 md:px-6 py-10 md:py-16">
+          <div className="flex flex-col gap-4 max-w-3xl">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold text-brand-gold-light">
+              <span className="bg-brand-gold text-brand-navy text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                #001
               </span>
-              {selectedCommune && (
-                <button
-                  onClick={() => setSelectedCommune(null)}
-                  className="bg-brand-navy-border text-brand-gold-light border border-brand-navy-border px-2 py-1 rounded-md text-[10px] font-bold cursor-pointer"
-                >
-                  Afficher Tout Kinshasa
-                </button>
-              )}
-            </div>
+              &quot;Tu Connais Kin ?&quot; — Guide Curation des 100 Meilleurs Lieux
+            </span>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-semibold text-brand-cream leading-[1.05]">
+              Le meilleur de Kinshasa,<br className="hidden md:block" /> commune par commune.
+            </h1>
+            <p className="text-base md:text-lg text-brand-cream/70 max-w-xl leading-relaxed">
+              La sélection éditoriale des adresses, de la culture et des sorties du week-end à
+              travers les communes de la capitale — sur une carte interactive.
+            </p>
           </div>
-          <div ref={mapContainer} className="w-full h-[350px] rounded-xl overflow-hidden md:h-[500px]" />
-        </section>
+        </div>
+      </section>
 
-        {/* LISTINGS */}
-        <section className="bg-brand-navy-light rounded-2xl border border-brand-navy-border p-4 flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-center mb-2.5 border-b border-brand-navy-border pb-2.5">
-              <h2 className="text-lg font-black text-brand-cream m-0 uppercase">
+      {/* EXPLORER / FILTER TABS */}
+      <section id="explorer" className="max-w-[1650px] mx-auto px-4 md:px-6 pt-8 w-full">
+        <h2 className="text-xs uppercase tracking-wide text-brand-muted font-semibold mb-3">
+          Explorer par catégorie
+        </h2>
+        <div className="flex gap-6 md:gap-8 overflow-x-auto border-b border-brand-navy-border">
+          {VERTICALS.map((v) => (
+            <button
+              key={v.id}
+              onClick={() => setActiveVertical(v.id)}
+              className={`shrink-0 whitespace-nowrap pb-3 text-sm font-semibold border-b-2 -mb-px transition-colors cursor-pointer ${
+                activeVertical === v.id
+                  ? 'text-brand-gold border-brand-gold'
+                  : 'text-brand-cream/55 border-transparent hover:text-brand-cream'
+              }`}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* MAIN GRID: MAP + LISTINGS */}
+      <section className="max-w-[1650px] mx-auto px-4 md:px-6 py-8 w-full flex-1">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,7fr)_minmax(340px,4.5fr)]">
+
+          {/* MAP */}
+          <div className="bg-brand-navy-light rounded-2xl border border-brand-navy-border p-3.5 md:p-4">
+            <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+              <span className="text-xs text-brand-muted uppercase font-semibold tracking-wide">
+                Carte ({markersRef.current.length} marqueurs visibles)
+              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-brand-green font-semibold">
+                  {selectedCommune ? `Commune : ${selectedCommune}` : 'Tout Kinshasa'}
+                </span>
+                {selectedCommune && (
+                  <Button variant="secondary" size="sm" onClick={() => setSelectedCommune(null)}>
+                    Afficher Tout Kinshasa
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div ref={mapContainer} className="w-full h-[350px] rounded-xl overflow-hidden md:h-[560px]" />
+          </div>
+
+          {/* LISTINGS — editorial feed, not stacked boxes */}
+          <div className="flex flex-col">
+            <div className="flex justify-between items-baseline mb-4 pb-4 border-b border-brand-navy-border">
+              <h2 className="font-display text-2xl md:text-3xl font-semibold text-brand-cream">
                 {selectedCommune ? selectedCommune : 'Tout Kinshasa'}
               </h2>
               <button
                 onClick={() => setSelectedCommune(selectedCommune ? null : 'Gombe')}
-                className={`inline-flex items-center gap-1 border border-brand-navy-border px-2.5 py-1.5 rounded-md text-[10px] font-bold cursor-pointer ${
-                  selectedCommune === null ? 'bg-brand-gold text-brand-navy' : 'bg-brand-navy text-brand-cream'
+                className={`inline-flex items-center gap-1 text-xs font-semibold cursor-pointer transition-colors ${
+                  selectedCommune === null ? 'text-brand-gold' : 'text-brand-cream/70 hover:text-brand-gold'
                 }`}
               >
                 {selectedCommune === null ? (<><IconPin size={12} /> Filtrer Gombe</>) : (<><IconGlobe size={12} /> Voir Tout Kinshasa</>)}
@@ -374,20 +381,24 @@ export default function HomePage() {
 
             {/* KIN WEEKEND */}
             {(activeVertical === 'all' || activeVertical === 'kin_weekend') && (
-              <div className="mb-5">
-                <h3 className="text-[11px] text-brand-plum uppercase tracking-wide border-b border-brand-navy-border pb-1 mb-2.5 font-bold">
-                  KIN WEEKEND ({weekendEvents.length})
+              <div id="kin-weekend" className="mb-7">
+                <h3 className="text-xs text-brand-plum uppercase tracking-wide font-semibold mb-3">
+                  Kin Weekend ({weekendEvents.length})
                 </h3>
                 {weekendEvents.length === 0 ? (
-                  <p className="text-[11px] text-brand-muted">Aucun événement ce weekend.</p>
+                  <p className="text-sm text-brand-muted">Aucun événement ce weekend.</p>
                 ) : (
-                  weekendEvents.map((evt) => (
-                    <div key={evt.id} className="bg-brand-navy border border-brand-plum rounded-lg p-2.5 mb-2">
-                      <span className="text-[9px] text-brand-plum font-bold uppercase">● {evt.category} ({evt.commune})</span>
-                      <h4 className="text-[13px] font-bold text-brand-cream my-0.5">{evt.title}</h4>
-                      <p className="text-[11px] text-brand-cream/70 m-0">{evt.description}</p>
-                    </div>
-                  ))
+                  <div className="flex flex-col divide-y divide-brand-navy-border">
+                    {weekendEvents.map((evt) => (
+                      <div key={evt.id} className="py-3 pl-3 border-l-2 border-brand-plum">
+                        <span className="text-[11px] text-brand-plum font-semibold uppercase tracking-wide">
+                          {evt.category} · {evt.commune}
+                        </span>
+                        <h4 className="text-sm font-semibold text-brand-cream mt-0.5 mb-1">{evt.title}</h4>
+                        <p className="text-sm text-brand-cream/60 m-0 leading-relaxed">{evt.description}</p>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
@@ -395,133 +406,138 @@ export default function HomePage() {
             {/* 100 KIN PLACES */}
             {activeVertical !== 'kin_weekend' && (
               <div>
-                <h3 className="text-[11px] text-brand-river uppercase tracking-wide border-b border-brand-navy-border pb-1 mb-2.5 font-bold">
-                  Sélection 100 KIN ({places.length})
+                <h3 className="text-xs text-brand-river uppercase tracking-wide font-semibold mb-3">
+                  Sélection 100 Kin ({places.length})
                 </h3>
                 {places.length === 0 ? (
-                  <p className="text-[11px] text-brand-muted">Aucun lieu certifié enregistré.</p>
+                  <p className="text-sm text-brand-muted">Aucun lieu certifié enregistré.</p>
                 ) : (
-                  places.map((place) => {
-                    const isLiked = likedPlaceIds.includes(place.id);
-                    const comments = commentsMap[place.id] || [];
-                    const isCommentsOpen = activeCommentsPlaceId === place.id;
+                  <div className="flex flex-col divide-y divide-brand-navy-border">
+                    {places.map((place) => {
+                      const isLiked = likedPlaceIds.includes(place.id);
+                      const comments = commentsMap[place.id] || [];
+                      const isCommentsOpen = activeCommentsPlaceId === place.id;
 
-                    return (
-                      <div key={place.id} className="bg-brand-navy border border-brand-navy-border rounded-[10px] p-3 mb-3">
-                        <div className="flex flex-col gap-3 items-start md:flex-row">
-                          {place.image_url && (
-                            <img
-                              src={place.image_url}
-                              alt={place.name}
-                              className="w-full h-40 object-cover rounded-md shrink-0 md:w-20 md:h-20"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <div className="flex justify-between mb-0.5">
-                              <span className="text-[9px] text-brand-green font-bold uppercase">★ {place.commune}</span>
-                              <span className="text-[10px] text-brand-gold-light font-bold">{place.budget}</span>
-                            </div>
-                            <h4 className="text-sm font-bold text-brand-cream my-0.5">{place.name}</h4>
-                            <p className="text-[11px] text-brand-cream/70 mb-1.5">{place.description}</p>
+                      return (
+                        <div key={place.id} className="py-4">
+                          <div className="flex flex-col gap-4 items-start md:flex-row">
+                            {place.image_url && (
+                              <img
+                                src={place.image_url}
+                                alt={place.name}
+                                className="w-full h-48 object-cover rounded-lg shrink-0 md:w-32 md:h-32"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-center gap-2 mb-1">
+                                <span className="text-[11px] text-brand-green font-semibold uppercase tracking-wide">
+                                  {place.commune}
+                                </span>
+                                <span className="text-xs text-brand-gold-light font-semibold shrink-0">{place.budget}</span>
+                              </div>
+                              <h4 className="font-display text-lg font-semibold text-brand-cream mb-1">{place.name}</h4>
+                              <p className="text-sm text-brand-cream/65 leading-relaxed mb-2.5">{place.description}</p>
 
-                            <div className="flex items-center gap-2.5 flex-wrap mt-1.5">
-                              {/* LIKE BUTTON */}
-                              <button
-                                onClick={() => handleLikePlace(place.id, place.likes || 0)}
-                                disabled={isLiked}
-                                className={`inline-flex items-center gap-1 border px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                                  isLiked
-                                    ? 'bg-brand-danger/20 text-brand-danger border-brand-danger cursor-default'
-                                    : 'bg-brand-navy-light text-brand-cream border-brand-navy-border cursor-pointer'
-                                }`}
-                              >
-                                <IconHeart size={13} filled={isLiked} />
-                                {isLiked ? 'Aimé' : "J'aime"} ({place.likes || 0})
-                              </button>
+                              <div className="flex items-center gap-2.5 flex-wrap">
+                                {/* LIKE BUTTON */}
+                                <button
+                                  onClick={() => handleLikePlace(place.id, place.likes || 0)}
+                                  disabled={isLiked}
+                                  className={`inline-flex items-center gap-1 border px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                    isLiked
+                                      ? 'bg-brand-danger/20 text-brand-danger border-brand-danger cursor-default'
+                                      : 'bg-brand-navy-light text-brand-cream border-brand-navy-border cursor-pointer hover:border-brand-danger'
+                                  }`}
+                                >
+                                  <IconHeart size={13} filled={isLiked} />
+                                  {isLiked ? 'Aimé' : "J'aime"} ({place.likes || 0})
+                                </button>
 
-                              {/* COMMENTS TOGGLE */}
-                              <button
-                                onClick={() => toggleComments(place.id)}
-                                className="inline-flex items-center gap-1 bg-brand-navy-light text-brand-river border border-brand-navy-border px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer"
-                              >
-                                <IconChat size={13} />
-                                Avis {comments.length > 0 ? `(${comments.length})` : ''}
-                              </button>
+                                {/* COMMENTS TOGGLE */}
+                                <button
+                                  onClick={() => toggleComments(place.id)}
+                                  className="inline-flex items-center gap-1 bg-brand-navy-light text-brand-river border border-brand-navy-border px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer hover:border-brand-river"
+                                >
+                                  <IconChat size={13} />
+                                  Avis {comments.length > 0 ? `(${comments.length})` : ''}
+                                </button>
 
-                              {place.google_maps_url && (
-                                <a href={place.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-brand-river font-bold no-underline ml-auto hover:text-brand-gold-light">
-                                  <IconExternalLink size={11} /> Google Maps
-                                </a>
-                              )}
+                                {place.google_maps_url && (
+                                  <a href={place.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-brand-river font-semibold no-underline ml-auto hover:text-brand-gold-light">
+                                    <IconExternalLink size={11} /> Google Maps
+                                  </a>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* EXPANDABLE COMMENTS DRAWER */}
-                        {isCommentsOpen && (
-                          <div className="mt-3 pt-2.5 border-t border-brand-navy-border">
-                            <form onSubmit={(e) => handleAddComment(place.id, e)} className="flex flex-col gap-2 mb-2.5">
-                              <input
-                                type="text"
-                                placeholder="Votre nom (ex: Glody)"
-                                value={newCommentAuthor}
-                                onChange={(e) => setNewCommentAuthor(e.target.value)}
-                                className="bg-brand-navy-light border border-brand-navy-border text-brand-cream px-2.5 py-1.5 rounded-md text-[11px] placeholder:text-brand-muted focus:outline-none focus:border-brand-gold"
-                              />
-                              <div className="flex gap-1.5">
+                          {/* EXPANDABLE COMMENTS DRAWER */}
+                          {isCommentsOpen && (
+                            <div className="mt-3 pt-3 border-t border-brand-navy-border">
+                              <form onSubmit={(e) => handleAddComment(place.id, e)} className="flex flex-col gap-2 mb-2.5">
                                 <input
                                   type="text"
-                                  placeholder="Laissez votre avis..."
-                                  value={newCommentText}
-                                  onChange={(e) => setNewCommentText(e.target.value)}
-                                  required
-                                  className="flex-1 bg-brand-navy-light border border-brand-navy-border text-brand-cream px-2.5 py-1.5 rounded-md text-[11px] placeholder:text-brand-muted focus:outline-none focus:border-brand-gold"
+                                  placeholder="Votre nom (ex: Glody)"
+                                  value={newCommentAuthor}
+                                  onChange={(e) => setNewCommentAuthor(e.target.value)}
+                                  className="bg-brand-navy-light border border-brand-navy-border text-brand-cream px-2.5 py-1.5 rounded-md text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-gold"
                                 />
-                                <button
-                                  type="submit"
-                                  disabled={isSubmittingComment}
-                                  className="bg-brand-gold text-brand-navy border-none px-3 py-1.5 rounded-md text-[11px] font-bold cursor-pointer disabled:opacity-60"
-                                >
-                                  {isSubmittingComment ? '...' : 'Envoyer'}
-                                </button>
-                              </div>
-                            </form>
+                                <div className="flex gap-1.5">
+                                  <input
+                                    type="text"
+                                    placeholder="Laissez votre avis..."
+                                    value={newCommentText}
+                                    onChange={(e) => setNewCommentText(e.target.value)}
+                                    required
+                                    className="flex-1 bg-brand-navy-light border border-brand-navy-border text-brand-cream px-2.5 py-1.5 rounded-md text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-gold"
+                                  />
+                                  <Button type="submit" disabled={isSubmittingComment} variant="primary" size="sm">
+                                    {isSubmittingComment ? '...' : 'Envoyer'}
+                                  </Button>
+                                </div>
+                              </form>
 
-                            {/* COMMENTS LIST */}
-                            <div className="flex flex-col gap-1.5 max-h-[150px] overflow-y-auto">
-                              {comments.length === 0 ? (
-                                <p className="text-[10px] text-brand-muted italic m-0">Soyez le premier à donner votre avis !</p>
-                              ) : (
-                                comments.map((c) => (
-                                  <div key={c.id} className="bg-brand-navy-light px-2.5 py-1.5 rounded-md border border-brand-navy-border">
-                                    <div className="flex justify-between text-[9px] text-brand-river font-bold">
-                                      <span className="inline-flex items-center gap-1"><IconUser size={11} /> {c.author_name || 'Visiteur'}</span>
-                                      <span className="text-brand-muted">{new Date(c.created_at).toLocaleDateString('fr-FR')}</span>
+                              {/* COMMENTS LIST */}
+                              <div className="flex flex-col gap-1.5 max-h-[150px] overflow-y-auto">
+                                {comments.length === 0 ? (
+                                  <p className="text-xs text-brand-muted italic m-0">Soyez le premier à donner votre avis !</p>
+                                ) : (
+                                  comments.map((c) => (
+                                    <div key={c.id} className="bg-brand-navy-light px-2.5 py-1.5 rounded-md border border-brand-navy-border">
+                                      <div className="flex justify-between text-[11px] text-brand-river font-semibold">
+                                        <span className="inline-flex items-center gap-1"><IconUser size={11} /> {c.author_name || 'Visiteur'}</span>
+                                        <span className="text-brand-muted">{new Date(c.created_at).toLocaleDateString('fr-FR')}</span>
+                                      </div>
+                                      <p className="text-sm text-brand-cream/80 mt-0.5 mb-0">{c.comment_text}</p>
                                     </div>
-                                    <p className="text-[11px] text-brand-cream/80 mt-0.5 mb-0">{c.comment_text}</p>
-                                  </div>
-                                ))
-                              )}
+                                  ))
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             )}
+
+            <Button
+              href={selectedCommune ? `/commune/${encodeURIComponent(selectedCommune)}` : `/commune/Gombe`}
+              variant="primary"
+              size="lg"
+              fullWidth
+              className="mt-6"
+            >
+              {selectedCommune ? `Guide de ${selectedCommune}` : 'Guide de Gombe'} →
+            </Button>
           </div>
 
-          <Link
-            href={selectedCommune ? `/commune/${encodeURIComponent(selectedCommune)}` : `/commune/Gombe`}
-            className="block text-center bg-brand-gold text-brand-navy px-3 py-3 rounded-lg font-bold no-underline text-xs mt-4 hover:bg-brand-gold-light transition-colors"
-          >
-            {selectedCommune ? `Guide de ${selectedCommune} →` : 'Guide de Gombe →'}
-          </Link>
-        </section>
+        </div>
+      </section>
 
-      </div>
+      <SiteFooter />
     </main>
   );
 }

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink } from '../../components/icons';
+import { Button } from '../../components/Button';
 
 const COMMUNES = [
   'Gombe', 'Limete', 'Ngaliema', "N'sele", "N'djili", 'Kintambo',
@@ -188,28 +189,29 @@ export default function BackofficePage() {
   const labelClass = "block text-[11px] text-brand-muted uppercase font-bold mb-1.5";
 
   return (
-    <main className="min-h-screen bg-brand-navy text-brand-cream p-4">
+    <main className="min-h-screen bg-brand-navy text-brand-cream">
 
-      {/* Navigation Header */}
-      <nav className="flex justify-between items-center max-w-[1000px] mx-auto mb-7 border-b border-brand-navy-border pb-4 flex-wrap gap-2.5">
+      {/* Simplified admin header — no marketing hero/footer needed here */}
+      <nav className="flex justify-between items-center max-w-[1000px] mx-auto px-4 py-4 border-b border-brand-navy-border flex-wrap gap-2.5">
         <div className="flex items-center gap-3">
-          <Link href="/" className="inline-flex items-center gap-1.5 bg-brand-navy-light text-brand-river border border-brand-navy-border px-3.5 py-2 rounded-lg no-underline font-bold text-xs hover:border-brand-river">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-brand-river no-underline font-semibold text-sm hover:text-brand-gold-light">
             <IconHome size={14} /> Accueil
           </Link>
-          <h1 className="text-lg font-bold text-brand-cream m-0">
-            KINSHASA LABEL — Backoffice
+          <span className="text-brand-navy-border">/</span>
+          <h1 className="font-display text-lg font-semibold text-brand-cream m-0">
+            Kinshasa Label — Backoffice
           </h1>
         </div>
-        <Link href="/" className="bg-brand-danger text-brand-cream px-4 py-2 rounded-lg no-underline font-bold text-xs">
-          ← Voir le Média
-        </Link>
+        <Button href="/" variant="secondary" size="sm">
+          ← Retour au Média
+        </Button>
       </nav>
 
-      <div className="max-w-[1000px] mx-auto">
+      <div className="max-w-[1000px] mx-auto px-4 py-7">
 
         {/* Status Notification */}
         {statusMsg && (
-          <div className={`p-3.5 rounded-xl mb-5 font-bold text-[13px] border ${
+          <div className={`p-3.5 rounded-xl mb-5 font-semibold text-sm border ${
             statusMsg.type === 'success'
               ? 'bg-brand-green/20 text-brand-green border-brand-green'
               : 'bg-brand-danger/20 text-brand-danger border-brand-danger'
@@ -219,30 +221,32 @@ export default function BackofficePage() {
         )}
 
         {/* Tab Switcher */}
-        <div className="flex gap-2.5 mb-5">
-          <button
+        <div className="flex gap-2.5 mb-6">
+          <Button
+            variant={activeTab === 'manage' ? 'primary' : 'secondary'}
             onClick={() => setActiveTab('manage')}
-            className={`flex-1 p-3 rounded-lg border border-brand-navy-border font-bold cursor-pointer ${activeTab === 'manage' ? 'bg-brand-gold text-brand-navy' : 'bg-brand-navy-light text-brand-cream'}`}
+            fullWidth
           >
             Liste des Lieux ({placesList.length})
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={activeTab === 'add' ? 'primary' : 'secondary'}
             onClick={() => { setActiveTab('add'); resetForm(); }}
-            className={`flex-1 inline-flex items-center justify-center gap-1.5 p-3 rounded-lg border border-brand-navy-border font-bold cursor-pointer ${activeTab === 'add' ? 'bg-brand-gold text-brand-navy' : 'bg-brand-navy-light text-brand-cream'}`}
+            fullWidth
           >
             {editingPlaceId ? (<><IconEdit size={14} /> Modifier le Lieu</>) : (<><IconPlus size={14} /> Ajouter un Lieu via Google Maps</>)}
-          </button>
+          </Button>
         </div>
 
         {/* LIST & EDIT TAB */}
         {activeTab === 'manage' && (
           <div className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
-            <h2 className="text-lg text-brand-river mt-0 mb-5">
+            <h2 className="font-display text-xl text-brand-river mt-0 mb-5 font-semibold">
               Lieux Répertoriés à Kinshasa
             </h2>
 
             {placesList.length === 0 ? (
-              <p className="text-xs text-brand-muted">Aucun lieu enregistré dans la base de données.</p>
+              <p className="text-sm text-brand-muted">Aucun lieu enregistré dans la base de données.</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {placesList.map((item) => (
@@ -258,31 +262,31 @@ export default function BackofficePage() {
                     <div className="flex-1 min-w-[280px]">
                       <div className="flex gap-2 items-center mb-1.5 flex-wrap">
                         <span className="text-[10px] bg-brand-gold text-brand-navy px-1.5 py-0.5 rounded font-bold uppercase">{item.vertical}</span>
-                        <span className="text-[11px] text-brand-green font-bold">{item.commune}</span>
-                        <span className="text-[11px] text-brand-gold-light">{item.budget}</span>
-                        <span className={`text-[10px] ${item.lat ? 'text-brand-river' : 'text-brand-danger'}`}>
+                        <span className="text-xs text-brand-green font-semibold">{item.commune}</span>
+                        <span className="text-xs text-brand-gold-light">{item.budget}</span>
+                        <span className={`text-[11px] ${item.lat ? 'text-brand-river' : 'text-brand-danger'}`}>
                           {item.lat ? 'Coordonnées OK' : 'Mode Fallback'}
                         </span>
                       </div>
 
-                      <h3 className="text-base text-brand-cream m-0 mb-1 font-bold">{item.name}</h3>
+                      <h3 className="text-base text-brand-cream m-0 mb-1 font-semibold">{item.name}</h3>
 
                       {item.google_maps_url && (
-                        <a href={item.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-brand-river no-underline font-bold mb-1">
+                        <a href={item.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-brand-river no-underline font-semibold mb-1">
                           <IconExternalLink size={11} /> Google Maps Link
                         </a>
                       )}
 
-                      <p className="text-xs text-brand-cream/70 m-0">{item.description}</p>
+                      <p className="text-sm text-brand-cream/70 m-0">{item.description}</p>
                     </div>
 
                     <div className="flex gap-2.5">
-                      <button onClick={() => startEditing(item)} className="inline-flex items-center gap-1 bg-brand-gold-light text-brand-navy border-none px-3.5 py-2 rounded-md font-bold text-xs cursor-pointer">
+                      <Button variant="primary" size="sm" onClick={() => startEditing(item)}>
                         <IconEdit size={13} /> Éditer
-                      </button>
-                      <button onClick={() => handleDeletePlace(item.id, item.name)} className="inline-flex items-center gap-1 bg-brand-danger text-brand-cream border-none px-3.5 py-2 rounded-md font-bold text-xs cursor-pointer">
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => handleDeletePlace(item.id, item.name)}>
                         <IconTrash size={13} /> Supprimer
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -295,13 +299,13 @@ export default function BackofficePage() {
         {activeTab === 'add' && (
           <form onSubmit={handleSavePlace} className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
             <div className="flex justify-between items-center mb-5 border-b border-brand-navy-border pb-3">
-              <h2 className="text-lg text-brand-river m-0">
+              <h2 className="font-display text-xl text-brand-river m-0 font-semibold">
                 {editingPlaceId ? `Éditer : "${placeName}"` : 'Rechercher & Importer via Google Maps'}
               </h2>
               {editingPlaceId && (
-                <button type="button" onClick={() => { resetForm(); setActiveTab('manage'); }} className="bg-brand-navy-border text-brand-cream border-none px-3 py-1.5 rounded-md text-[11px] font-bold cursor-pointer">
+                <Button type="button" variant="ghost" onClick={() => { resetForm(); setActiveTab('manage'); }}>
                   Annuler
-                </button>
+                </Button>
               )}
             </div>
 
@@ -374,13 +378,9 @@ export default function BackofficePage() {
               <textarea value={placeDesc} onChange={(e) => setPlaceDesc(e.target.value)} required rows={3} className={inputClass} />
             </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className={`w-full p-3.5 border-none rounded-lg font-bold cursor-pointer ${editingPlaceId ? 'bg-brand-gold-light text-brand-navy' : 'bg-brand-gold text-brand-navy'}`}
-            >
+            <Button type="submit" disabled={submitting} variant="primary" size="lg" fullWidth>
               {submitting ? 'Enregistrement...' : editingPlaceId ? 'Enregistrer les Modifications →' : 'Enregistrer le Lieu →'}
-            </button>
+            </Button>
           </form>
         )}
 

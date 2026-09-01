@@ -141,3 +141,36 @@ export function IconGlobe({ size = 16, ...props }: IconProps) {
     </svg>
   );
 }
+
+export function IconChevronRight({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+export function IconClock({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7v5.3l3.6 2.1" />
+    </svg>
+  );
+}
+
+export function IconChart({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M4 20V10M4 20h16M9.5 20V6M15 20v-8" />
+    </svg>
+  );
+}
+
+export function IconMenu({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  );
+}

@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
+import { Button } from '../../components/Button';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,16 +43,13 @@ export default function LoginPage() {
       <nav className="flex justify-between items-center pb-3 border-b border-brand-navy-border max-w-[1600px] w-full mx-auto">
         <div className="flex items-center gap-2.5">
           <div className="w-3 h-3 rounded-full bg-brand-green shadow-[0_0_10px_#2F6B45]" />
-          <h1 className="text-lg font-bold uppercase tracking-wide m-0 text-brand-cream">
+          <h1 className="font-display text-lg font-semibold tracking-wide m-0 text-brand-cream">
             Kinshasa Label — Backoffice
           </h1>
         </div>
-        <Link
-          href="/"
-          className="bg-brand-danger text-brand-cream px-4 py-2 rounded-lg no-underline font-bold text-xs uppercase tracking-wide"
-        >
+        <Button href="/" variant="secondary" size="sm">
           Retour au Média
-        </Link>
+        </Button>
       </nav>
 
       {/* Center Access Card */}
@@ -70,10 +67,10 @@ export default function LoginPage() {
               </span>
             </div>
 
-            <h2 className="text-[32px] font-black uppercase mt-1 mb-1.5 text-brand-cream tracking-wide">
+            <h2 className="font-display text-4xl font-semibold mt-1 mb-1.5 text-brand-cream tracking-tight">
               Connexion
             </h2>
-            <p className="text-[13px] text-brand-muted m-0 leading-snug">
+            <p className="text-sm text-brand-muted m-0 leading-snug">
               Réservé à l'équipe éditoriale de Kinshasa Label.
             </p>
           </div>
@@ -122,15 +119,9 @@ export default function LoginPage() {
             </div>
 
             {/* Launch Backoffice Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`text-brand-navy rounded-xl p-3.5 font-bold text-[13px] uppercase tracking-wide mt-1 border-none transition-colors ${
-                loading ? 'bg-brand-gold-light cursor-not-allowed' : 'bg-brand-gold cursor-pointer hover:bg-brand-gold-light'
-              }`}
-            >
+            <Button type="submit" disabled={loading} variant="primary" size="lg" fullWidth className="mt-1">
               {loading ? 'Connexion en cours...' : 'Se connecter →'}
-            </button>
+            </Button>
           </form>
 
         </div>

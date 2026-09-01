@@ -7,7 +7,9 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../../../lib/supabase';
 import { escapeHtml } from '../../../lib/html';
-import { IconHome, IconExternalLink } from '../../../components/icons';
+import { IconHome, IconExternalLink, IconChevronRight, IconClock, IconChart } from '../../../components/icons';
+import { SiteHeader } from '../../../components/SiteHeader';
+import { SiteFooter } from '../../../components/SiteFooter';
 
 const COMMUNE_DETAILS: Record<string, {
   tagline: string;
@@ -366,22 +368,33 @@ export default function CommuneDetailPage() {
   const culturePlaces = places.filter(p => p.vertical === 'kin_culture');
   const stylePlaces = places.filter(p => p.vertical === 'kin_style');
 
+  // UI-only state for the category tab interface below (replaces four
+  // permanently-visible boxes with a single tabbed section).
+  const CATEGORY_TABS = [
+    { id: 'kin_food', label: 'Kin Food', items: foodPlaces, empty: 'Aucune adresse pour le moment.', text: 'text-brand-green', border: 'border-brand-green' },
+    { id: 'kin_places', label: 'Kin Places', items: otherPlaces, empty: 'Aucun lieu répertorié.', text: 'text-brand-river', border: 'border-brand-river' },
+    { id: 'kin_culture', label: 'Kin Culture', items: culturePlaces, empty: 'Aucun espace culturel.', text: 'text-brand-gold', border: 'border-brand-gold' },
+    { id: 'kin_style', label: 'Kin Style', items: stylePlaces, empty: 'Aucune adresse mode.', text: 'text-brand-plum', border: 'border-brand-plum' },
+  ] as const;
+  const [activeCategoryTab, setActiveCategoryTab] = useState<string>('kin_food');
+  const activeTab = CATEGORY_TABS.find(t => t.id === activeCategoryTab) || CATEGORY_TABS[0];
+
   const renderPlaceCard = (p: any) => (
-    <div key={p.id} className="bg-brand-navy border border-brand-navy-border rounded-[10px] p-3 mb-3">
+    <div key={p.id} className="border-b border-brand-navy-border py-4 last:border-0 last:pb-0">
       {p.image_url && (
         <img
           src={p.image_url}
           alt={p.name}
-          className="w-full h-[140px] object-cover rounded-lg mb-2 border border-brand-navy-border"
+          className="w-full h-[160px] object-cover rounded-lg mb-3"
         />
       )}
-      <strong className="block text-brand-cream text-sm mb-0.5">
-        {p.name} {p.budget ? `(${p.budget})` : ''}
+      <strong className="block font-display text-base font-semibold text-brand-cream mb-0.5">
+        {p.name} {p.budget ? <span className="text-brand-gold-light font-sans font-semibold text-sm">({p.budget})</span> : ''}
       </strong>
-      {p.address && <span className="block text-[11px] text-brand-muted mb-1">{p.address}</span>}
-      <p className="text-xs text-brand-cream/70 mb-1.5 leading-relaxed">{p.description}</p>
+      {p.address && <span className="block text-xs text-brand-muted mb-1">{p.address}</span>}
+      <p className="text-sm text-brand-cream/70 mb-2 leading-relaxed">{p.description}</p>
       {p.google_maps_url && (
-        <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-brand-river font-bold no-underline hover:text-brand-gold-light">
+        <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-brand-river font-semibold no-underline hover:text-brand-gold-light">
           <IconExternalLink size={11} /> Google Maps Itinéraire →
         </a>
       )}
@@ -389,168 +402,172 @@ export default function CommuneDetailPage() {
   );
 
   return (
-    <main className="min-h-screen bg-brand-navy text-brand-cream p-4">
+    <main className="min-h-screen bg-brand-navy text-brand-cream flex flex-col">
+      <SiteHeader />
 
-      {/* Top Header Navigation */}
-      <nav className="flex justify-between items-center max-w-[1650px] mx-auto mb-5 border-b border-brand-navy-border pb-3.5 flex-wrap gap-2.5">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="inline-flex items-center gap-1.5 bg-brand-navy-light text-brand-river border border-brand-navy-border px-3.5 py-2 rounded-lg no-underline font-bold text-xs hover:border-brand-river">
-            <IconHome size={14} /> Accueil
+      <div className="max-w-[1650px] mx-auto px-4 md:px-6 w-full flex-1">
+
+        {/* Breadcrumb */}
+        <nav aria-label="Fil d'Ariane" className="flex items-center gap-1.5 text-xs text-brand-muted pt-5">
+          <Link href="/" className="inline-flex items-center gap-1 no-underline text-brand-muted hover:text-brand-gold-light">
+            <IconHome size={12} /> Accueil
           </Link>
-          <span className="text-brand-muted text-xs">/ Communes /</span>
-          <h1 className="text-xl font-black text-brand-cream m-0 uppercase">
-            Commune de {communeName}
-          </h1>
-        </div>
+          <IconChevronRight size={12} />
+          <Link href="/commune/Gombe" className="no-underline text-brand-muted hover:text-brand-gold-light">
+            Communes
+          </Link>
+          <IconChevronRight size={12} />
+          <span className="text-brand-cream/80 font-medium">{communeName}</span>
+        </nav>
 
-        {/* Commune Selector Dropdown with ALL 24 COMMUNES */}
-        <select
-          value={ALL_KINSHASA_COMMUNES.includes(communeName) ? communeName : ''}
-          onChange={(e) => router.push(`/commune/${encodeURIComponent(e.target.value)}`)}
-          className="bg-brand-navy-light border border-brand-gold text-brand-cream px-3 py-2 rounded-lg text-xs font-bold cursor-pointer"
-        >
-          <option value="" disabled>Choisir une commune (24)...</option>
-          {ALL_KINSHASA_COMMUNES.map(c => (
-            <option key={c} value={c}>Commune de {c}</option>
-          ))}
-        </select>
-      </nav>
+        {/* HERO / INTRO */}
+        <section className="pt-4 pb-8 border-b border-brand-navy-border md:pt-6 md:pb-10">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div className="max-w-3xl">
+              <span className="inline-block bg-brand-gold text-brand-navy text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide mb-3">
+                Fiche Officielle Kinshasa Label
+              </span>
+              <h1 className="font-display text-4xl md:text-5xl font-semibold text-brand-cream leading-[1.05] mb-4">
+                {communeName}
+              </h1>
+              <p className="font-display italic text-xl md:text-2xl text-brand-gold-light leading-snug border-l-4 border-brand-gold pl-4">
+                &quot;{communeInfo.tagline}&quot;
+              </p>
+            </div>
 
-      {/* Main Grid: Content Column + Map Sidebar */}
-      <div className="grid grid-cols-1 gap-5 max-w-[1650px] mx-auto lg:grid-cols-[minmax(0,1fr)_380px]">
+            {/* Commune Selector, part of the hero rather than a floating utility */}
+            <div className="shrink-0">
+              <label className="block text-[11px] uppercase tracking-wide text-brand-muted font-semibold mb-1.5">
+                Changer de commune
+              </label>
+              <select
+                value={ALL_KINSHASA_COMMUNES.includes(communeName) ? communeName : ''}
+                onChange={(e) => router.push(`/commune/${encodeURIComponent(e.target.value)}`)}
+                className="bg-brand-navy-light border border-brand-gold text-brand-cream px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer min-w-[220px]"
+              >
+                <option value="" disabled>Choisir une commune (24)...</option>
+                {ALL_KINSHASA_COMMUNES.map(c => (
+                  <option key={c} value={c}>Commune de {c}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </section>
 
-        {/* Left Column: Briefs & Vertical Listings */}
-        <div>
+        {/* Main Grid: Content Column + Map Sidebar */}
+        <div className="grid grid-cols-1 gap-8 py-8 lg:grid-cols-[minmax(0,1fr)_380px]">
 
-          {/* Banner Tagline & Header */}
-          <div className="bg-brand-navy-light border border-brand-gold rounded-2xl p-5 mb-5">
-            <span className="bg-brand-gold text-brand-navy text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">
-              Fiche Officielle Kinshasa Label
-            </span>
-            <h1 className="text-[26px] font-black text-brand-cream mt-2 mb-1 uppercase">
-              Le Meilleur de {communeName}
-            </h1>
-            <p className="text-[15px] text-brand-gold-light font-bold m-0 italic">
-              &quot;{communeInfo.tagline}&quot;
+          {/* Left Column: Briefs & Vertical Listings */}
+          <div>
+
+            {/* Lead paragraph — unboxed, editorial */}
+            <p className="text-lg text-brand-cream/80 leading-relaxed max-w-3xl mb-8">
+              {communeInfo.specification}
             </p>
+
+            {/* Histoire / Économie — two-column fact layout, icon-led */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mb-8 pb-8 border-b border-brand-navy-border">
+              <div>
+                <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-brand-river mb-2">
+                  <IconClock size={16} /> Aperçu Historique
+                </h2>
+                <p className="text-sm text-brand-cream/70 leading-relaxed">
+                  {communeInfo.history}
+                </p>
+              </div>
+              <div>
+                <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-brand-green mb-2">
+                  <IconChart size={16} /> Économie &amp; Activités
+                </h2>
+                <p className="text-sm text-brand-cream/70 leading-relaxed">
+                  {communeInfo.economy}
+                </p>
+              </div>
+            </div>
+
+            {/* Quartiers Phares */}
+            <div className="mb-9">
+              <h3 className="text-xs text-brand-muted uppercase tracking-wide font-semibold mb-3">
+                Quartiers &amp; Repères Clés
+              </h3>
+              <div className="flex gap-2 flex-wrap">
+                {communeInfo.keyDistricts.map(d => (
+                  <span key={d} className="bg-brand-navy-light text-brand-river border border-brand-navy-border px-3 py-1 rounded-full text-xs font-semibold">
+                    {d}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* KIN WEEKEND HIGHLIGHT */}
+            <section className="bg-brand-navy-light border border-brand-plum/60 rounded-2xl p-5 md:p-6 mb-9">
+              <h2 className="text-base font-semibold text-brand-plum mb-4">
+                Kin Weekend — À faire ce weekend à {communeName} ({events.length})
+              </h2>
+              <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+                {events.length === 0 ? (
+                  <p className="text-sm text-brand-muted">Aucun événement ce weekend dans cette commune.</p>
+                ) : (
+                  events.map(e => (
+                    <div key={e.id} className="bg-brand-navy border border-brand-navy-border rounded-lg p-3.5">
+                      <span className="text-[11px] text-brand-plum font-semibold uppercase tracking-wide">{e.category} · {e.event_date}</span>
+                      <h3 className="text-sm font-semibold text-brand-cream my-1">{e.title}</h3>
+                      <p className="text-sm text-brand-cream/70 m-0 leading-relaxed">{e.description}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            {/* CATEGORY TABS — replaces 4 permanently-visible boxes */}
+            <section>
+              <h2 className="text-xs uppercase tracking-wide text-brand-muted font-semibold mb-3">
+                Adresses recommandées par catégorie
+              </h2>
+              <div className="flex gap-6 overflow-x-auto border-b border-brand-navy-border">
+                {CATEGORY_TABS.map((tab) => {
+                  const isActive = tab.id === activeCategoryTab;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveCategoryTab(tab.id)}
+                      className={`shrink-0 whitespace-nowrap pb-3 text-sm font-semibold border-b-2 -mb-px transition-colors cursor-pointer ${
+                        isActive ? `${tab.text} ${tab.border}` : 'text-brand-cream/55 border-transparent hover:text-brand-cream'
+                      }`}
+                    >
+                      {tab.label} <span className="font-normal text-brand-muted">({tab.items.length})</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="pt-1">
+                {activeTab.items.length === 0 ? (
+                  <p className="text-sm text-brand-muted py-4">{activeTab.empty}</p>
+                ) : (
+                  activeTab.items.map(renderPlaceCard)
+                )}
+              </div>
+            </section>
+
           </div>
 
-          {/* 3 Encyclopedic Brief Pillars: Spécificité, Histoire, Économie */}
-          <div className="flex flex-col gap-3.5 mb-5">
-
-            {/* Spécificités */}
-            <div className="bg-brand-navy-light border border-brand-navy-border rounded-xl p-4 border-l-4 border-l-brand-gold">
-              <h2 className="text-sm font-bold text-brand-cream m-0 mb-1.5 uppercase">
-                Spécificités &amp; Identité
-              </h2>
-              <p className="text-[13px] text-brand-cream/70 leading-relaxed m-0">
-                {communeInfo.specification}
+          {/* Sidebar Interactive Map */}
+          <aside>
+            <div className="sticky top-24 bg-brand-navy-light border border-brand-navy-border rounded-2xl p-3.5">
+              <h3 className="text-xs text-brand-river uppercase font-semibold mt-0 mb-2.5">
+                Carte Interactive de {communeName}
+              </h3>
+              <div ref={mapContainer} className="w-full h-[440px] rounded-[10px] overflow-hidden" />
+              <p className="text-[11px] text-brand-muted mt-2 mb-0 text-center">
+                {places.length} lieu(x) certifié(s) géolocalisé(s)
               </p>
             </div>
-
-            {/* Histoire */}
-            <div className="bg-brand-navy-light border border-brand-navy-border rounded-xl p-4 border-l-4 border-l-brand-river">
-              <h2 className="text-sm font-bold text-brand-cream m-0 mb-1.5 uppercase">
-                Aperçu Historique
-              </h2>
-              <p className="text-[13px] text-brand-cream/70 leading-relaxed m-0">
-                {communeInfo.history}
-              </p>
-            </div>
-
-            {/* Économie */}
-            <div className="bg-brand-navy-light border border-brand-navy-border rounded-xl p-4 border-l-4 border-l-brand-green">
-              <h2 className="text-sm font-bold text-brand-cream m-0 mb-1.5 uppercase">
-                Économie &amp; Activités
-              </h2>
-              <p className="text-[13px] text-brand-cream/70 leading-relaxed m-0">
-                {communeInfo.economy}
-              </p>
-            </div>
-
-          </div>
-
-          {/* Quartiers Phares Badges */}
-          <div className="bg-brand-navy-light border border-brand-navy-border rounded-xl p-3.5 mb-5">
-            <h3 className="text-[11px] text-brand-muted uppercase tracking-wide mt-0 mb-2">
-              Quartiers &amp; Repères Clés :
-            </h3>
-            <div className="flex gap-2 flex-wrap">
-              {communeInfo.keyDistricts.map(d => (
-                <span key={d} className="bg-brand-navy-border text-brand-river border border-brand-navy-border px-2.5 py-1 rounded-full text-[11px] font-bold">
-                  • {d}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* KIN WEEKEND HIGHLIGHT */}
-          <section className="bg-brand-navy-light border border-brand-plum rounded-2xl p-[18px] mb-5">
-            <h2 className="text-base font-bold text-brand-plum mb-3 uppercase">
-              KIN WEEKEND — À faire ce weekend à {communeName} ({events.length})
-            </h2>
-            <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
-              {events.length === 0 ? (
-                <p className="text-[11px] text-brand-muted">Aucun événement ce weekend dans cette commune.</p>
-              ) : (
-                events.map(e => (
-                  <div key={e.id} className="bg-brand-navy border border-brand-navy-border rounded-lg p-3">
-                    <span className="text-[9px] text-brand-plum font-bold uppercase">{e.category} ● {e.event_date}</span>
-                    <h3 className="text-sm text-brand-cream my-1">{e.title}</h3>
-                    <p className="text-[11px] text-brand-cream/70 m-0">{e.description}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-
-          {/* 4 VERTICAL CARDS */}
-          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
-            <section className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-[18px]">
-              <h2 className="text-[15px] text-brand-green mb-3 uppercase font-bold">
-                KIN FOOD ({foodPlaces.length})
-              </h2>
-              {foodPlaces.length === 0 ? <p className="text-[11px] text-brand-muted">Aucune adresse pour le moment.</p> : foodPlaces.map(renderPlaceCard)}
-            </section>
-
-            <section className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-[18px]">
-              <h2 className="text-[15px] text-brand-river mb-3 uppercase font-bold">
-                KIN PLACES ({otherPlaces.length})
-              </h2>
-              {otherPlaces.length === 0 ? <p className="text-[11px] text-brand-muted">Aucun lieu répertorié.</p> : otherPlaces.map(renderPlaceCard)}
-            </section>
-
-            <section className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-[18px]">
-              <h2 className="text-[15px] text-brand-gold mb-3 uppercase font-bold">
-                KIN CULTURE ({culturePlaces.length})
-              </h2>
-              {culturePlaces.length === 0 ? <p className="text-[11px] text-brand-muted">Aucun espace culturel.</p> : culturePlaces.map(renderPlaceCard)}
-            </section>
-
-            <section className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-[18px]">
-              <h2 className="text-[15px] text-brand-plum mb-3 uppercase font-bold">
-                KIN STYLE ({stylePlaces.length})
-              </h2>
-              {stylePlaces.length === 0 ? <p className="text-[11px] text-brand-muted">Aucune adresse mode.</p> : stylePlaces.map(renderPlaceCard)}
-            </section>
-          </div>
+          </aside>
 
         </div>
-
-        {/* Sidebar Interactive Map */}
-        <aside>
-          <div className="sticky top-4 bg-brand-navy-light border border-brand-navy-border rounded-2xl p-3.5">
-            <h3 className="text-xs text-brand-river uppercase font-bold mt-0 mb-2.5">
-              Carte Interactive de {communeName}
-            </h3>
-            <div ref={mapContainer} className="w-full h-[440px] rounded-[10px] overflow-hidden" />
-            <p className="text-[10px] text-brand-muted mt-2 mb-0 text-center">
-              {places.length} lieu(x) certifié(s) géolocalisé(s)
-            </p>
-          </div>
-        </aside>
-
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

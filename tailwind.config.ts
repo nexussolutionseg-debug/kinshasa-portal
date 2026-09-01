@@ -1,9 +1,19 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: ["./src/app/**/*.{js,ts,jsx,tsx,mdx}"],
+  content: [
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
   theme: {
     extend: {
+      fontFamily: {
+        // Editorial display serif for headline moments (hero titles, page
+        // titles, commune names). Uses a system/web-safe serif stack —
+        // deliberately not a Google Font — so headline rendering never
+        // depends on a build-time or runtime network fetch.
+        display: ["Georgia", "'Times New Roman'", "'Noto Serif'", "serif"],
+      },
       colors: {
         brand: {
           navy: "#0B1E3A",
