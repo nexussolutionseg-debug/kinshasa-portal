@@ -11,6 +11,36 @@ import { IconHome, IconExternalLink, IconChevronRight, IconClock, IconChart } fr
 import { SiteHeader } from '../../../components/SiteHeader';
 import { SiteFooter } from '../../../components/SiteFooter';
 
+// Same fix as the homepage map: CARTO's hosted GL vector style now gates
+// actual tile pixels behind a required API key (confirmed live — the
+// style/sprite JSON still load, but tiles return an "API key required"
+// placeholder), which is why the production map showed no basemap under
+// the markers. Esri's raster tiles need no key.
+const MAP_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    'esri-dark-gray-base': {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+      ],
+      tileSize: 256,
+      attribution: 'Tiles &copy; Esri',
+    },
+    'esri-dark-gray-labels': {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+      ],
+      tileSize: 256,
+    },
+  },
+  layers: [
+    { id: 'esri-dark-gray-base-layer', type: 'raster', source: 'esri-dark-gray-base' },
+    { id: 'esri-dark-gray-labels-layer', type: 'raster', source: 'esri-dark-gray-labels' },
+  ],
+};
+
 const COMMUNE_DETAILS: Record<string, {
   tagline: string;
   specification: string;
@@ -323,7 +353,7 @@ export default function CommuneDetailPage() {
     } else {
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+        style: MAP_STYLE,
         center: [communeInfo.lng, communeInfo.lat],
         zoom: communeInfo.zoom,
         pitch: 35

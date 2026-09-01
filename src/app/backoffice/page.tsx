@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink } from '../../components/icons';
 import { Button } from '../../components/Button';
+import { KinshasaMark } from '../../components/BrandMark';
 
 const COMMUNES = [
   'Gombe', 'Limete', 'Ngaliema', "N'sele", "N'djili", 'Kintambo',
@@ -194,6 +195,7 @@ export default function BackofficePage() {
       {/* Simplified admin header — no marketing hero/footer needed here */}
       <nav className="flex justify-between items-center max-w-[1000px] mx-auto px-4 py-4 border-b border-brand-navy-border flex-wrap gap-2.5">
         <div className="flex items-center gap-3">
+          <KinshasaMark size={28} />
           <Link href="/" className="inline-flex items-center gap-1.5 text-brand-river no-underline font-semibold text-sm hover:text-brand-gold-light">
             <IconHome size={14} /> Accueil
           </Link>

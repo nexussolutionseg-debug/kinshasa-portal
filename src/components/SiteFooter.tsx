@@ -2,6 +2,7 @@
 // (brand column, sitemap columns, copyright bar) signals a finished,
 // professional site rather than a single-screen prototype.
 import Link from 'next/link';
+import { KinshasaSeal } from './BrandMark';
 
 const FOOTER_COMMUNES = ['Gombe', 'Limete', 'Ngaliema', 'Kalamu', 'Lemba', 'Masina'];
 
@@ -11,12 +12,15 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-brand-navy-border bg-brand-navy-light">
       <div className="max-w-[1650px] mx-auto px-4 md:px-6 py-10 md:py-12 grid grid-cols-1 gap-9 md:grid-cols-[1.4fr_1fr_1fr]">
-        <div>
-          <span className="font-display text-xl font-bold text-brand-cream">Kinshasa Label</span>
-          <p className="text-sm text-brand-cream/60 mt-3 max-w-sm leading-relaxed">
-            Le guide de référence des meilleures adresses, de la culture et des événements de
-            Kinshasa — commune par commune, sur une carte interactive.
-          </p>
+        <div className="flex gap-5">
+          <KinshasaSeal size={84} />
+          <div>
+            <span className="font-display text-xl font-bold text-brand-cream">Kinshasa Label</span>
+            <p className="text-sm text-brand-cream/60 mt-3 max-w-sm leading-relaxed">
+              Le guide de référence des meilleures adresses, de la culture et des événements de
+              Kinshasa — commune par commune, sur une carte interactive.
+            </p>
+          </div>
         </div>
 
         <div>

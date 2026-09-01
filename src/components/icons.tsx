@@ -167,6 +167,14 @@ export function IconChart({ size = 16, ...props }: IconProps) {
   );
 }
 
+export function IconThumbsDown({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M7 14V4M3 4h3.2c.4 0 .8.1 1.1.3l4.4 2c.3.1.7.2 1.1.2h4.4a2 2 0 0 1 2 2.3l-1 6a2 2 0 0 1-2 1.7H9" />
+    </svg>
+  );
+}
+
 export function IconMenu({ size = 16, ...props }: IconProps) {
   return (
     <svg {...base(size)} {...props}>

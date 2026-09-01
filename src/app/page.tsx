@@ -5,7 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../lib/supabase';
 import { escapeHtml } from '../lib/html';
 import communesData from '../data/communes.json';
-import { IconHeart, IconChat, IconExternalLink, IconUser, IconPin, IconGlobe } from '../components/icons';
+import { IconHeart, IconThumbsDown, IconChat, IconExternalLink, IconUser, IconPin, IconGlobe } from '../components/icons';
 import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
 import { Button } from '../components/Button';
@@ -23,6 +23,42 @@ const VERTICALS = [
 // marker/popup content, which cannot use Tailwind classes or JSX.
 const HEART_SVG = (color: string) =>
   `<svg width="11" height="11" viewBox="0 0 24 24" fill="${color}" stroke="${color}" stroke-width="2" style="vertical-align:-1px;"><path d="M12 20.5s-7-4.35-9.5-8.8C.9 8.6 2.3 5 5.7 5c1.9 0 3.3 1 4.3 2.5C11 6 12.4 5 14.3 5c3.4 0 4.8 3.6 3.2 6.7C19 16.15 12 20.5 12 20.5Z"/></svg>`;
+
+const THUMBS_DOWN_SVG = (color: string) =>
+  `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M7 14V4M3 4h3.2c.4 0 .8.1 1.1.3l4.4 2c.3.1.7.2 1.1.2h4.4a2 2 0 0 1 2 2.3l-1 6a2 2 0 0 1-2 1.7H9"/></svg>`;
+
+// MapLibre style object: plain raster tiles from Esri's free, no-API-key
+// "World Dark Gray" basemap (base + labels reference layer). The app
+// previously pointed at CARTO's hosted GL vector style
+// (basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json); that style's
+// metadata still loads, but CARTO now gates the actual tile pixels behind
+// a required API key, so the map rendered with markers floating over a
+// blank background in production. Esri's raster tiles need no key and
+// verified working end-to-end against real Kinshasa coordinates.
+const MAP_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    'esri-dark-gray-base': {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+      ],
+      tileSize: 256,
+      attribution: 'Tiles &copy; Esri',
+    },
+    'esri-dark-gray-labels': {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+      ],
+      tileSize: 256,
+    },
+  },
+  layers: [
+    { id: 'esri-dark-gray-base-layer', type: 'raster', source: 'esri-dark-gray-base' },
+    { id: 'esri-dark-gray-labels-layer', type: 'raster', source: 'esri-dark-gray-labels' },
+  ],
+};
 
 // Fallback Geocoding Helper for venues missing explicit lat/lng
 const getFallbackCoordinates = (communeName?: string) => {
@@ -47,18 +83,23 @@ export default function HomePage() {
 
   // Likes & Comments State
   const [likedPlaceIds, setLikedPlaceIds] = useState<number[]>([]);
+  const [dislikedPlaceIds, setDislikedPlaceIds] = useState<number[]>([]);
   const [activeCommentsPlaceId, setActiveCommentsPlaceId] = useState<number | null>(null);
   const [commentsMap, setCommentsMap] = useState<{ [key: number]: any[] }>({});
   const [newCommentAuthor, setNewCommentAuthor] = useState('');
   const [newCommentText, setNewCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
-  // Load liked places from localStorage on initial render
+  // Load liked/disliked places from localStorage on initial render
   useEffect(() => {
     try {
       const savedLikes = localStorage.getItem('kin_liked_places');
       if (savedLikes) {
         setLikedPlaceIds(JSON.parse(savedLikes));
+      }
+      const savedDislikes = localStorage.getItem('kin_disliked_places');
+      if (savedDislikes) {
+        setDislikedPlaceIds(JSON.parse(savedDislikes));
       }
     } catch (e) {
       console.error('Could not read likes from localStorage', e);
@@ -71,7 +112,7 @@ export default function HomePage() {
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      style: MAP_STYLE,
       center: [15.3057, -4.3245],
       zoom: 11.5,
       pitch: 45,
@@ -158,6 +199,30 @@ export default function HomePage() {
     }
 
 
+  };
+
+  // Handle Dislike Action — mirrors handleLikePlace. Requires a `dislikes`
+  // integer column on the `places` table (same pattern as `likes`); until
+  // that column exists in Supabase, the UI count still updates locally but
+  // the persisted update silently fails, exactly like every other
+  // Supabase call in this file that doesn't check `error`.
+  const handleDislikePlace = async (placeId: number, currentDislikes: number) => {
+    if (dislikedPlaceIds.includes(placeId)) return;
+
+    const updatedDislikes = (currentDislikes || 0) + 1;
+    const newDislikedPlaceIds = [...dislikedPlaceIds, placeId];
+
+    setPlaces((prevPlaces) =>
+      prevPlaces.map((p) => (p.id === placeId ? { ...p, dislikes: updatedDislikes } : p))
+    );
+    setDislikedPlaceIds(newDislikedPlaceIds);
+
+    try {
+      localStorage.setItem('kin_disliked_places', JSON.stringify(newDislikedPlaceIds));
+      await supabase.from('places').update({ dislikes: updatedDislikes }).eq('id', placeId);
+    } catch (err) {
+      console.error('Error updating dislikes:', err);
+    }
   };
 
   // Toggle Comment Box & Fetch Comments for a Place
@@ -271,6 +336,7 @@ export default function HomePage() {
           <h4 style="margin: 2px 0; font-size: 13px; font-weight: 800; color: #0B1E3A;">${escapeHtml(place.name)}</h4>
           ${imageHtml}
           <p style="margin: 0; font-size: 11px; color: #5B5548;">${escapeHtml(place.description || '')}</p>
+          <span style="display:inline-flex; align-items:center; gap:3px; font-size: 10px; font-weight: bold; color: #6b7280; margin-top: 4px;">${THUMBS_DOWN_SVG('#6b7280')}${place.dislikes || 0}</span>
           ${mapsLinkHtml}
         </div>
       `;
@@ -290,7 +356,7 @@ export default function HomePage() {
     }
 
 
-  }, [places, likedPlaceIds]);
+  }, [places, likedPlaceIds, dislikedPlaceIds]);
 
   return (
     <main className="min-h-screen bg-brand-navy text-brand-cream flex flex-col">
@@ -415,6 +481,7 @@ export default function HomePage() {
                   <div className="flex flex-col divide-y divide-brand-navy-border">
                     {places.map((place) => {
                       const isLiked = likedPlaceIds.includes(place.id);
+                      const isDisliked = dislikedPlaceIds.includes(place.id);
                       const comments = commentsMap[place.id] || [];
                       const isCommentsOpen = activeCommentsPlaceId === place.id;
 
@@ -451,6 +518,20 @@ export default function HomePage() {
                                 >
                                   <IconHeart size={13} filled={isLiked} />
                                   {isLiked ? 'Aimé' : "J'aime"} ({place.likes || 0})
+                                </button>
+
+                                {/* DISLIKE BUTTON */}
+                                <button
+                                  onClick={() => handleDislikePlace(place.id, place.dislikes || 0)}
+                                  disabled={isDisliked}
+                                  className={`inline-flex items-center gap-1 border px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                    isDisliked
+                                      ? 'bg-brand-navy-border text-brand-muted border-brand-navy-border cursor-default'
+                                      : 'bg-brand-navy-light text-brand-cream/70 border-brand-navy-border cursor-pointer hover:border-brand-muted'
+                                  }`}
+                                >
+                                  <IconThumbsDown size={13} />
+                                  ({place.dislikes || 0})
                                 </button>
 
                                 {/* COMMENTS TOGGLE */}

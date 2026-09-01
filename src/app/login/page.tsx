@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/Button';
+import { KinshasaMark } from '../../components/BrandMark';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function LoginPage() {
       {/* Top Navigation Bar */}
       <nav className="flex justify-between items-center pb-3 border-b border-brand-navy-border max-w-[1600px] w-full mx-auto">
         <div className="flex items-center gap-2.5">
-          <div className="w-3 h-3 rounded-full bg-brand-green shadow-[0_0_10px_#2F6B45]" />
+          <KinshasaMark size={30} />
           <h1 className="font-display text-lg font-semibold tracking-wide m-0 text-brand-cream">
             Kinshasa Label — Backoffice
           </h1>

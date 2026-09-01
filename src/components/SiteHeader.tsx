@@ -7,6 +7,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from './Button';
 import { IconPin, IconClose, IconMenu } from './icons';
+import { KinshasaMark } from './BrandMark';
 
 const NAV_LINKS = [
   { href: '/', label: 'Accueil' },
@@ -21,12 +22,15 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 bg-brand-navy/95 backdrop-blur supports-[backdrop-filter]:bg-brand-navy/80 border-b border-brand-navy-border">
       <div className="max-w-[1650px] mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between gap-4">
-        <Link href="/" className="flex flex-col leading-none no-underline shrink-0">
-          <span className="font-display text-xl md:text-2xl font-bold text-brand-cream tracking-tight">
-            Kinshasa Label
-          </span>
-          <span className="hidden sm:block text-[10px] uppercase tracking-[2px] text-brand-gold font-semibold mt-1">
-            Le Média-Guide de Référence
+        <Link href="/" className="flex items-center gap-2.5 no-underline shrink-0">
+          <KinshasaMark size={38} />
+          <span className="flex flex-col leading-none">
+            <span className="font-display text-xl md:text-2xl font-bold text-brand-cream tracking-tight">
+              Kinshasa Label
+            </span>
+            <span className="hidden sm:block text-[10px] uppercase tracking-[2px] text-brand-gold font-semibold mt-1">
+              Le Média-Guide de Référence
+            </span>
           </span>
         </Link>
 
