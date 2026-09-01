@@ -58,6 +58,9 @@ const MAP_STYLE: maplibregl.StyleSpecification = {
     { id: 'esri-dark-gray-base-layer', type: 'raster', source: 'esri-dark-gray-base' },
     { id: 'esri-dark-gray-labels-layer', type: 'raster', source: 'esri-dark-gray-labels' },
   ],
+  // MapLibre's own public demo glyph server — needed for the commune name
+  // labels below (text layers render nothing without a `glyphs` source).
+  glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
 };
 
 // Fallback Geocoding Helper for venues missing explicit lat/lng
@@ -140,11 +143,51 @@ export default function HomePage() {
         }
       });
 
+      // Visible commune boundary outline — the fill-extrusion layer above
+      // has no stroke of its own, so adjacent communes were hard to tell
+      // apart against the new basemap. A distinct gold border fixes that.
+      map.current.addLayer({
+        id: 'communes-border',
+        type: 'line',
+        source: 'communes-geojson',
+        paint: {
+          'line-color': '#C8992E',
+          'line-width': 1.5,
+          'line-opacity': 0.9
+        }
+      });
+
+      // Commune name labels so each shape is identifiable at a glance.
+      map.current.addLayer({
+        id: 'communes-label',
+        type: 'symbol',
+        source: 'communes-geojson',
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-font': ['Noto Sans Regular'],
+          'text-size': 11,
+          'text-transform': 'uppercase',
+          'text-letter-spacing': 0.05
+        },
+        paint: {
+          'text-color': '#F4F1E9',
+          'text-halo-color': '#0B1E3A',
+          'text-halo-width': 1.4
+        }
+      });
+
       map.current.on('click', 'communes-layer', (e) => {
         if (e.features && e.features[0]) {
           const name = e.features[0].properties?.name;
           if (name) setSelectedCommune(name);
         }
+      });
+
+      map.current.on('mouseenter', 'communes-layer', () => {
+        if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+      });
+      map.current.on('mouseleave', 'communes-layer', () => {
+        if (map.current) map.current.getCanvas().style.cursor = '';
       });
     });
 
