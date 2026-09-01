@@ -456,7 +456,7 @@ export default function HomePage() {
           <div className="bg-brand-navy-light rounded-2xl border border-brand-navy-border p-3.5 md:p-4">
             <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
               <span className="text-xs text-brand-muted uppercase font-semibold tracking-wide">
-                Carte ({markersRef.current.length} marqueurs visibles)
+                Carte ({places.length} marqueurs visibles)
               </span>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-brand-green font-semibold">
