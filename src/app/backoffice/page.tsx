@@ -2,11 +2,12 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
+import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink } from '../../components/icons';
 
 const COMMUNES = [
-  'Gombe', 'Limete', 'Ngaliema', "N'sele", "N'djili", 'Kintambo', 
-  'Barumbu', 'Kinshasa', 'Lingwala', 'Kasa-Vubu', 'Bandalungwa', 
-  'Kalamu', 'Ngiri-Ngiri', 'Bumbu', 'Selembao', 'Makala', 'Ngaba', 
+  'Gombe', 'Limete', 'Ngaliema', "N'sele", "N'djili", 'Kintambo',
+  'Barumbu', 'Kinshasa', 'Lingwala', 'Kasa-Vubu', 'Bandalungwa',
+  'Kalamu', 'Ngiri-Ngiri', 'Bumbu', 'Selembao', 'Makala', 'Ngaba',
   'Lemba', 'Matete', 'Masina', 'Kimbanseke', 'Mont-Ngafula', 'Maluku', 'Ouanza'
 ];
 
@@ -183,88 +184,105 @@ export default function BackofficePage() {
     }
   };
 
+  const inputClass = "w-full box-border px-3 py-2.5 bg-brand-navy border border-brand-navy-border text-brand-cream rounded-lg text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-gold";
+  const labelClass = "block text-[11px] text-brand-muted uppercase font-bold mb-1.5";
+
   return (
-    <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '16px', fontFamily: 'system-ui, sans-serif' }}>
-      
+    <main className="min-h-screen bg-brand-navy text-brand-cream p-4">
+
       {/* Navigation Header */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1000px', margin: '0 auto 28px auto', borderBottom: '1px solid #1e293b', paddingBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Link href="/" style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '8px 14px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            🏠 Accueil
+      <nav className="flex justify-between items-center max-w-[1000px] mx-auto mb-7 border-b border-brand-navy-border pb-4 flex-wrap gap-2.5">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-1.5 bg-brand-navy-light text-brand-river border border-brand-navy-border px-3.5 py-2 rounded-lg no-underline font-bold text-xs hover:border-brand-river">
+            <IconHome size={14} /> Accueil
           </Link>
-          <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>
+          <h1 className="text-lg font-bold text-brand-cream m-0">
             KINSHASA LABEL — Backoffice
           </h1>
         </div>
-        <Link href="/" style={{ backgroundColor: '#dc2626', color: '#ffffff', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px' }}>
+        <Link href="/" className="bg-brand-danger text-brand-cream px-4 py-2 rounded-lg no-underline font-bold text-xs">
           ← Voir le Média
         </Link>
       </nav>
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        
+      <div className="max-w-[1000px] mx-auto">
+
         {/* Status Notification */}
         {statusMsg && (
-          <div style={{ padding: '14px', borderRadius: '10px', marginBottom: '20px', fontWeight: 'bold', fontSize: '13px', backgroundColor: statusMsg.type === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)', color: statusMsg.type === 'success' ? '#4ade80' : '#f87171', border: `1px solid ${statusMsg.type === 'success' ? '#22c55e' : '#ef4444'}` }}>
+          <div className={`p-3.5 rounded-xl mb-5 font-bold text-[13px] border ${
+            statusMsg.type === 'success'
+              ? 'bg-brand-green/20 text-brand-green border-brand-green'
+              : 'bg-brand-danger/20 text-brand-danger border-brand-danger'
+          }`}>
             {statusMsg.text}
           </div>
         )}
 
         {/* Tab Switcher */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-          <button onClick={() => setActiveTab('manage')} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: activeTab === 'manage' ? '#2563eb' : '#0f172a', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
-            📋 Liste des Lieux ({placesList.length})
+        <div className="flex gap-2.5 mb-5">
+          <button
+            onClick={() => setActiveTab('manage')}
+            className={`flex-1 p-3 rounded-lg border border-brand-navy-border font-bold cursor-pointer ${activeTab === 'manage' ? 'bg-brand-gold text-brand-navy' : 'bg-brand-navy-light text-brand-cream'}`}
+          >
+            Liste des Lieux ({placesList.length})
           </button>
-          <button onClick={() => { setActiveTab('add'); resetForm(); }} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: activeTab === 'add' ? '#2563eb' : '#0f172a', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
-            {editingPlaceId ? '✏️ Modifier le Lieu' : '➕ Ajouter un Lieu via Google Maps'}
+          <button
+            onClick={() => { setActiveTab('add'); resetForm(); }}
+            className={`flex-1 inline-flex items-center justify-center gap-1.5 p-3 rounded-lg border border-brand-navy-border font-bold cursor-pointer ${activeTab === 'add' ? 'bg-brand-gold text-brand-navy' : 'bg-brand-navy-light text-brand-cream'}`}
+          >
+            {editingPlaceId ? (<><IconEdit size={14} /> Modifier le Lieu</>) : (<><IconPlus size={14} /> Ajouter un Lieu via Google Maps</>)}
           </button>
         </div>
 
         {/* LIST & EDIT TAB */}
         {activeTab === 'manage' && (
-          <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
-            <h2 style={{ fontSize: '18px', color: '#38bdf8', marginTop: 0, marginBottom: '20px' }}>
+          <div className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
+            <h2 className="text-lg text-brand-river mt-0 mb-5">
               Lieux Répertoriés à Kinshasa
             </h2>
 
             {placesList.length === 0 ? (
-              <p style={{ fontSize: '12px', color: '#64748b' }}>Aucun lieu enregistré dans la base de données.</p>
+              <p className="text-xs text-brand-muted">Aucun lieu enregistré dans la base de données.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="flex flex-col gap-3">
                 {placesList.map((item) => (
-                  <div key={item.id} style={{ backgroundColor: '#020617', border: '1px solid #334155', borderRadius: '10px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div key={item.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
                     {item.image_url ? (
-                      <img src={item.image_url} alt={item.name} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0, border: '1px solid #334155' }} />
+                      <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-lg shrink-0 border border-brand-navy-border" />
                     ) : (
-                      <div style={{ width: '80px', height: '80px', backgroundColor: '#0f172a', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#64748b', flexShrink: 0, border: '1px dashed #334155' }}>
-                        Pas d'image
+                      <div className="w-20 h-20 bg-brand-navy-light rounded-lg flex items-center justify-center text-[10px] text-brand-muted shrink-0 border border-dashed border-brand-navy-border">
+                        Pas d&apos;image
                       </div>
                     )}
 
-                    <div style={{ flex: '1 1 280px' }}>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '10px', backgroundColor: '#2563eb', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>{item.vertical}</span>
-                        <span style={{ fontSize: '11px', color: '#22c55e', fontWeight: 'bold' }}>{item.commune}</span>
-                        <span style={{ fontSize: '11px', color: '#eab308' }}>{item.budget}</span>
-                        <span style={{ fontSize: '10px', color: item.lat ? '#38bdf8' : '#ef4444' }}>
-                          {item.lat ? '📍 Coordonnées OK' : '⚠️ Mode Fallback'}
+                    <div className="flex-1 min-w-[280px]">
+                      <div className="flex gap-2 items-center mb-1.5 flex-wrap">
+                        <span className="text-[10px] bg-brand-gold text-brand-navy px-1.5 py-0.5 rounded font-bold uppercase">{item.vertical}</span>
+                        <span className="text-[11px] text-brand-green font-bold">{item.commune}</span>
+                        <span className="text-[11px] text-brand-gold-light">{item.budget}</span>
+                        <span className={`text-[10px] ${item.lat ? 'text-brand-river' : 'text-brand-danger'}`}>
+                          {item.lat ? 'Coordonnées OK' : 'Mode Fallback'}
                         </span>
                       </div>
 
-                      <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px 0', fontWeight: 'bold' }}>{item.name}</h3>
+                      <h3 className="text-base text-brand-cream m-0 mb-1 font-bold">{item.name}</h3>
 
                       {item.google_maps_url && (
-                        <a href={item.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', textDecoration: 'none', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
-                          📍 Google Maps Link →
+                        <a href={item.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-brand-river no-underline font-bold mb-1">
+                          <IconExternalLink size={11} /> Google Maps Link
                         </a>
                       )}
 
-                      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0 }}>{item.description}</p>
+                      <p className="text-xs text-brand-cream/70 m-0">{item.description}</p>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button onClick={() => startEditing(item)} style={{ backgroundColor: '#eab308', color: '#000', border: 'none', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>✏️ Éditer</button>
-                      <button onClick={() => handleDeletePlace(item.id, item.name)} style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>🗑️ Supprimer</button>
+                    <div className="flex gap-2.5">
+                      <button onClick={() => startEditing(item)} className="inline-flex items-center gap-1 bg-brand-gold-light text-brand-navy border-none px-3.5 py-2 rounded-md font-bold text-xs cursor-pointer">
+                        <IconEdit size={13} /> Éditer
+                      </button>
+                      <button onClick={() => handleDeletePlace(item.id, item.name)} className="inline-flex items-center gap-1 bg-brand-danger text-brand-cream border-none px-3.5 py-2 rounded-md font-bold text-xs cursor-pointer">
+                        <IconTrash size={13} /> Supprimer
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -275,75 +293,75 @@ export default function BackofficePage() {
 
         {/* ADD / EDIT FORM */}
         {activeTab === 'add' && (
-          <form onSubmit={handleSavePlace} style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #1e293b', paddingBottom: '12px' }}>
-              <h2 style={{ fontSize: '18px', color: '#38bdf8', margin: 0 }}>
+          <form onSubmit={handleSavePlace} className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-5 border-b border-brand-navy-border pb-3">
+              <h2 className="text-lg text-brand-river m-0">
                 {editingPlaceId ? `Éditer : "${placeName}"` : 'Rechercher & Importer via Google Maps'}
               </h2>
               {editingPlaceId && (
-                <button type="button" onClick={() => { resetForm(); setActiveTab('manage'); }} style={{ backgroundColor: '#475569', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>
+                <button type="button" onClick={() => { resetForm(); setActiveTab('manage'); }} className="bg-brand-navy-border text-brand-cream border-none px-3 py-1.5 rounded-md text-[11px] font-bold cursor-pointer">
                   Annuler
                 </button>
               )}
             </div>
 
             {/* Google Places Input */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
-                🔍 Nom du Lieu (Recherche Auto Google Maps) *
+            <div className="mb-4">
+              <label className={labelClass}>
+                Nom du Lieu (Recherche Auto Google Maps) *
               </label>
-              <input 
-                ref={placeInputRef} 
-                type="text" 
-                value={placeName} 
-                onChange={(e) => setPlaceName(e.target.value)} 
-                required 
-                placeholder="Tapez le nom d'un établissement à Kinshasa..." 
-                style={{ width: '100%', padding: '12px', backgroundColor: '#020617', border: '1px solid #2563eb', color: '#fff', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} 
+              <input
+                ref={placeInputRef}
+                type="text"
+                value={placeName}
+                onChange={(e) => setPlaceName(e.target.value)}
+                required
+                placeholder="Tapez le nom d'un établissement à Kinshasa..."
+                className={`${inputClass} border-brand-gold`}
               />
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Lien Photo (URL)</label>
-              <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." style={{ width: '100%', padding: '12px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} />
+            <div className="mb-4">
+              <label className={labelClass}>Lien Photo (URL)</label>
+              <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className={inputClass} />
               {imageUrl && (
-                <div style={{ marginTop: '10px' }}>
-                  <img src={imageUrl} alt="Aperçu" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #334155' }} />
+                <div className="mt-2.5">
+                  <img src={imageUrl} alt="Aperçu" className="w-[120px] h-20 object-cover rounded-md border border-brand-navy-border" />
                 </div>
               )}
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Lien Google Maps</label>
-              <input type="url" value={googleMapsUrl} onChange={(e) => setGoogleMapsUrl(e.target.value)} placeholder="https://maps.app.goo.gl/..." style={{ width: '100%', padding: '12px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} />
+            <div className="mb-4">
+              <label className={labelClass}>Lien Google Maps</label>
+              <input type="url" value={googleMapsUrl} onChange={(e) => setGoogleMapsUrl(e.target.value)} placeholder="https://maps.app.goo.gl/..." className={inputClass} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+            <div className="grid gap-4 mb-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
               <div>
-                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Commune</label>
-                <select value={commune} onChange={(e) => setCommune(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px' }}>
+                <label className={labelClass}>Commune</label>
+                <select value={commune} onChange={(e) => setCommune(e.target.value)} className={inputClass}>
                   {COMMUNES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Verticale</label>
-                <select value={vertical} onChange={(e) => setVertical(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px' }}>
-                  <option value="kin_food">🍔 KIN FOOD (Où bien manger)</option>
-                  <option value="kin_places">📍 KIN PLACES (Lieux à découvrir)</option>
-                  <option value="kin_culture">🎨 KIN CULTURE (Culture & Musique)</option>
-                  <option value="kin_style">👗 KIN STYLE (Mode & Créateurs)</option>
+                <label className={labelClass}>Verticale</label>
+                <select value={vertical} onChange={(e) => setVertical(e.target.value)} className={inputClass}>
+                  <option value="kin_food">KIN FOOD (Où bien manger)</option>
+                  <option value="kin_places">KIN PLACES (Lieux à découvrir)</option>
+                  <option value="kin_culture">KIN CULTURE (Culture &amp; Musique)</option>
+                  <option value="kin_style">KIN STYLE (Mode &amp; Créateurs)</option>
                 </select>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+            <div className="grid gap-4 mb-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
               <div>
-                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Adresse / Repère</label>
-                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="ex: Av. Blvd 30 Juin" style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
+                <label className={labelClass}>Adresse / Repère</label>
+                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="ex: Av. Blvd 30 Juin" className={inputClass} />
               </div>
               <div>
-                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Budget</label>
-                <select value={budget} onChange={(e) => setBudget(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px' }}>
+                <label className={labelClass}>Budget</label>
+                <select value={budget} onChange={(e) => setBudget(e.target.value)} className={inputClass}>
                   <option value="$">$ (Abordable)</option>
                   <option value="$$">$$ (Moyen)</option>
                   <option value="$$$">$$$ (Premium)</option>
@@ -351,12 +369,16 @@ export default function BackofficePage() {
               </div>
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Description *</label>
-              <textarea value={placeDesc} onChange={(e) => setPlaceDesc(e.target.value)} required rows={3} style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
+            <div className="mb-5">
+              <label className={labelClass}>Description *</label>
+              <textarea value={placeDesc} onChange={(e) => setPlaceDesc(e.target.value)} required rows={3} className={inputClass} />
             </div>
 
-            <button type="submit" disabled={submitting} style={{ width: '100%', padding: '14px', backgroundColor: editingPlaceId ? '#eab308' : '#2563eb', color: editingPlaceId ? '#000' : '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+            <button
+              type="submit"
+              disabled={submitting}
+              className={`w-full p-3.5 border-none rounded-lg font-bold cursor-pointer ${editingPlaceId ? 'bg-brand-gold-light text-brand-navy' : 'bg-brand-gold text-brand-navy'}`}
+            >
               {submitting ? 'Enregistrement...' : editingPlaceId ? 'Enregistrer les Modifications →' : 'Enregistrer le Lieu →'}
             </button>
           </form>

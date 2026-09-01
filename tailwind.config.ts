@@ -5,9 +5,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        drcBlue: "#007FFF",
-        drcYellow: "#F4D03F",
-        drcRed: "#C0392B",
+        brand: {
+          navy: "#0B1E3A",
+          "navy-light": "#14294A",
+          "navy-border": "#22385C",
+          gold: "#C8992E",
+          "gold-light": "#E4C767",
+          green: "#2F6B45",
+          river: "#5FA8C9",
+          cream: "#F4F1E9",
+          muted: "#9C9284",
+          plum: "#6E4A63",
+          danger: "#C4453A",
+        },
       },
     },
   },

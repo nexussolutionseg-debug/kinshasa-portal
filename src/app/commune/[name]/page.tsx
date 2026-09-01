@@ -7,6 +7,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../../../lib/supabase';
 import { escapeHtml } from '../../../lib/html';
+import { IconHome, IconExternalLink } from '../../../components/icons';
 
 const COMMUNE_DETAILS: Record<string, {
   tagline: string;
@@ -335,20 +336,20 @@ export default function CommuneDetailPage() {
       const lng = p.lng ? parseFloat(p.lng) : communeInfo.lng;
 
       const el = document.createElement('div');
-      el.style.backgroundColor = '#2563eb';
-      el.style.color = '#ffffff';
+      el.style.backgroundColor = '#0B1E3A';
+      el.style.color = '#F4F1E9';
       el.style.padding = '4px 8px';
       el.style.borderRadius = '12px';
       el.style.fontSize = '10px';
       el.style.fontWeight = 'bold';
-      el.style.border = '2px solid #38bdf8';
-      el.style.boxShadow = '0 0 8px rgba(56, 189, 248, 0.6)';
-      el.innerText = `📍 ${p.name}`;
+      el.style.border = '2px solid #C8992E';
+      el.style.boxShadow = '0 0 8px rgba(200, 153, 46, 0.55)';
+      el.innerText = p.name;
 
       const popup = new maplibregl.Popup({ offset: 20 }).setHTML(`
-        <div style="color: #0f172a; font-family: system-ui; padding: 4px;">
+        <div style="color: #0B1E3A; font-family: system-ui; padding: 4px;">
           <h4 style="margin:0 0 4px 0; font-weight:800;">${escapeHtml(p.name)}</h4>
-          <p style="margin:0; font-size:11px; color:#475569;">${escapeHtml(p.description || '')}</p>
+          <p style="margin:0; font-size:11px; color:#5B5548;">${escapeHtml(p.description || '')}</p>
         </div>
       `);
 
@@ -366,121 +367,103 @@ export default function CommuneDetailPage() {
   const stylePlaces = places.filter(p => p.vertical === 'kin_style');
 
   const renderPlaceCard = (p: any) => (
-    <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '12px', marginBottom: '12px' }}>
+    <div key={p.id} className="bg-brand-navy border border-brand-navy-border rounded-[10px] p-3 mb-3">
       {p.image_url && (
-        <img 
-          src={p.image_url} 
-          alt={p.name} 
-          style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '8px', marginBottom: '8px', border: '1px solid #1e293b' }} 
+        <img
+          src={p.image_url}
+          alt={p.name}
+          className="w-full h-[140px] object-cover rounded-lg mb-2 border border-brand-navy-border"
         />
       )}
-      <strong style={{ color: '#fff', fontSize: '14px', display: 'block', marginBottom: '2px' }}>
+      <strong className="block text-brand-cream text-sm mb-0.5">
         {p.name} {p.budget ? `(${p.budget})` : ''}
       </strong>
-      {p.address && <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>{p.address}</span>}
-      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 6px 0', lineHeight: '1.4' }}>{p.description}</p>
+      {p.address && <span className="block text-[11px] text-brand-muted mb-1">{p.address}</span>}
+      <p className="text-xs text-brand-cream/70 mb-1.5 leading-relaxed">{p.description}</p>
       {p.google_maps_url && (
-        <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
-          📍 Google Maps Itinéraire →
+        <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-brand-river font-bold no-underline hover:text-brand-gold-light">
+          <IconExternalLink size={11} /> Google Maps Itinéraire →
         </a>
       )}
     </div>
   );
 
   return (
-    <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '16px', fontFamily: 'system-ui, sans-serif' }}>
-      
-      {/* Global CSS for grid responsiveness */}
-      <style jsx global>{`
-        .commune-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-        .main-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; max-width: 1650px; margin: 0 auto; }
-        @media (max-width: 1024px) {
-          .main-layout { grid-template-columns: 1fr; }
-        }
-      `}</style>
+    <main className="min-h-screen bg-brand-navy text-brand-cream p-4">
 
       {/* Top Header Navigation */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1650px', margin: '0 auto 20px auto', borderBottom: '1px solid #1e293b', paddingBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Link href="/" style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '8px 14px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px' }}>
-            🏠 Accueil
+      <nav className="flex justify-between items-center max-w-[1650px] mx-auto mb-5 border-b border-brand-navy-border pb-3.5 flex-wrap gap-2.5">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-1.5 bg-brand-navy-light text-brand-river border border-brand-navy-border px-3.5 py-2 rounded-lg no-underline font-bold text-xs hover:border-brand-river">
+            <IconHome size={14} /> Accueil
           </Link>
-          <span style={{ color: '#64748b', fontSize: '12px' }}>/ Communes /</span>
-          <h1 style={{ fontSize: '20px', fontWeight: '900', color: '#ffffff', margin: 0, textTransform: 'uppercase' }}>
+          <span className="text-brand-muted text-xs">/ Communes /</span>
+          <h1 className="text-xl font-black text-brand-cream m-0 uppercase">
             Commune de {communeName}
           </h1>
         </div>
 
         {/* Commune Selector Dropdown with ALL 24 COMMUNES */}
-        <select 
-          value={ALL_KINSHASA_COMMUNES.includes(communeName) ? communeName : ''} 
+        <select
+          value={ALL_KINSHASA_COMMUNES.includes(communeName) ? communeName : ''}
           onChange={(e) => router.push(`/commune/${encodeURIComponent(e.target.value)}`)}
-          style={{ backgroundColor: '#0f172a', border: '1px solid #38bdf8', color: '#fff', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+          className="bg-brand-navy-light border border-brand-gold text-brand-cream px-3 py-2 rounded-lg text-xs font-bold cursor-pointer"
         >
-          <option value="" disabled>📍 Choisir une commune (24)...</option>
+          <option value="" disabled>Choisir une commune (24)...</option>
           {ALL_KINSHASA_COMMUNES.map(c => (
-            <option key={c} value={c}>📍 Commune de {c}</option>
+            <option key={c} value={c}>Commune de {c}</option>
           ))}
         </select>
       </nav>
 
       {/* Main Grid: Content Column + Map Sidebar */}
-      <div className="main-layout">
-        
+      <div className="grid grid-cols-1 gap-5 max-w-[1650px] mx-auto lg:grid-cols-[minmax(0,1fr)_380px]">
+
         {/* Left Column: Briefs & Vertical Listings */}
         <div>
-          
+
           {/* Banner Tagline & Header */}
-          <div style={{ backgroundColor: '#0f172a', border: '1px solid #2563eb', borderRadius: '14px', padding: '20px', marginBottom: '20px' }}>
-            <span style={{ backgroundColor: '#2563eb', color: '#fff', fontSize: '10px', fontWeight: 'bold', padding: '3px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <div className="bg-brand-navy-light border border-brand-gold rounded-2xl p-5 mb-5">
+            <span className="bg-brand-gold text-brand-navy text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">
               Fiche Officielle Kinshasa Label
             </span>
-            <h1 style={{ fontSize: '26px', fontWeight: '900', color: '#ffffff', margin: '8px 0 4px 0', textTransform: 'uppercase' }}>
+            <h1 className="text-[26px] font-black text-brand-cream mt-2 mb-1 uppercase">
               Le Meilleur de {communeName}
             </h1>
-            <p style={{ fontSize: '15px', color: '#38bdf8', fontWeight: 'bold', margin: 0, fontStyle: 'italic' }}>
-              "{communeInfo.tagline}"
+            <p className="text-[15px] text-brand-gold-light font-bold m-0 italic">
+              &quot;{communeInfo.tagline}&quot;
             </p>
           </div>
 
           {/* 3 Encyclopedic Brief Pillars: Spécificité, Histoire, Économie */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
-            
+          <div className="flex flex-col gap-3.5 mb-5">
+
             {/* Spécificités */}
-            <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '18px' }}>✨</span>
-                <h2 style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff', margin: 0, textTransform: 'uppercase' }}>
-                  Spécificités & Identité
-                </h2>
-              </div>
-              <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6', margin: 0 }}>
+            <div className="bg-brand-navy-light border border-brand-navy-border rounded-xl p-4 border-l-4 border-l-brand-gold">
+              <h2 className="text-sm font-bold text-brand-cream m-0 mb-1.5 uppercase">
+                Spécificités &amp; Identité
+              </h2>
+              <p className="text-[13px] text-brand-cream/70 leading-relaxed m-0">
                 {communeInfo.specification}
               </p>
             </div>
 
             {/* Histoire */}
-            <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '18px' }}>🏛️</span>
-                <h2 style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff', margin: 0, textTransform: 'uppercase' }}>
-                  Aperçu Historique
-                </h2>
-              </div>
-              <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6', margin: 0 }}>
+            <div className="bg-brand-navy-light border border-brand-navy-border rounded-xl p-4 border-l-4 border-l-brand-river">
+              <h2 className="text-sm font-bold text-brand-cream m-0 mb-1.5 uppercase">
+                Aperçu Historique
+              </h2>
+              <p className="text-[13px] text-brand-cream/70 leading-relaxed m-0">
                 {communeInfo.history}
               </p>
             </div>
 
             {/* Économie */}
-            <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '18px' }}>💼</span>
-                <h2 style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff', margin: 0, textTransform: 'uppercase' }}>
-                  Économie & Activités
-                </h2>
-              </div>
-              <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6', margin: 0 }}>
+            <div className="bg-brand-navy-light border border-brand-navy-border rounded-xl p-4 border-l-4 border-l-brand-green">
+              <h2 className="text-sm font-bold text-brand-cream m-0 mb-1.5 uppercase">
+                Économie &amp; Activités
+              </h2>
+              <p className="text-[13px] text-brand-cream/70 leading-relaxed m-0">
                 {communeInfo.economy}
               </p>
             </div>
@@ -488,13 +471,13 @@ export default function CommuneDetailPage() {
           </div>
 
           {/* Quartiers Phares Badges */}
-          <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', padding: '14px', marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginTop: 0, marginBottom: '8px' }}>
-              📍 Quartiers & Repères Clés :
+          <div className="bg-brand-navy-light border border-brand-navy-border rounded-xl p-3.5 mb-5">
+            <h3 className="text-[11px] text-brand-muted uppercase tracking-wide mt-0 mb-2">
+              Quartiers &amp; Repères Clés :
             </h3>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div className="flex gap-2 flex-wrap">
               {communeInfo.keyDistricts.map(d => (
-                <span key={d} style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold' }}>
+                <span key={d} className="bg-brand-navy-border text-brand-river border border-brand-navy-border px-2.5 py-1 rounded-full text-[11px] font-bold">
                   • {d}
                 </span>
               ))}
@@ -502,19 +485,19 @@ export default function CommuneDetailPage() {
           </div>
 
           {/* KIN WEEKEND HIGHLIGHT */}
-          <section style={{ backgroundColor: '#0f172a', border: '1px solid #a855f7', borderRadius: '14px', padding: '18px', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#a855f7', margin: '0 0 12px 0', textTransform: 'uppercase' }}>
-              🎉 KIN WEEKEND — À faire ce weekend à {communeName} ({events.length})
+          <section className="bg-brand-navy-light border border-brand-plum rounded-2xl p-[18px] mb-5">
+            <h2 className="text-base font-bold text-brand-plum mb-3 uppercase">
+              KIN WEEKEND — À faire ce weekend à {communeName} ({events.length})
             </h2>
-            <div className="commune-grid">
+            <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
               {events.length === 0 ? (
-                <p style={{ fontSize: '11px', color: '#64748b' }}>Aucun événement ce weekend dans cette commune.</p>
+                <p className="text-[11px] text-brand-muted">Aucun événement ce weekend dans cette commune.</p>
               ) : (
                 events.map(e => (
-                  <div key={e.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '8px', padding: '12px' }}>
-                    <span style={{ fontSize: '9px', color: '#a855f7', fontWeight: 'bold', textTransform: 'uppercase' }}>{e.category} ● {e.event_date}</span>
-                    <h3 style={{ fontSize: '14px', color: '#fff', margin: '4px 0' }}>{e.title}</h3>
-                    <p style={{ fontSize: '11px', color: '#cbd5e1', margin: 0 }}>{e.description}</p>
+                  <div key={e.id} className="bg-brand-navy border border-brand-navy-border rounded-lg p-3">
+                    <span className="text-[9px] text-brand-plum font-bold uppercase">{e.category} ● {e.event_date}</span>
+                    <h3 className="text-sm text-brand-cream my-1">{e.title}</h3>
+                    <p className="text-[11px] text-brand-cream/70 m-0">{e.description}</p>
                   </div>
                 ))
               )}
@@ -522,33 +505,33 @@ export default function CommuneDetailPage() {
           </section>
 
           {/* 4 VERTICAL CARDS */}
-          <div className="commune-grid">
-            <section style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '14px', padding: '18px' }}>
-              <h2 style={{ fontSize: '15px', color: '#22c55e', margin: '0 0 12px 0', textTransform: 'uppercase', fontWeight: 'bold' }}>
-                🍔 KIN FOOD ({foodPlaces.length})
+          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+            <section className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-[18px]">
+              <h2 className="text-[15px] text-brand-green mb-3 uppercase font-bold">
+                KIN FOOD ({foodPlaces.length})
               </h2>
-              {foodPlaces.length === 0 ? <p style={{ fontSize: '11px', color: '#64748b' }}>Aucune adresse pour le moment.</p> : foodPlaces.map(renderPlaceCard)}
+              {foodPlaces.length === 0 ? <p className="text-[11px] text-brand-muted">Aucune adresse pour le moment.</p> : foodPlaces.map(renderPlaceCard)}
             </section>
 
-            <section style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '14px', padding: '18px' }}>
-              <h2 style={{ fontSize: '15px', color: '#38bdf8', margin: '0 0 12px 0', textTransform: 'uppercase', fontWeight: 'bold' }}>
-                📍 KIN PLACES ({otherPlaces.length})
+            <section className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-[18px]">
+              <h2 className="text-[15px] text-brand-river mb-3 uppercase font-bold">
+                KIN PLACES ({otherPlaces.length})
               </h2>
-              {otherPlaces.length === 0 ? <p style={{ fontSize: '11px', color: '#64748b' }}>Aucun lieu répertorié.</p> : otherPlaces.map(renderPlaceCard)}
+              {otherPlaces.length === 0 ? <p className="text-[11px] text-brand-muted">Aucun lieu répertorié.</p> : otherPlaces.map(renderPlaceCard)}
             </section>
 
-            <section style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '14px', padding: '18px' }}>
-              <h2 style={{ fontSize: '15px', color: '#f59e0b', margin: '0 0 12px 0', textTransform: 'uppercase', fontWeight: 'bold' }}>
-                🎨 KIN CULTURE ({culturePlaces.length})
+            <section className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-[18px]">
+              <h2 className="text-[15px] text-brand-gold mb-3 uppercase font-bold">
+                KIN CULTURE ({culturePlaces.length})
               </h2>
-              {culturePlaces.length === 0 ? <p style={{ fontSize: '11px', color: '#64748b' }}>Aucun espace culturel.</p> : culturePlaces.map(renderPlaceCard)}
+              {culturePlaces.length === 0 ? <p className="text-[11px] text-brand-muted">Aucun espace culturel.</p> : culturePlaces.map(renderPlaceCard)}
             </section>
 
-            <section style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '14px', padding: '18px' }}>
-              <h2 style={{ fontSize: '15px', color: '#ec4899', margin: '0 0 12px 0', textTransform: 'uppercase', fontWeight: 'bold' }}>
-                👗 KIN STYLE ({stylePlaces.length})
+            <section className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-[18px]">
+              <h2 className="text-[15px] text-brand-plum mb-3 uppercase font-bold">
+                KIN STYLE ({stylePlaces.length})
               </h2>
-              {stylePlaces.length === 0 ? <p style={{ fontSize: '11px', color: '#64748b' }}>Aucune adresse mode.</p> : stylePlaces.map(renderPlaceCard)}
+              {stylePlaces.length === 0 ? <p className="text-[11px] text-brand-muted">Aucune adresse mode.</p> : stylePlaces.map(renderPlaceCard)}
             </section>
           </div>
 
@@ -556,12 +539,12 @@ export default function CommuneDetailPage() {
 
         {/* Sidebar Interactive Map */}
         <aside>
-          <div style={{ position: 'sticky', top: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '14px', padding: '14px' }}>
-            <h3 style={{ fontSize: '12px', color: '#38bdf8', textTransform: 'uppercase', fontWeight: 'bold', marginTop: 0, marginBottom: '10px' }}>
-              🗺️ Carte Interactive de {communeName}
+          <div className="sticky top-4 bg-brand-navy-light border border-brand-navy-border rounded-2xl p-3.5">
+            <h3 className="text-xs text-brand-river uppercase font-bold mt-0 mb-2.5">
+              Carte Interactive de {communeName}
             </h3>
-            <div ref={mapContainer} style={{ width: '100%', height: '440px', borderRadius: '10px', overflow: 'hidden' }} />
-            <p style={{ fontSize: '10px', color: '#64748b', marginTop: '8px', marginBottom: 0, textAlign: 'center' }}>
+            <div ref={mapContainer} className="w-full h-[440px] rounded-[10px] overflow-hidden" />
+            <p className="text-[10px] text-brand-muted mt-2 mb-0 text-center">
               {places.length} lieu(x) certifié(s) géolocalisé(s)
             </p>
           </div>

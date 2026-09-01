@@ -34,193 +34,114 @@ export default function LoginPage() {
     }
   };
 
+  const inputClass = "w-full box-border bg-brand-navy-light border border-brand-navy-border rounded-lg px-3 py-2.5 text-brand-cream text-sm outline-none focus:border-brand-gold";
+
   return (
-    <main 
-      style={{
-        backgroundColor: '#020617',
-        color: '#f8fafc',
-        minHeight: '100vh',
-        padding: '20px',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        boxSizing: 'border-box'
-      }}
-    >
+    <main className="min-h-screen bg-brand-navy text-brand-cream p-5 flex flex-col justify-between box-border">
+
       {/* Top Navigation Bar */}
-      <nav 
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingBottom: '12px',
-          borderBottom: '1px solid #1e293b',
-          maxWidth: '1600px',
-          width: '100%',
-          margin: '0 auto'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div 
-            style={{ 
-              width: '12px', 
-              height: '12px', 
-              borderRadius: '50%', 
-              backgroundColor: '#22c55e', 
-              boxShadow: '0 0 10px #22c55e' 
-            }} 
-          />
-          <h1 style={{ fontSize: '18px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, color: '#ffffff' }}>
+      <nav className="flex justify-between items-center pb-3 border-b border-brand-navy-border max-w-[1600px] w-full mx-auto">
+        <div className="flex items-center gap-2.5">
+          <div className="w-3 h-3 rounded-full bg-brand-green shadow-[0_0_10px_#2F6B45]" />
+          <h1 className="text-lg font-bold uppercase tracking-wide m-0 text-brand-cream">
             Kinshasa Urban Intelligence Portal
           </h1>
         </div>
-        <Link 
-          href="/" 
-          style={{ 
-            backgroundColor: '#dc2626', 
-            color: '#ffffff', 
-            padding: '8px 16px', 
-            borderRadius: '8px', 
-            textDecoration: 'none', 
-            fontWeight: 'bold', 
-            fontSize: '12px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}
+        <Link
+          href="/"
+          className="bg-brand-danger text-brand-cream px-4 py-2 rounded-lg no-underline font-bold text-xs uppercase tracking-wide"
         >
           Return to Portal Map
         </Link>
       </nav>
 
       {/* Center Command Access Card */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
-        <div 
-          style={{
-            backgroundColor: '#0f172a',
-            border: '1px solid #1e293b',
-            borderRadius: '16px',
-            padding: '32px',
-            maxWidth: '440px',
-            width: '100%',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.7)',
-            boxSizing: 'border-box'
-          }}
-        >
+      <div className="flex-1 flex items-center justify-center py-10">
+        <div className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-8 max-w-[440px] w-full shadow-[0_20px_40px_rgba(0,0,0,0.7)] box-border">
+
           {/* Card Sub-header */}
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-brand-river text-[11px] font-bold uppercase tracking-wide">
                 Zone Access Control
               </span>
-              <span style={{ backgroundColor: '#020617', color: '#22c55e', fontSize: '11px', padding: '4px 10px', borderRadius: '12px', border: '1px solid #1e293b', fontWeight: 'bold' }}>
+              <span className="bg-brand-navy text-brand-green text-[11px] px-2.5 py-1 rounded-xl border border-brand-navy-border font-bold">
                 ● Live System
               </span>
             </div>
 
-            <h2 style={{ fontSize: '32px', fontWeight: '900', textTransform: 'uppercase', margin: '4px 0 6px 0', color: '#ffffff', letterSpacing: '0.5px' }}>
+            <h2 className="text-[32px] font-black uppercase mt-1 mb-1.5 text-brand-cream tracking-wide">
               Press Gate
             </h2>
-            <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
+            <p className="text-[13px] text-brand-muted m-0 leading-snug">
               Authorized journalist login for dispatching real-time sector alerts.
             </p>
           </div>
 
           {/* Error Message Alert */}
           {errorMsg && (
-            <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.15)', border: '1px solid #dc2626', color: '#fca5a5', padding: '12px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>
-              ⚠️ {errorMsg}
+            <div className="bg-brand-danger/15 border border-brand-danger text-brand-danger p-3 rounded-xl text-xs font-bold mb-5 text-center">
+              {errorMsg}
             </div>
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <div className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex flex-col gap-4">
+
               {/* Email Input */}
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                <label className="block text-[10px] font-bold uppercase text-brand-muted tracking-wide mb-1.5">
                   Press Clearance Email
                 </label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="press@kinshasa-portal.cd"
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #1e293b',
-                    borderRadius: '8px',
-                    padding: '10px 12px',
-                    color: '#ffffff',
-                    fontSize: '14px',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
+                  className={inputClass}
                 />
               </div>
 
               {/* Password Input */}
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                <label className="block text-[10px] font-bold uppercase text-brand-muted tracking-wide mb-1.5">
                   Security Key
                 </label>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #1e293b',
-                    borderRadius: '8px',
-                    padding: '10px 12px',
-                    color: '#ffffff',
-                    fontSize: '14px',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
+                  className={inputClass}
                 />
               </div>
 
             </div>
 
             {/* Launch Backoffice Button */}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
-              style={{
-                backgroundColor: loading ? '#1d4ed8' : '#2563eb',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '14px',
-                fontWeight: 'bold',
-                fontSize: '13px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'background-color 0.2s ease',
-                marginTop: '4px'
-              }}
+              className={`text-brand-navy rounded-xl p-3.5 font-bold text-[13px] uppercase tracking-wide mt-1 border-none transition-colors ${
+                loading ? 'bg-brand-gold-light cursor-not-allowed' : 'bg-brand-gold cursor-pointer hover:bg-brand-gold-light'
+              }`}
             >
               {loading ? 'Authenticating Credentials...' : 'Launch Backoffice Hub →'}
             </button>
           </form>
 
           {/* Status Metrics Box */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #1e293b' }}>
-            <div style={{ backgroundColor: '#020617', padding: '10px 12px', borderRadius: '8px', border: '1px solid #1e293b' }}>
-              <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Security Protocol</span>
-              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#22c55e', margin: '2px 0 0 0' }}>Encrypted / Active</p>
+          <div className="grid grid-cols-2 gap-2.5 mt-5 pt-4 border-t border-brand-navy-border">
+            <div className="bg-brand-navy px-3 py-2.5 rounded-lg border border-brand-navy-border">
+              <span className="text-[10px] text-brand-muted uppercase block">Security Protocol</span>
+              <p className="text-xs font-bold text-brand-green mt-0.5 mb-0">Encrypted / Active</p>
             </div>
-            <div style={{ backgroundColor: '#020617', padding: '10px 12px', borderRadius: '8px', border: '1px solid #1e293b' }}>
-              <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Clearance Level</span>
-              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#38bdf8', margin: '2px 0 0 0' }}>Level 2 Journalist</p>
+            <div className="bg-brand-navy px-3 py-2.5 rounded-lg border border-brand-navy-border">
+              <span className="text-[10px] text-brand-muted uppercase block">Clearance Level</span>
+              <p className="text-xs font-bold text-brand-river mt-0.5 mb-0">Level 2 Journalist</p>
             </div>
           </div>
 
@@ -228,22 +149,9 @@ export default function LoginPage() {
       </div>
 
       {/* Footer Line */}
-      <footer 
-        style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          paddingTop: '12px', 
-          borderTop: '1px solid #1e293b', 
-          fontSize: '11px', 
-          color: '#64748b',
-          maxWidth: '1600px',
-          width: '100%',
-          margin: '0 auto'
-        }}
-      >
+      <footer className="flex justify-between items-center pt-3 border-t border-brand-navy-border text-[11px] text-brand-muted max-w-[1600px] w-full mx-auto">
         <span>KINSHASA URBAN OPERATIONS PLATFORM</span>
-        <span style={{ color: '#38bdf8', fontFamily: 'monospace' }}>SUPABASE AUTH CONNECTED</span>
+        <span className="text-brand-river font-mono">SUPABASE AUTH CONNECTED</span>
       </footer>
 
     </main>
