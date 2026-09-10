@@ -100,6 +100,8 @@ export default function HomePage() {
   const [selectedCommune, setSelectedCommune] = useState<string | null>(null);
   const [places, setPlaces] = useState<any[]>([]);
   const [weekendEvents, setWeekendEvents] = useState<any[]>([]);
+  const [news, setNews] = useState<any[]>([]);
+  const [banner, setBanner] = useState<any | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // Rating & Comments State. Replaces the earlier like/dislike counters
@@ -233,6 +235,7 @@ export default function HomePage() {
       if (activeVertical === 'kin_traffic') {
         setPlaces([]);
         setWeekendEvents([]);
+        setNews([]);
         return;
       }
 
@@ -253,12 +256,37 @@ export default function HomePage() {
       }
       const { data: eventData } = await eventQuery;
       setWeekendEvents(eventData || []);
+
+      // Kin News — manually-curated news items entered via the backoffice
+      // (there's no free, no-billing external news API to pull from), shown
+      // alongside the events' own dates in the same feed section.
+      let newsQuery = supabase.from('news').select('*').order('published_date', { ascending: false });
+      if (selectedCommune) {
+        newsQuery = newsQuery.ilike('commune', `%${selectedCommune.trim()}%`);
+      }
+      const { data: newsData } = await newsQuery;
+      setNews(newsData || []);
     };
 
     fetchData();
 
 
   }, [selectedCommune, activeVertical]);
+
+  // Site-wide banner — fetched once, independent of the category/commune
+  // filters. Only the most recently created active banner is shown.
+  useEffect(() => {
+    const fetchBanner = async () => {
+      const { data } = await supabase
+        .from('banners')
+        .select('*')
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      setBanner((data && data[0]) || null);
+    };
+    fetchBanner();
+  }, []);
 
   // Handle a 1-5 star rating submission. Stores a running sum + count on
   // the place (`rating_sum`/`rating_count`) rather than each individual
@@ -464,6 +492,23 @@ export default function HomePage() {
             </button>
           ))}
         </div>
+
+        {/* BANNER — set from the backoffice, hidden entirely when there's no active one */}
+        {banner && (
+          <div className="mt-4 flex items-center justify-between gap-3 flex-wrap rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-3">
+            <p className="text-sm text-brand-cream m-0">{banner.message}</p>
+            {banner.link_url && (
+              <a
+                href={banner.link_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold no-underline hover:text-brand-gold-light"
+              >
+                {banner.link_label || 'En savoir plus'} <IconExternalLink size={11} />
+              </a>
+            )}
+          </div>
+        )}
       </section>
 
       {/* MAIN GRID: MAP + LISTINGS */}
@@ -525,6 +570,46 @@ export default function HomePage() {
                         </span>
                         <h4 className="text-sm font-semibold text-brand-cream mt-0.5 mb-1">{evt.title}</h4>
                         <p className="text-sm text-brand-cream/60 m-0 leading-relaxed">{evt.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* KIN NEWS — team-curated news items, dated like the events above.
+                Not a live external news feed: there's no free, no-billing news
+                API, so these are entered by hand via the backoffice. */}
+            {(activeVertical === 'all' || activeVertical === 'kin_weekend') && (
+              <div id="kin-news" className="mb-7">
+                <h3 className="text-xs text-brand-river uppercase tracking-wide font-semibold mb-3">
+                  Kin News ({news.length})
+                </h3>
+                {news.length === 0 ? (
+                  <p className="text-sm text-brand-muted">Aucune actualité publiée pour le moment.</p>
+                ) : (
+                  <div className="flex flex-col divide-y divide-brand-navy-border">
+                    {news.map((item) => (
+                      <div key={item.id} className="py-3 pl-3 border-l-2 border-brand-river">
+                        <span className="text-[11px] text-brand-river font-semibold uppercase tracking-wide">
+                          {new Date(item.published_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          {item.commune ? ` · ${item.commune}` : ''}
+                        </span>
+                        <h4 className="text-sm font-semibold text-brand-cream mt-0.5 mb-1">{item.title}</h4>
+                        <p className="text-sm text-brand-cream/60 m-0 leading-relaxed">{item.body}</p>
+                        {item.link_url && (
+                          <a
+                            href={item.link_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-river no-underline mt-1"
+                          >
+                            Lire la source <IconExternalLink size={10} />
+                          </a>
+                        )}
+                        {item.source_note && (
+                          <p className="text-[11px] text-brand-muted/70 m-0 mt-1">{item.source_note}</p>
+                        )}
                       </div>
                     ))}
                   </div>

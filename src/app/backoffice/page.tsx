@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
-import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink } from '../../components/icons';
+import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock } from '../../components/icons';
 import { Button } from '../../components/Button';
 import { KinshasaMark } from '../../components/BrandMark';
 
@@ -14,6 +14,9 @@ const COMMUNES = [
 ];
 
 export default function BackofficePage() {
+  // Which content type the backoffice is managing right now.
+  const [section, setSection] = useState<'places' | 'events' | 'news' | 'banner'>('places');
+
   const [activeTab, setActiveTab] = useState<'manage' | 'add'>('manage');
   const [submitting, setSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -186,6 +189,261 @@ export default function BackofficePage() {
     }
   };
 
+  // ---------------------------------------------------------------------
+  // ÉVÉNEMENTS (Kin Weekend) — added so events can be managed from here
+  // instead of only via direct database access. Mirrors the places CRUD
+  // pattern above.
+  // ---------------------------------------------------------------------
+  const [eventTab, setEventTab] = useState<'manage' | 'add'>('manage');
+  const [eventsList, setEventsList] = useState<any[]>([]);
+  const [editingEventId, setEditingEventId] = useState<number | null>(null);
+  const [evTitle, setEvTitle] = useState('');
+  const [evCommune, setEvCommune] = useState('Gombe');
+  const [evCategory, setEvCategory] = useState('');
+  const [evDescription, setEvDescription] = useState('');
+  const [evDate, setEvDate] = useState('');
+
+  const fetchEvents = async () => {
+    const { data, error } = await supabase.from('events').select('*').order('event_date', { ascending: true });
+    if (!error && data) setEventsList(data);
+  };
+
+  useEffect(() => { fetchEvents(); fetchNewsItems(); fetchBanners(); }, []);
+
+  const resetEventForm = () => {
+    setEditingEventId(null);
+    setEvTitle('');
+    setEvCommune('Gombe');
+    setEvCategory('');
+    setEvDescription('');
+    setEvDate('');
+  };
+
+  const startEditingEvent = (evt: any) => {
+    setEditingEventId(evt.id);
+    setEvTitle(evt.title || '');
+    setEvCommune(evt.commune || 'Gombe');
+    setEvCategory(evt.category || '');
+    setEvDescription(evt.description || '');
+    setEvDate(evt.event_date || '');
+    setEventTab('add');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSaveEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setStatusMsg(null);
+    const payload = {
+      title: evTitle.trim(),
+      commune: evCommune,
+      category: evCategory.trim() || null,
+      description: evDescription.trim(),
+      event_date: evDate || null,
+    };
+    try {
+      if (editingEventId) {
+        const { error } = await supabase.from('events').update(payload).eq('id', editingEventId);
+        if (error) throw error;
+        setStatusMsg({ type: 'success', text: `Événement "${evTitle}" mis à jour !` });
+      } else {
+        const { error } = await supabase.from('events').insert([payload]);
+        if (error) throw error;
+        setStatusMsg({ type: 'success', text: `Événement "${evTitle}" ajouté !` });
+      }
+      resetEventForm();
+      fetchEvents();
+      setEventTab('manage');
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteEvent = async (id: number, title: string) => {
+    if (!confirm(`Supprimer "${title}" ?`)) return;
+    try {
+      const { error } = await supabase.from('events').delete().eq('id', id);
+      if (error) throw error;
+      setStatusMsg({ type: 'success', text: `Événement "${title}" supprimé.` });
+      fetchEvents();
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message });
+    }
+  };
+
+  // ---------------------------------------------------------------------
+  // ACTUALITÉS (Kin News) — manually-curated news items. There is no free,
+  // no-billing news API to pull from automatically, so this is a real
+  // editorial feed the team enters by hand, dated like events.
+  // ---------------------------------------------------------------------
+  const [newsTab, setNewsTab] = useState<'manage' | 'add'>('manage');
+  const [newsList, setNewsList] = useState<any[]>([]);
+  const [editingNewsId, setEditingNewsId] = useState<number | null>(null);
+  const [nwTitle, setNwTitle] = useState('');
+  const [nwBody, setNwBody] = useState('');
+  const [nwCommune, setNwCommune] = useState('');
+  const [nwSourceNote, setNwSourceNote] = useState('');
+  const [nwLinkUrl, setNwLinkUrl] = useState('');
+  const [nwDate, setNwDate] = useState('');
+
+  const fetchNewsItems = async () => {
+    const { data, error } = await supabase.from('news').select('*').order('published_date', { ascending: false });
+    if (!error && data) setNewsList(data);
+  };
+
+  const resetNewsForm = () => {
+    setEditingNewsId(null);
+    setNwTitle('');
+    setNwBody('');
+    setNwCommune('');
+    setNwSourceNote('');
+    setNwLinkUrl('');
+    setNwDate('');
+  };
+
+  const startEditingNews = (item: any) => {
+    setEditingNewsId(item.id);
+    setNwTitle(item.title || '');
+    setNwBody(item.body || '');
+    setNwCommune(item.commune || '');
+    setNwSourceNote(item.source_note || '');
+    setNwLinkUrl(item.link_url || '');
+    setNwDate(item.published_date || '');
+    setNewsTab('add');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSaveNews = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setStatusMsg(null);
+    const payload = {
+      title: nwTitle.trim(),
+      body: nwBody.trim(),
+      commune: nwCommune.trim() || null,
+      source_note: nwSourceNote.trim() || null,
+      link_url: nwLinkUrl.trim() || null,
+      published_date: nwDate || new Date().toISOString().slice(0, 10),
+    };
+    try {
+      if (editingNewsId) {
+        const { error } = await supabase.from('news').update(payload).eq('id', editingNewsId);
+        if (error) throw error;
+        setStatusMsg({ type: 'success', text: `Actualité "${nwTitle}" mise à jour !` });
+      } else {
+        const { error } = await supabase.from('news').insert([payload]);
+        if (error) throw error;
+        setStatusMsg({ type: 'success', text: `Actualité "${nwTitle}" publiée !` });
+      }
+      resetNewsForm();
+      fetchNewsItems();
+      setNewsTab('manage');
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteNews = async (id: number, title: string) => {
+    if (!confirm(`Supprimer "${title}" ?`)) return;
+    try {
+      const { error } = await supabase.from('news').delete().eq('id', id);
+      if (error) throw error;
+      setStatusMsg({ type: 'success', text: `Actualité "${title}" supprimée.` });
+      fetchNewsItems();
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message });
+    }
+  };
+
+  // ---------------------------------------------------------------------
+  // BANNIÈRE — a small announcement strip shown under the category tabs
+  // on the homepage. Only the most recently created row with active=true
+  // is ever displayed there; older/inactive ones stay listed here for
+  // re-use.
+  // ---------------------------------------------------------------------
+  const [bannerList, setBannerList] = useState<any[]>([]);
+  const [editingBannerId, setEditingBannerId] = useState<number | null>(null);
+  const [bnMessage, setBnMessage] = useState('');
+  const [bnLinkUrl, setBnLinkUrl] = useState('');
+  const [bnLinkLabel, setBnLinkLabel] = useState('');
+  const [bnActive, setBnActive] = useState(true);
+
+  const fetchBanners = async () => {
+    const { data, error } = await supabase.from('banners').select('*').order('created_at', { ascending: false });
+    if (!error && data) setBannerList(data);
+  };
+
+  const resetBannerForm = () => {
+    setEditingBannerId(null);
+    setBnMessage('');
+    setBnLinkUrl('');
+    setBnLinkLabel('');
+    setBnActive(true);
+  };
+
+  const startEditingBanner = (b: any) => {
+    setEditingBannerId(b.id);
+    setBnMessage(b.message || '');
+    setBnLinkUrl(b.link_url || '');
+    setBnLinkLabel(b.link_label || '');
+    setBnActive(!!b.active);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSaveBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setStatusMsg(null);
+    const payload = {
+      message: bnMessage.trim(),
+      link_url: bnLinkUrl.trim() || null,
+      link_label: bnLinkLabel.trim() || null,
+      active: bnActive,
+    };
+    try {
+      if (editingBannerId) {
+        const { error } = await supabase.from('banners').update(payload).eq('id', editingBannerId);
+        if (error) throw error;
+        setStatusMsg({ type: 'success', text: 'Bannière mise à jour !' });
+      } else {
+        const { error } = await supabase.from('banners').insert([payload]);
+        if (error) throw error;
+        setStatusMsg({ type: 'success', text: 'Bannière ajoutée !' });
+      }
+      resetBannerForm();
+      fetchBanners();
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggleBanner = async (b: any) => {
+    try {
+      const { error } = await supabase.from('banners').update({ active: !b.active }).eq('id', b.id);
+      if (error) throw error;
+      fetchBanners();
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message });
+    }
+  };
+
+  const handleDeleteBanner = async (id: number) => {
+    if (!confirm('Supprimer cette bannière ?')) return;
+    try {
+      const { error } = await supabase.from('banners').delete().eq('id', id);
+      if (error) throw error;
+      fetchBanners();
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message });
+    }
+  };
+
   const inputClass = "w-full box-border px-3 py-2.5 bg-brand-navy border border-brand-navy-border text-brand-cream rounded-lg text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-gold";
   const labelClass = "block text-[11px] text-brand-muted uppercase font-bold mb-1.5";
 
@@ -222,6 +480,24 @@ export default function BackofficePage() {
           </div>
         )}
 
+        {/* SECTION SWITCHER — which content type is being managed */}
+        <div className="flex gap-2.5 mb-6 flex-wrap">
+          <Button variant={section === 'places' ? 'primary' : 'secondary'} onClick={() => setSection('places')}>
+            Lieux
+          </Button>
+          <Button variant={section === 'events' ? 'primary' : 'secondary'} onClick={() => setSection('events')}>
+            Événements (Kin Weekend)
+          </Button>
+          <Button variant={section === 'news' ? 'primary' : 'secondary'} onClick={() => setSection('news')}>
+            Actualités (Kin News)
+          </Button>
+          <Button variant={section === 'banner' ? 'primary' : 'secondary'} onClick={() => setSection('banner')}>
+            Bannière
+          </Button>
+        </div>
+
+        {section === 'places' && (
+        <>
         {/* Tab Switcher */}
         <div className="flex gap-2.5 mb-6">
           <Button
@@ -385,6 +661,286 @@ export default function BackofficePage() {
               {submitting ? 'Enregistrement...' : editingPlaceId ? 'Enregistrer les Modifications →' : 'Enregistrer le Lieu →'}
             </Button>
           </form>
+        )}
+        </>
+        )}
+
+        {/* ÉVÉNEMENTS SECTION */}
+        {section === 'events' && (
+        <>
+        <div className="flex gap-2.5 mb-6">
+          <Button variant={eventTab === 'manage' ? 'primary' : 'secondary'} onClick={() => setEventTab('manage')} fullWidth>
+            Liste des Événements ({eventsList.length})
+          </Button>
+          <Button variant={eventTab === 'add' ? 'primary' : 'secondary'} onClick={() => { setEventTab('add'); resetEventForm(); }} fullWidth>
+            {editingEventId ? (<><IconEdit size={14} /> Modifier l&apos;Événement</>) : (<><IconPlus size={14} /> Ajouter un Événement</>)}
+          </Button>
+        </div>
+
+        {eventTab === 'manage' && (
+          <div className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
+            <h2 className="font-display text-xl text-brand-river mt-0 mb-5 font-semibold">
+              Événements — Kin Weekend
+            </h2>
+            {eventsList.length === 0 ? (
+              <p className="text-sm text-brand-muted">Aucun événement enregistré. Ajoutez le premier événement du week-end via l&apos;onglet ci-dessus.</p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {eventsList.map((item) => (
+                  <div key={item.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
+                    <div className="flex-1 min-w-[280px]">
+                      <div className="flex gap-2 items-center mb-1.5 flex-wrap">
+                        {item.category && <span className="text-[10px] bg-brand-gold text-brand-navy px-1.5 py-0.5 rounded font-bold uppercase">{item.category}</span>}
+                        <span className="text-xs text-brand-green font-semibold">{item.commune}</span>
+                        <span className="inline-flex items-center gap-1 text-[11px] text-brand-muted">
+                          <IconClock size={11} /> {item.event_date || 'Date non définie'}
+                        </span>
+                      </div>
+                      <h3 className="text-base text-brand-cream m-0 mb-1 font-semibold">{item.title}</h3>
+                      <p className="text-sm text-brand-cream/70 m-0">{item.description}</p>
+                    </div>
+                    <div className="flex gap-2.5">
+                      <Button variant="primary" size="sm" onClick={() => startEditingEvent(item)}>
+                        <IconEdit size={13} /> Éditer
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => handleDeleteEvent(item.id, item.title)}>
+                        <IconTrash size={13} /> Supprimer
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {eventTab === 'add' && (
+          <form onSubmit={handleSaveEvent} className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-5 border-b border-brand-navy-border pb-3">
+              <h2 className="font-display text-xl text-brand-river m-0 font-semibold">
+                {editingEventId ? `Éditer : "${evTitle}"` : 'Nouvel Événement'}
+              </h2>
+              {editingEventId && (
+                <Button type="button" variant="ghost" onClick={() => { resetEventForm(); setEventTab('manage'); }}>
+                  Annuler
+                </Button>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label className={labelClass}>Titre *</label>
+              <input type="text" value={evTitle} onChange={(e) => setEvTitle(e.target.value)} required className={inputClass} />
+            </div>
+
+            <div className="grid gap-4 mb-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+              <div>
+                <label className={labelClass}>Commune</label>
+                <select value={evCommune} onChange={(e) => setEvCommune(e.target.value)} className={inputClass}>
+                  {COMMUNES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Catégorie</label>
+                <input type="text" value={evCategory} onChange={(e) => setEvCategory(e.target.value)} placeholder="ex: Concert, Marché, Expo" className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Date</label>
+                <input type="date" value={evDate} onChange={(e) => setEvDate(e.target.value)} className={inputClass} />
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <label className={labelClass}>Description *</label>
+              <textarea value={evDescription} onChange={(e) => setEvDescription(e.target.value)} required rows={3} className={inputClass} />
+            </div>
+
+            <Button type="submit" disabled={submitting} variant="primary" size="lg" fullWidth>
+              {submitting ? 'Enregistrement...' : editingEventId ? 'Enregistrer les Modifications →' : 'Publier l’Événement →'}
+            </Button>
+          </form>
+        )}
+        </>
+        )}
+
+        {/* ACTUALITÉS SECTION */}
+        {section === 'news' && (
+        <>
+        <div className="flex gap-2.5 mb-6">
+          <Button variant={newsTab === 'manage' ? 'primary' : 'secondary'} onClick={() => setNewsTab('manage')} fullWidth>
+            Liste des Actualités ({newsList.length})
+          </Button>
+          <Button variant={newsTab === 'add' ? 'primary' : 'secondary'} onClick={() => { setNewsTab('add'); resetNewsForm(); }} fullWidth>
+            {editingNewsId ? (<><IconEdit size={14} /> Modifier l&apos;Actualité</>) : (<><IconPlus size={14} /> Publier une Actualité</>)}
+          </Button>
+        </div>
+
+        {newsTab === 'manage' && (
+          <div className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
+            <h2 className="font-display text-xl text-brand-river mt-0 mb-5 font-semibold">
+              Actualités — Kin News
+            </h2>
+            <p className="text-xs text-brand-muted mb-4 leading-relaxed">
+              Flux éditorial saisi à la main par l&apos;équipe — il n&apos;existe pas d&apos;API d&apos;actualités gratuite et sans facturation à brancher automatiquement ici.
+            </p>
+            {newsList.length === 0 ? (
+              <p className="text-sm text-brand-muted">Aucune actualité publiée. Ajoutez la première via l&apos;onglet ci-dessus.</p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {newsList.map((item) => (
+                  <div key={item.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
+                    <div className="flex-1 min-w-[280px]">
+                      <div className="flex gap-2 items-center mb-1.5 flex-wrap">
+                        {item.commune && <span className="text-xs text-brand-green font-semibold">{item.commune}</span>}
+                        <span className="inline-flex items-center gap-1 text-[11px] text-brand-muted">
+                          <IconClock size={11} /> {item.published_date}
+                        </span>
+                      </div>
+                      <h3 className="text-base text-brand-cream m-0 mb-1 font-semibold">{item.title}</h3>
+                      <p className="text-sm text-brand-cream/70 m-0">{item.body}</p>
+                      {item.source_note && <p className="text-[11px] text-brand-muted/70 m-0 mt-1">{item.source_note}</p>}
+                    </div>
+                    <div className="flex gap-2.5">
+                      <Button variant="primary" size="sm" onClick={() => startEditingNews(item)}>
+                        <IconEdit size={13} /> Éditer
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => handleDeleteNews(item.id, item.title)}>
+                        <IconTrash size={13} /> Supprimer
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {newsTab === 'add' && (
+          <form onSubmit={handleSaveNews} className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-5 border-b border-brand-navy-border pb-3">
+              <h2 className="font-display text-xl text-brand-river m-0 font-semibold">
+                {editingNewsId ? `Éditer : "${nwTitle}"` : 'Nouvelle Actualité'}
+              </h2>
+              {editingNewsId && (
+                <Button type="button" variant="ghost" onClick={() => { resetNewsForm(); setNewsTab('manage'); }}>
+                  Annuler
+                </Button>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label className={labelClass}>Titre *</label>
+              <input type="text" value={nwTitle} onChange={(e) => setNwTitle(e.target.value)} required className={inputClass} />
+            </div>
+
+            <div className="grid gap-4 mb-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+              <div>
+                <label className={labelClass}>Commune (optionnel)</label>
+                <select value={nwCommune} onChange={(e) => setNwCommune(e.target.value)} className={inputClass}>
+                  <option value="">Toute la ville</option>
+                  {COMMUNES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Date de publication</label>
+                <input type="date" value={nwDate} onChange={(e) => setNwDate(e.target.value)} className={inputClass} />
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className={labelClass}>Contenu *</label>
+              <textarea value={nwBody} onChange={(e) => setNwBody(e.target.value)} required rows={4} className={inputClass} />
+            </div>
+
+            <div className="mb-4">
+              <label className={labelClass}>Lien source (optionnel)</label>
+              <input type="url" value={nwLinkUrl} onChange={(e) => setNwLinkUrl(e.target.value)} placeholder="https://..." className={inputClass} />
+            </div>
+
+            <div className="mb-5">
+              <label className={labelClass}>Note de source (optionnel)</label>
+              <input type="text" value={nwSourceNote} onChange={(e) => setNwSourceNote(e.target.value)} placeholder="ex: Radio Okapi, communiqué du client..." className={inputClass} />
+            </div>
+
+            <Button type="submit" disabled={submitting} variant="primary" size="lg" fullWidth>
+              {submitting ? 'Enregistrement...' : editingNewsId ? 'Enregistrer les Modifications →' : 'Publier →'}
+            </Button>
+          </form>
+        )}
+        </>
+        )}
+
+        {/* BANNIÈRE SECTION */}
+        {section === 'banner' && (
+        <div className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
+          <h2 className="font-display text-xl text-brand-river mt-0 mb-2 font-semibold">
+            Bannière du site
+          </h2>
+          <p className="text-xs text-brand-muted mb-5 leading-relaxed">
+            Affichée sous les catégories (Kin Food, Kin Places...) sur la page d&apos;accueil. Une seule bannière active à la fois — la plus récente marquée &laquo; active &raquo; est celle qui s&apos;affiche.
+          </p>
+
+          <form onSubmit={handleSaveBanner} className="mb-6 pb-6 border-b border-brand-navy-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm text-brand-cream font-semibold m-0">
+                {editingBannerId ? 'Éditer la bannière' : 'Nouvelle bannière'}
+              </h3>
+              {editingBannerId && (
+                <Button type="button" variant="ghost" size="sm" onClick={resetBannerForm}>
+                  Annuler
+                </Button>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className={labelClass}>Message *</label>
+              <input type="text" value={bnMessage} onChange={(e) => setBnMessage(e.target.value)} required placeholder="ex: Kin Sécurité est en ligne — signalez un poste manquant" className={inputClass} />
+            </div>
+            <div className="grid gap-4 mb-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+              <div>
+                <label className={labelClass}>Lien (optionnel)</label>
+                <input type="url" value={bnLinkUrl} onChange={(e) => setBnLinkUrl(e.target.value)} placeholder="https://..." className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Texte du lien</label>
+                <input type="text" value={bnLinkLabel} onChange={(e) => setBnLinkLabel(e.target.value)} placeholder="En savoir plus" className={inputClass} />
+              </div>
+            </div>
+            <label className="flex items-center gap-2 mb-5 text-sm text-brand-cream">
+              <input type="checkbox" checked={bnActive} onChange={(e) => setBnActive(e.target.checked)} />
+              Active (visible sur le site)
+            </label>
+            <Button type="submit" disabled={submitting} variant="primary" size="lg" fullWidth>
+              {submitting ? 'Enregistrement...' : editingBannerId ? 'Enregistrer les Modifications →' : 'Créer la Bannière →'}
+            </Button>
+          </form>
+
+          {bannerList.length === 0 ? (
+            <p className="text-sm text-brand-muted">Aucune bannière créée.</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {bannerList.map((b) => (
+                <div key={b.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
+                  <div className="flex-1 min-w-[280px]">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${b.active ? 'bg-brand-green text-brand-navy' : 'bg-brand-navy-border text-brand-muted'}`}>
+                      {b.active ? 'Active' : 'Inactive'}
+                    </span>
+                    <p className="text-sm text-brand-cream mt-1.5 m-0">{b.message}</p>
+                  </div>
+                  <div className="flex gap-2.5">
+                    <Button variant="secondary" size="sm" onClick={() => handleToggleBanner(b)}>
+                      {b.active ? 'Désactiver' : 'Activer'}
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={() => startEditingBanner(b)}>
+                      <IconEdit size={13} /> Éditer
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => handleDeleteBanner(b.id)}>
+                      <IconTrash size={13} /> Supprimer
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         )}
 
       </div>
