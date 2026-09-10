@@ -5,10 +5,11 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../lib/supabase';
 import { escapeHtml } from '../lib/html';
 import communesData from '../data/communes.json';
-import { IconHeart, IconThumbsDown, IconChat, IconExternalLink, IconUser, IconPin, IconGlobe } from '../components/icons';
+import { IconStar, IconThumbsDown, IconChat, IconExternalLink, IconUser, IconPin, IconGlobe } from '../components/icons';
 import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
 import { Button } from '../components/Button';
+import { TRAFFIC_LEVELS, TRAFFIC_COLORS, TRAFFIC_LABELS, DEFAULT_COMMUNE_COLOR, TRAFFIC_FILL_EXPRESSION } from '../lib/traffic';
 
 const VERTICALS = [
   { id: 'all', label: 'TOUT KIN' },
@@ -16,13 +17,16 @@ const VERTICALS = [
   { id: 'kin_places', label: 'KIN PLACES' },
   { id: 'kin_culture', label: 'KIN CULTURE' },
   { id: 'kin_style', label: 'KIN STYLE' },
+  { id: 'kin_securite', label: 'KIN SÉCURITÉ' },
+  { id: 'kin_traffic', label: 'KIN TRAFFIC' },
   { id: 'kin_weekend', label: 'KIN WEEKEND' }
 ];
 
 // Small inline SVG markup (string form) for the raw-HTML MapLibre
-// marker/popup content, which cannot use Tailwind classes or JSX.
-const HEART_SVG = (color: string) =>
-  `<svg width="11" height="11" viewBox="0 0 24 24" fill="${color}" stroke="${color}" stroke-width="2" style="vertical-align:-1px;"><path d="M12 20.5s-7-4.35-9.5-8.8C.9 8.6 2.3 5 5.7 5c1.9 0 3.3 1 4.3 2.5C11 6 12.4 5 14.3 5c3.4 0 4.8 3.6 3.2 6.7C19 16.15 12 20.5 12 20.5Z"/></svg>`;
+// marker/popup content, which cannot use Tailwind classes or JSX. Stars,
+// not hearts, per client feedback — filled gold star for the like count.
+const STAR_SVG = (color: string) =>
+  `<svg width="11" height="11" viewBox="0 0 24 24" fill="${color}" stroke="${color}" stroke-width="1" style="vertical-align:-1px;"><path d="M12 3.2 14.7 9l6.3.6-4.8 4.2 1.4 6.2L12 16.9l-5.6 3.1 1.4-6.2-4.8-4.2L9.3 9Z"/></svg>`;
 
 const THUMBS_DOWN_SVG = (color: string) =>
   `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M7 14V4M3 4h3.2c.4 0 .8.1 1.1.3l4.4 2c.3.1.7.2 1.1.2h4.4a2 2 0 0 1 2 2.3l-1 6a2 2 0 0 1-2 1.7H9"/></svg>`;
@@ -83,6 +87,7 @@ export default function HomePage() {
   const [selectedCommune, setSelectedCommune] = useState<string | null>(null);
   const [places, setPlaces] = useState<any[]>([]);
   const [weekendEvents, setWeekendEvents] = useState<any[]>([]);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   // Likes & Comments State
   const [likedPlaceIds, setLikedPlaceIds] = useState<number[]>([]);
@@ -189,14 +194,35 @@ export default function HomePage() {
       map.current.on('mouseleave', 'communes-layer', () => {
         if (map.current) map.current.getCanvas().style.cursor = '';
       });
+
+      setMapLoaded(true);
     });
 
 
   }, []);
 
+  // Kin Traffic: color each commune shape by its indicative congestion
+  // level instead of the flat navy fill, and revert once another tab is
+  // selected. A `setPaintProperty` call rather than re-adding the layer,
+  // since the layer and its click/hover handlers are already wired up.
+  useEffect(() => {
+    if (!mapLoaded || !map.current) return;
+    const fillColor = activeVertical === 'kin_traffic' ? TRAFFIC_FILL_EXPRESSION : DEFAULT_COMMUNE_COLOR;
+    map.current.setPaintProperty('communes-layer', 'fill-extrusion-color', fillColor as any);
+  }, [activeVertical, mapLoaded]);
+
   // Fetch places and events from Supabase
   useEffect(() => {
     const fetchData = async () => {
+      // Kin Traffic isn't a places category — it colors the commune
+      // shapes on the map instead of listing pins, so there's nothing to
+      // query here.
+      if (activeVertical === 'kin_traffic') {
+        setPlaces([]);
+        setWeekendEvents([]);
+        return;
+      }
+
       let placeQuery = supabase.from('places').select('*').order('created_at', { ascending: false });
 
       if (selectedCommune) {
@@ -344,7 +370,8 @@ export default function HomePage() {
       const isFood = place.vertical === 'kin_food';
       const isCulture = place.vertical === 'kin_culture';
       const isStyle = place.vertical === 'kin_style';
-      const pinColor = isFood ? '#2F6B45' : isCulture ? '#C8992E' : isStyle ? '#6E4A63' : '#5FA8C9';
+      const isSecurite = place.vertical === 'kin_securite';
+      const pinColor = isFood ? '#2F6B45' : isCulture ? '#C8992E' : isStyle ? '#6E4A63' : isSecurite ? '#C4453A' : '#5FA8C9';
 
       el.style.backgroundColor = '#0B1E3A';
       el.style.border = `2px solid ${pinColor}`;
@@ -360,7 +387,7 @@ export default function HomePage() {
       el.style.gap = '4px';
       el.style.whiteSpace = 'nowrap';
 
-      el.innerHTML = `<span style="color:${pinColor};font-size:13px;line-height:1;">●</span> <span>${escapeHtml(place.name)}</span> <span style="color:#C4453A;display:inline-flex;align-items:center;gap:2px;">${HEART_SVG('#C4453A')}${place.likes || 0}</span>`;
+      el.innerHTML = `<span style="color:${pinColor};font-size:13px;line-height:1;">●</span> <span>${escapeHtml(place.name)}</span> <span style="color:#C8992E;display:inline-flex;align-items:center;gap:2px;">${STAR_SVG('#C8992E')}${place.likes || 0}</span>`;
 
       const imageHtml = place.image_url ?
         `<img src="${escapeHtml(place.image_url)}" alt="${escapeHtml(place.name)}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 6px; margin: 6px 0; border: 1px solid #22385C;" />` : '';
@@ -374,7 +401,7 @@ export default function HomePage() {
             <span style="font-size: 9px; font-weight: bold; color: #C8992E; text-transform: uppercase;">
               ★ ${escapeHtml(place.commune)}
             </span>
-            <span style="font-size: 10px; font-weight: bold; color: #C4453A; display:inline-flex; align-items:center; gap:2px;">${HEART_SVG('#C4453A')}${place.likes || 0}</span>
+            <span style="font-size: 10px; font-weight: bold; color: #C8992E; display:inline-flex; align-items:center; gap:2px;">${STAR_SVG('#C8992E')}${place.likes || 0}</span>
           </div>
           <h4 style="margin: 2px 0; font-size: 13px; font-weight: 800; color: #0B1E3A;">${escapeHtml(place.name)}</h4>
           ${imageHtml}
@@ -456,7 +483,9 @@ export default function HomePage() {
           <div className="bg-brand-navy-light rounded-2xl border border-brand-navy-border p-3.5 md:p-4">
             <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
               <span className="text-xs text-brand-muted uppercase font-semibold tracking-wide">
-                Carte ({places.length} marqueurs visibles)
+                {activeVertical === 'kin_traffic'
+                  ? 'Carte (niveaux de trafic par commune)'
+                  : `Carte (${places.length} marqueurs visibles)`}
               </span>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-brand-green font-semibold">
@@ -512,8 +541,41 @@ export default function HomePage() {
               </div>
             )}
 
+            {/* KIN TRAFFIC — indicative congestion legend, not a places list */}
+            {activeVertical === 'kin_traffic' && (
+              <div className="mb-7">
+                <h3 className="text-xs text-brand-danger uppercase tracking-wide font-semibold mb-2">
+                  Kin Traffic
+                </h3>
+                <p className="text-xs text-brand-muted mb-3 leading-relaxed">
+                  Niveaux de circulation indicatifs par commune, basés sur les axes et carrefours
+                  connus pour leurs embouteillages (ex. Boulevard du 30 Juin, Boulevard Lumumba,
+                  Rond-Point Victoire). Ce ne sont pas des données de trafic en temps réel.
+                </p>
+                <div className="flex flex-col divide-y divide-brand-navy-border">
+                  {Object.entries(TRAFFIC_LEVELS)
+                    .filter(([name]) => !selectedCommune || name.toLowerCase() === selectedCommune.trim().toLowerCase())
+                    .map(([name, level]) => (
+                      <div key={name} className="flex items-center justify-between py-2.5">
+                        <span className="text-sm text-brand-cream font-medium">{name}</span>
+                        <span
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold"
+                          style={{ color: TRAFFIC_COLORS[level] }}
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full inline-block"
+                            style={{ backgroundColor: TRAFFIC_COLORS[level] }}
+                          />
+                          {TRAFFIC_LABELS[level]}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
             {/* 100 KIN PLACES */}
-            {activeVertical !== 'kin_weekend' && (
+            {activeVertical !== 'kin_weekend' && activeVertical !== 'kin_traffic' && (
               <div>
                 <h3 className="text-xs text-brand-river uppercase tracking-wide font-semibold mb-3">
                   Sélection 100 Kin ({places.length})
@@ -555,11 +617,11 @@ export default function HomePage() {
                                   disabled={isLiked}
                                   className={`inline-flex items-center gap-1 border px-2.5 py-1 rounded-full text-xs font-semibold ${
                                     isLiked
-                                      ? 'bg-brand-danger/20 text-brand-danger border-brand-danger cursor-default'
-                                      : 'bg-brand-navy-light text-brand-cream border-brand-navy-border cursor-pointer hover:border-brand-danger'
+                                      ? 'bg-brand-gold/20 text-brand-gold border-brand-gold cursor-default'
+                                      : 'bg-brand-navy-light text-brand-cream border-brand-navy-border cursor-pointer hover:border-brand-gold'
                                   }`}
                                 >
-                                  <IconHeart size={13} filled={isLiked} />
+                                  <IconStar size={13} filled={isLiked} />
                                   {isLiked ? 'Aimé' : "J'aime"} ({place.likes || 0})
                                 </button>
 

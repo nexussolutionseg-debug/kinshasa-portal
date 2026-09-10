@@ -25,6 +25,14 @@ export function IconHeart({ size = 16, filled = false, ...props }: IconProps & {
   );
 }
 
+export function IconStar({ size = 16, filled = false, ...props }: IconProps & { filled?: boolean }) {
+  return (
+    <svg {...base(size)} fill={filled ? 'currentColor' : 'none'} {...props}>
+      <path d="M12 3.2 14.7 9l6.3.6-4.8 4.2 1.4 6.2L12 16.9l-5.6 3.1 1.4-6.2-4.8-4.2L9.3 9Z" />
+    </svg>
+  );
+}
+
 export function IconChat({ size = 16, ...props }: IconProps) {
   return (
     <svg {...base(size)} {...props}>

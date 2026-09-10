@@ -10,6 +10,7 @@ import { escapeHtml } from '../../../lib/html';
 import { IconHome, IconExternalLink, IconChevronRight, IconClock, IconChart } from '../../../components/icons';
 import { SiteHeader } from '../../../components/SiteHeader';
 import { SiteFooter } from '../../../components/SiteFooter';
+import { getTrafficLevel, TRAFFIC_COLORS, TRAFFIC_LABELS } from '../../../lib/traffic';
 
 // Same fix as the homepage map: CARTO's hosted GL vector style now gates
 // actual tile pixels behind a required API key (confirmed live — the
@@ -397,6 +398,7 @@ export default function CommuneDetailPage() {
   const otherPlaces = places.filter(p => p.vertical === 'kin_places');
   const culturePlaces = places.filter(p => p.vertical === 'kin_culture');
   const stylePlaces = places.filter(p => p.vertical === 'kin_style');
+  const securitePlaces = places.filter(p => p.vertical === 'kin_securite');
 
   // UI-only state for the category tab interface below (replaces four
   // permanently-visible boxes with a single tabbed section).
@@ -405,9 +407,12 @@ export default function CommuneDetailPage() {
     { id: 'kin_places', label: 'Kin Places', items: otherPlaces, empty: 'Aucun lieu répertorié.', text: 'text-brand-river', border: 'border-brand-river' },
     { id: 'kin_culture', label: 'Kin Culture', items: culturePlaces, empty: 'Aucun espace culturel.', text: 'text-brand-gold', border: 'border-brand-gold' },
     { id: 'kin_style', label: 'Kin Style', items: stylePlaces, empty: 'Aucune adresse mode.', text: 'text-brand-plum', border: 'border-brand-plum' },
+    { id: 'kin_securite', label: 'Kin Sécurité', items: securitePlaces, empty: 'Aucun poste de sécurité répertorié.', text: 'text-brand-danger', border: 'border-brand-danger' },
   ] as const;
   const [activeCategoryTab, setActiveCategoryTab] = useState<string>('kin_food');
   const activeTab = CATEGORY_TABS.find(t => t.id === activeCategoryTab) || CATEGORY_TABS[0];
+
+  const trafficLevel = getTrafficLevel(communeName);
 
   const renderPlaceCard = (p: any) => (
     <div key={p.id} className="border-b border-brand-navy-border py-4 last:border-0 last:pb-0">
@@ -463,6 +468,19 @@ export default function CommuneDetailPage() {
               <p className="font-display italic text-xl md:text-2xl text-brand-gold-light leading-snug border-l-4 border-brand-gold pl-4">
                 &quot;{communeInfo.tagline}&quot;
               </p>
+              {trafficLevel && (
+                <p
+                  className="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold"
+                  style={{ color: TRAFFIC_COLORS[trafficLevel] }}
+                  title="Niveau indicatif, pas une donnée de trafic en temps réel."
+                >
+                  <span
+                    className="w-2 h-2 rounded-full inline-block"
+                    style={{ backgroundColor: TRAFFIC_COLORS[trafficLevel] }}
+                  />
+                  Circulation {TRAFFIC_LABELS[trafficLevel].toLowerCase()} (indicatif)
+                </p>
+              )}
             </div>
 
             {/* Commune Selector, part of the hero rather than a floating utility */}

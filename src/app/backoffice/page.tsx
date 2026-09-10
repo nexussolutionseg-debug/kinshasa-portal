@@ -356,6 +356,7 @@ export default function BackofficePage() {
                   <option value="kin_places">KIN PLACES (Lieux à découvrir)</option>
                   <option value="kin_culture">KIN CULTURE (Culture &amp; Musique)</option>
                   <option value="kin_style">KIN STYLE (Mode &amp; Créateurs)</option>
+                  <option value="kin_securite">KIN SÉCURITÉ (Police &amp; Postes de sécurité)</option>
                 </select>
               </div>
             </div>
