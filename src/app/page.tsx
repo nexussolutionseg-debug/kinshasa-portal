@@ -5,7 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../lib/supabase';
 import { escapeHtml } from '../lib/html';
 import communesData from '../data/communes.json';
-import { IconStar, IconThumbsDown, IconChat, IconExternalLink, IconUser, IconPin, IconGlobe } from '../components/icons';
+import { IconStar, IconChat, IconExternalLink, IconUser, IconPin, IconGlobe } from '../components/icons';
 import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
 import { Button } from '../components/Button';
@@ -23,13 +23,26 @@ const VERTICALS = [
 ];
 
 // Small inline SVG markup (string form) for the raw-HTML MapLibre
-// marker/popup content, which cannot use Tailwind classes or JSX. Stars,
-// not hearts, per client feedback — filled gold star for the like count.
+// marker/popup content, which cannot use Tailwind classes or JSX. A
+// filled gold star, used for the average-rating display.
 const STAR_SVG = (color: string) =>
   `<svg width="11" height="11" viewBox="0 0 24 24" fill="${color}" stroke="${color}" stroke-width="1" style="vertical-align:-1px;"><path d="M12 3.2 14.7 9l6.3.6-4.8 4.2 1.4 6.2L12 16.9l-5.6 3.1 1.4-6.2-4.8-4.2L9.3 9Z"/></svg>`;
 
-const THUMBS_DOWN_SVG = (color: string) =>
-  `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M7 14V4M3 4h3.2c.4 0 .8.1 1.1.3l4.4 2c.3.1.7.2 1.1.2h4.4a2 2 0 0 1 2 2.3l-1 6a2 2 0 0 1-2 1.7H9"/></svg>`;
+// A place's average rating out of 5, from the running rating_sum /
+// rating_count kept on the row — not stored per vote, to match the app's
+// existing lightweight schema (same shape as the old likes/dislikes
+// counters). Returns null when nobody has rated it yet.
+function getAverageRating(place: { rating_sum?: number; rating_count?: number }): number | null {
+  const count = place.rating_count || 0;
+  if (count <= 0) return null;
+  return (place.rating_sum || 0) / count;
+}
+
+function formatRatingLabel(place: { rating_sum?: number; rating_count?: number }): string {
+  const avg = getAverageRating(place);
+  const count = place.rating_count || 0;
+  return avg === null ? 'Non noté' : `${avg.toFixed(1)} (${count})`;
+}
 
 // MapLibre style object: plain raster tiles from Esri's free, no-API-key
 // "World Dark Gray" basemap (base + labels reference layer). The app
@@ -89,28 +102,28 @@ export default function HomePage() {
   const [weekendEvents, setWeekendEvents] = useState<any[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Likes & Comments State
-  const [likedPlaceIds, setLikedPlaceIds] = useState<number[]>([]);
-  const [dislikedPlaceIds, setDislikedPlaceIds] = useState<number[]>([]);
+  // Rating & Comments State. Replaces the earlier like/dislike counters
+  // with a single 1-5 star rating per place, per client feedback — a
+  // 5-star scale already covers the full range from bad to great, so a
+  // separate dislike count became redundant.
+  const [ratedPlaceIds, setRatedPlaceIds] = useState<number[]>([]);
   const [activeCommentsPlaceId, setActiveCommentsPlaceId] = useState<number | null>(null);
   const [commentsMap, setCommentsMap] = useState<{ [key: number]: any[] }>({});
   const [newCommentAuthor, setNewCommentAuthor] = useState('');
   const [newCommentText, setNewCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
-  // Load liked/disliked places from localStorage on initial render
+  // Load already-rated places from localStorage on initial render (guards
+  // against rating the same place twice from the same browser — same
+  // pattern the old like/dislike guard used).
   useEffect(() => {
     try {
-      const savedLikes = localStorage.getItem('kin_liked_places');
-      if (savedLikes) {
-        setLikedPlaceIds(JSON.parse(savedLikes));
-      }
-      const savedDislikes = localStorage.getItem('kin_disliked_places');
-      if (savedDislikes) {
-        setDislikedPlaceIds(JSON.parse(savedDislikes));
+      const savedRatings = localStorage.getItem('kin_rated_places');
+      if (savedRatings) {
+        setRatedPlaceIds(JSON.parse(savedRatings));
       }
     } catch (e) {
-      console.error('Could not read likes from localStorage', e);
+      console.error('Could not read ratings from localStorage', e);
     }
   }, []);
 
@@ -247,50 +260,29 @@ export default function HomePage() {
 
   }, [selectedCommune, activeVertical]);
 
-  // Handle Like Action
-  const handleLikePlace = async (placeId: number, currentLikes: number) => {
-    if (likedPlaceIds.includes(placeId)) return; // Prevent double-liking locally
+  // Handle a 1-5 star rating submission. Stores a running sum + count on
+  // the place (`rating_sum`/`rating_count`) rather than each individual
+  // vote, matching the app's existing lightweight schema — the displayed
+  // average is just rating_sum / rating_count. One rating per place per
+  // browser, guarded by localStorage, same pattern as the old like guard.
+  const handleRatePlace = async (placeId: number, value: number, currentSum: number, currentCount: number) => {
+    if (ratedPlaceIds.includes(placeId)) return;
 
-    const updatedLikes = (currentLikes || 0) + 1;
-    const newLikedPlaceIds = [...likedPlaceIds, placeId];
+    const updatedSum = (currentSum || 0) + value;
+    const updatedCount = (currentCount || 0) + 1;
+    const newRatedPlaceIds = [...ratedPlaceIds, placeId];
 
     // Optimistic UI Update
     setPlaces((prevPlaces) =>
-      prevPlaces.map((p) => (p.id === placeId ? { ...p, likes: updatedLikes } : p))
+      prevPlaces.map((p) => (p.id === placeId ? { ...p, rating_sum: updatedSum, rating_count: updatedCount } : p))
     );
-    setLikedPlaceIds(newLikedPlaceIds);
+    setRatedPlaceIds(newRatedPlaceIds);
 
     try {
-      localStorage.setItem('kin_liked_places', JSON.stringify(newLikedPlaceIds));
-      await supabase.from('places').update({ likes: updatedLikes }).eq('id', placeId);
+      localStorage.setItem('kin_rated_places', JSON.stringify(newRatedPlaceIds));
+      await supabase.from('places').update({ rating_sum: updatedSum, rating_count: updatedCount }).eq('id', placeId);
     } catch (err) {
-      console.error('Error updating likes:', err);
-    }
-
-
-  };
-
-  // Handle Dislike Action — mirrors handleLikePlace. Requires a `dislikes`
-  // integer column on the `places` table (same pattern as `likes`); until
-  // that column exists in Supabase, the UI count still updates locally but
-  // the persisted update silently fails, exactly like every other
-  // Supabase call in this file that doesn't check `error`.
-  const handleDislikePlace = async (placeId: number, currentDislikes: number) => {
-    if (dislikedPlaceIds.includes(placeId)) return;
-
-    const updatedDislikes = (currentDislikes || 0) + 1;
-    const newDislikedPlaceIds = [...dislikedPlaceIds, placeId];
-
-    setPlaces((prevPlaces) =>
-      prevPlaces.map((p) => (p.id === placeId ? { ...p, dislikes: updatedDislikes } : p))
-    );
-    setDislikedPlaceIds(newDislikedPlaceIds);
-
-    try {
-      localStorage.setItem('kin_disliked_places', JSON.stringify(newDislikedPlaceIds));
-      await supabase.from('places').update({ dislikes: updatedDislikes }).eq('id', placeId);
-    } catch (err) {
-      console.error('Error updating dislikes:', err);
+      console.error('Error updating rating:', err);
     }
   };
 
@@ -387,7 +379,7 @@ export default function HomePage() {
       el.style.gap = '4px';
       el.style.whiteSpace = 'nowrap';
 
-      el.innerHTML = `<span style="color:${pinColor};font-size:13px;line-height:1;">●</span> <span>${escapeHtml(place.name)}</span> <span style="color:#C8992E;display:inline-flex;align-items:center;gap:2px;">${STAR_SVG('#C8992E')}${place.likes || 0}</span>`;
+      el.innerHTML = `<span style="color:${pinColor};font-size:13px;line-height:1;">●</span> <span>${escapeHtml(place.name)}</span> <span style="color:#C8992E;display:inline-flex;align-items:center;gap:2px;">${STAR_SVG('#C8992E')}${formatRatingLabel(place)}</span>`;
 
       const imageHtml = place.image_url ?
         `<img src="${escapeHtml(place.image_url)}" alt="${escapeHtml(place.name)}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 6px; margin: 6px 0; border: 1px solid #22385C;" />` : '';
@@ -401,12 +393,11 @@ export default function HomePage() {
             <span style="font-size: 9px; font-weight: bold; color: #C8992E; text-transform: uppercase;">
               ★ ${escapeHtml(place.commune)}
             </span>
-            <span style="font-size: 10px; font-weight: bold; color: #C8992E; display:inline-flex; align-items:center; gap:2px;">${STAR_SVG('#C8992E')}${place.likes || 0}</span>
+            <span style="font-size: 10px; font-weight: bold; color: #C8992E; display:inline-flex; align-items:center; gap:2px;">${STAR_SVG('#C8992E')}${formatRatingLabel(place)}</span>
           </div>
           <h4 style="margin: 2px 0; font-size: 13px; font-weight: 800; color: #0B1E3A;">${escapeHtml(place.name)}</h4>
           ${imageHtml}
           <p style="margin: 0; font-size: 11px; color: #5B5548;">${escapeHtml(place.description || '')}</p>
-          <span style="display:inline-flex; align-items:center; gap:3px; font-size: 10px; font-weight: bold; color: #6b7280; margin-top: 4px;">${THUMBS_DOWN_SVG('#6b7280')}${place.dislikes || 0}</span>
           ${mapsLinkHtml}
         </div>
       `;
@@ -426,7 +417,7 @@ export default function HomePage() {
     }
 
 
-  }, [places, likedPlaceIds, dislikedPlaceIds]);
+  }, [places, ratedPlaceIds]);
 
   return (
     <main className="min-h-screen bg-brand-navy text-brand-cream flex flex-col">
@@ -585,8 +576,9 @@ export default function HomePage() {
                 ) : (
                   <div className="flex flex-col divide-y divide-brand-navy-border">
                     {places.map((place) => {
-                      const isLiked = likedPlaceIds.includes(place.id);
-                      const isDisliked = dislikedPlaceIds.includes(place.id);
+                      const isRated = ratedPlaceIds.includes(place.id);
+                      const avgRating = getAverageRating(place);
+                      const filledStars = avgRating !== null ? Math.round(avgRating) : 0;
                       const comments = commentsMap[place.id] || [];
                       const isCommentsOpen = activeCommentsPlaceId === place.id;
 
@@ -611,33 +603,32 @@ export default function HomePage() {
                               <p className="text-sm text-brand-cream/65 leading-relaxed mb-2.5">{place.description}</p>
 
                               <div className="flex items-center gap-2.5 flex-wrap">
-                                {/* LIKE BUTTON */}
-                                <button
-                                  onClick={() => handleLikePlace(place.id, place.likes || 0)}
-                                  disabled={isLiked}
-                                  className={`inline-flex items-center gap-1 border px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                    isLiked
-                                      ? 'bg-brand-gold/20 text-brand-gold border-brand-gold cursor-default'
-                                      : 'bg-brand-navy-light text-brand-cream border-brand-navy-border cursor-pointer hover:border-brand-gold'
-                                  }`}
-                                >
-                                  <IconStar size={13} filled={isLiked} />
-                                  {isLiked ? 'Aimé' : "J'aime"} ({place.likes || 0})
-                                </button>
-
-                                {/* DISLIKE BUTTON */}
-                                <button
-                                  onClick={() => handleDislikePlace(place.id, place.dislikes || 0)}
-                                  disabled={isDisliked}
-                                  className={`inline-flex items-center gap-1 border px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                    isDisliked
-                                      ? 'bg-brand-navy-border text-brand-muted border-brand-navy-border cursor-default'
-                                      : 'bg-brand-navy-light text-brand-cream/70 border-brand-navy-border cursor-pointer hover:border-brand-muted'
-                                  }`}
-                                >
-                                  <IconThumbsDown size={13} />
-                                  ({place.dislikes || 0})
-                                </button>
+                                {/* 1-5 STAR RATING */}
+                                <div className="inline-flex items-center gap-2 border border-brand-navy-border bg-brand-navy-light px-2.5 py-1 rounded-full">
+                                  <div className="inline-flex items-center gap-0.5" role="radiogroup" aria-label="Noter ce lieu">
+                                    {[1, 2, 3, 4, 5].map((value) => (
+                                      <button
+                                        key={value}
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={value === filledStars}
+                                        aria-label={`${value} étoile${value > 1 ? 's' : ''}`}
+                                        disabled={isRated}
+                                        onClick={() => handleRatePlace(place.id, value, place.rating_sum || 0, place.rating_count || 0)}
+                                        className={isRated ? 'cursor-default' : 'cursor-pointer hover:scale-110 transition-transform'}
+                                      >
+                                        <IconStar
+                                          size={14}
+                                          filled={value <= filledStars}
+                                          className={value <= filledStars ? 'text-brand-gold' : 'text-brand-muted/50'}
+                                        />
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <span className="text-xs font-semibold text-brand-cream/80">
+                                    {avgRating !== null ? `${avgRating.toFixed(1)} (${place.rating_count})` : 'Soyez le premier'}
+                                  </span>
+                                </div>
 
                                 {/* COMMENTS TOGGLE */}
                                 <button
