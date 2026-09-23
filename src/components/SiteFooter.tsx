@@ -61,6 +61,11 @@ export function SiteFooter() {
                 Backoffice
               </Link>
             </li>
+            <li>
+              <Link href="/politique-de-confidentialite" className="text-sm text-brand-cream/70 no-underline hover:text-brand-gold transition-colors">
+                Politique de confidentialité
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
