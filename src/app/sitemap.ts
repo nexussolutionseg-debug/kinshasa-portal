@@ -21,6 +21,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
+  const staticEntries = [
+    { path: '/qui-sommes-nous', priority: 0.6 },
+    { path: '/contact', priority: 0.5 },
+    { path: '/devenir-partenaire', priority: 0.5 },
+    { path: '/politique-de-confidentialite', priority: 0.3 },
+  ].map(({ path, priority }) => ({
+    url: `${siteUrl}${path}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority,
+  }));
+
   return [
     {
       url: siteUrl,
@@ -29,5 +41,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     ...communeEntries,
+    ...staticEntries,
   ];
 }

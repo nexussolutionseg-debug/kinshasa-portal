@@ -14,6 +14,8 @@ const NAV_LINKS = [
   { href: '/commune/Gombe', label: 'Communes' },
   { href: '/#explorer', label: 'Explorer Kin' },
   { href: '/#kin-weekend', label: 'Kin Weekend' },
+  { href: '/qui-sommes-nous', label: 'Qui sommes-nous' },
+  { href: '/contact', label: 'Contact' },
 ];
 
 export function SiteHeader() {

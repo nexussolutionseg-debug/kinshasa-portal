@@ -3,14 +3,22 @@
 // professional site rather than a single-screen prototype.
 import Link from 'next/link';
 import { KinshasaSeal } from './BrandMark';
+import { NewsletterSignup } from './NewsletterSignup';
+import { SocialLinks } from './SocialLinks';
+import { IconMail } from './icons';
 
 const FOOTER_COMMUNES = ['Gombe', 'Limete', 'Ngaliema', 'Kalamu', 'Lemba', 'Masina'];
+const CONTACT_EMAIL = 'contact@kinshasalabel.com';
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
     <footer className="border-t border-brand-navy-border bg-brand-navy-light">
+      <div className="max-w-[1650px] mx-auto px-4 md:px-6 py-8 border-b border-brand-navy-border">
+        <NewsletterSignup />
+      </div>
+
       <div className="max-w-[1650px] mx-auto px-4 md:px-6 py-10 md:py-12 grid grid-cols-1 gap-9 md:grid-cols-[1.4fr_1fr_1fr]">
         <div className="flex gap-5">
           <KinshasaSeal size={84} />
@@ -20,6 +28,15 @@ export function SiteFooter() {
               Le guide de référence des meilleures adresses, de la culture et des événements de
               Kinshasa — commune par commune, sur une carte interactive.
             </p>
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="inline-flex items-center gap-1.5 text-sm text-brand-gold-light no-underline hover:text-brand-gold mt-3.5"
+            >
+              <IconMail size={14} /> {CONTACT_EMAIL}
+            </a>
+            <div className="mt-4">
+              <SocialLinks />
+            </div>
           </div>
         </div>
 
@@ -49,6 +66,21 @@ export function SiteFooter() {
             <li>
               <Link href="/" className="text-sm text-brand-cream/70 no-underline hover:text-brand-gold transition-colors">
                 Accueil
+              </Link>
+            </li>
+            <li>
+              <Link href="/qui-sommes-nous" className="text-sm text-brand-cream/70 no-underline hover:text-brand-gold transition-colors">
+                Qui sommes-nous
+              </Link>
+            </li>
+            <li>
+              <Link href="/contact" className="text-sm text-brand-cream/70 no-underline hover:text-brand-gold transition-colors">
+                Contact
+              </Link>
+            </li>
+            <li>
+              <Link href="/devenir-partenaire" className="text-sm text-brand-cream/70 no-underline hover:text-brand-gold transition-colors">
+                Devenir partenaire
               </Link>
             </li>
             <li>

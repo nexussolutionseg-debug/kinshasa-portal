@@ -496,7 +496,14 @@ export default function HomePage() {
         {/* BANNER — set from the backoffice, hidden entirely when there's no active one */}
         {banner && (
           <div className="mt-4 flex items-center justify-between gap-3 flex-wrap rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-3">
-            <p className="text-sm text-brand-cream m-0">{banner.message}</p>
+            {banner.image_url && (
+              <img
+                src={banner.image_url}
+                alt=""
+                className="w-14 h-14 object-cover rounded-lg shrink-0 hidden sm:block"
+              />
+            )}
+            <p className="text-sm text-brand-cream m-0 flex-1 min-w-[180px]">{banner.message}</p>
             {banner.link_url && (
               <a
                 href={banner.link_url}

@@ -190,3 +190,69 @@ export function IconMenu({ size = 16, ...props }: IconProps) {
     </svg>
   );
 }
+
+export function IconMail({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M4 5.5h16a1 1 0 0 1 1 1V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z" />
+      <path d="m3.5 6.5 8 6.2a1 1 0 0 0 1.2 0l8-6.2" />
+    </svg>
+  );
+}
+
+export function IconBuilding({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M5 20.5V4.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M15 9.5h3a1 1 0 0 1 1 1v10M3 20.5h18" />
+      <path d="M8 7.5h1.5M12.5 7.5H14M8 11h1.5M12.5 11H14M8 14.5h1.5M12.5 14.5H14M17 13.5h1.5M17 17h1.5" />
+    </svg>
+  );
+}
+
+// Minimal line-art versions of the common social-platform marks — kept in
+// the same hand-drawn stroke style as the rest of the icon set rather than
+// pulling in each brand's official logo asset. Swap for real brand marks
+// later if the client wants pixel-exact logos once accounts are live.
+export function IconFacebook({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M14.5 21v-7.2h2.4l.4-2.9h-2.8V9.1c0-.8.2-1.4 1.4-1.4h1.5V5.1C16.9 5 16 5 15 5c-2.2 0-3.7 1.3-3.7 3.8v2.1H8.9v2.9h2.4V21" />
+    </svg>
+  );
+}
+
+export function IconInstagram({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="17" cy="7" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function IconX({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M4.5 4.5l15 15M19.5 4.5l-15 15" />
+    </svg>
+  );
+}
+
+export function IconLinkedin({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" />
+      <path d="M8 10.5V17M8 7.3v.1M12.2 17v-3.8c0-1.4 1-2.4 2.3-2.4s2 1 2 2.4V17" />
+    </svg>
+  );
+}
+
+export function IconTiktok({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M13 3.5v11.2a2.9 2.9 0 1 1-2.4-2.86" />
+      <path d="M13 3.5c.3 2.2 2 3.9 4.2 4.2" />
+    </svg>
+  );
+}

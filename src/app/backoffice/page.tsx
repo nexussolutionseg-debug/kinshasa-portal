@@ -371,6 +371,8 @@ export default function BackofficePage() {
   const [bnLinkUrl, setBnLinkUrl] = useState('');
   const [bnLinkLabel, setBnLinkLabel] = useState('');
   const [bnActive, setBnActive] = useState(true);
+  const [bnImageUrl, setBnImageUrl] = useState('');
+  const [bnImageUploading, setBnImageUploading] = useState(false);
 
   const fetchBanners = async () => {
     const { data, error } = await supabase.from('banners').select('*').order('created_at', { ascending: false });
@@ -383,6 +385,7 @@ export default function BackofficePage() {
     setBnLinkUrl('');
     setBnLinkLabel('');
     setBnActive(true);
+    setBnImageUrl('');
   };
 
   const startEditingBanner = (b: any) => {
@@ -391,7 +394,33 @@ export default function BackofficePage() {
     setBnLinkUrl(b.link_url || '');
     setBnLinkLabel(b.link_label || '');
     setBnActive(!!b.active);
+    setBnImageUrl(b.image_url || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Uploads a banner image file straight to the public "banners" Supabase
+  // Storage bucket and stores the resulting public URL — same idea as the
+  // image_url text field already used for places, but with a real file
+  // upload instead of pasting a URL, since editors won't always have one.
+  const handleBannerImageSelect = async (file: File | null) => {
+    if (!file) return;
+    setBnImageUploading(true);
+    setStatusMsg(null);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `banner-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('banners').upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('banners').getPublicUrl(path);
+      setBnImageUrl(data.publicUrl);
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: `Échec de l'envoi de l'image : ${err.message}` });
+    } finally {
+      setBnImageUploading(false);
+    }
   };
 
   const handleSaveBanner = async (e: React.FormEvent) => {
@@ -403,6 +432,7 @@ export default function BackofficePage() {
       link_url: bnLinkUrl.trim() || null,
       link_label: bnLinkLabel.trim() || null,
       active: bnActive,
+      image_url: bnImageUrl.trim() || null,
     };
     try {
       if (editingBannerId) {
@@ -904,11 +934,30 @@ export default function BackofficePage() {
                 <input type="text" value={bnLinkLabel} onChange={(e) => setBnLinkLabel(e.target.value)} placeholder="En savoir plus" className={inputClass} />
               </div>
             </div>
+            <div className="mb-5">
+              <label className={labelClass}>Image (optionnel)</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleBannerImageSelect(e.target.files?.[0] || null)}
+                disabled={bnImageUploading}
+                className="text-sm text-brand-cream file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-navy file:font-semibold file:text-xs file:cursor-pointer"
+              />
+              {bnImageUploading && <p className="text-xs text-brand-muted mt-2">Envoi de l&apos;image...</p>}
+              {bnImageUrl && !bnImageUploading && (
+                <div className="mt-3 flex items-center gap-3">
+                  <img src={bnImageUrl} alt="Aperçu de la bannière" className="w-[160px] h-20 object-cover rounded-md border border-brand-navy-border" />
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setBnImageUrl('')}>
+                    Retirer l&apos;image
+                  </Button>
+                </div>
+              )}
+            </div>
             <label className="flex items-center gap-2 mb-5 text-sm text-brand-cream">
               <input type="checkbox" checked={bnActive} onChange={(e) => setBnActive(e.target.checked)} />
               Active (visible sur le site)
             </label>
-            <Button type="submit" disabled={submitting} variant="primary" size="lg" fullWidth>
+            <Button type="submit" disabled={submitting || bnImageUploading} variant="primary" size="lg" fullWidth>
               {submitting ? 'Enregistrement...' : editingBannerId ? 'Enregistrer les Modifications →' : 'Créer la Bannière →'}
             </Button>
           </form>
@@ -919,6 +968,9 @@ export default function BackofficePage() {
             <div className="flex flex-col gap-3">
               {bannerList.map((b) => (
                 <div key={b.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
+                  {b.image_url && (
+                    <img src={b.image_url} alt="" className="w-20 h-14 object-cover rounded-md shrink-0 border border-brand-navy-border" />
+                  )}
                   <div className="flex-1 min-w-[280px]">
                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${b.active ? 'bg-brand-green text-brand-navy' : 'bg-brand-navy-border text-brand-muted'}`}>
                       {b.active ? 'Active' : 'Inactive'}
