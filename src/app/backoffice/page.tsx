@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock } from '../../components/icons';
 import { Button } from '../../components/Button';
@@ -14,6 +15,42 @@ const COMMUNES = [
 ];
 
 export default function BackofficePage() {
+  // ---------------------------------------------------------------------
+  // ACCESS GUARD — /login already collects a real Supabase Auth session,
+  // but until now nothing actually checked for one here: anyone who
+  // opened /backoffice directly (bookmark, guessed URL, the public
+  // "Proposer un Lieu" button) landed straight in the full editorial
+  // panel — no credentials required. This sends anyone without a valid
+  // session to /login instead, and signs out again if the session ever
+  // disappears (expiry, sign-out in another tab).
+  // ---------------------------------------------------------------------
+  const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
+      if (!session) {
+        router.replace('/login');
+      } else {
+        setAuthChecked(true);
+      }
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) router.replace('/login');
+    });
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
   // Which content type the backoffice is managing right now.
   const [section, setSection] = useState<'places' | 'events' | 'news' | 'banner'>('places');
 
@@ -477,6 +514,17 @@ export default function BackofficePage() {
   const inputClass = "w-full box-border px-3 py-2.5 bg-brand-navy border border-brand-navy-border text-brand-cream rounded-lg text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-gold";
   const labelClass = "block text-[11px] text-brand-muted uppercase font-bold mb-1.5";
 
+  // Nothing is rendered until the session check above resolves — avoids a
+  // flash of the full admin panel before an unauthenticated visitor gets
+  // redirected to /login.
+  if (!authChecked) {
+    return (
+      <main className="min-h-screen bg-brand-navy text-brand-cream flex items-center justify-center">
+        <p className="text-sm text-brand-muted">Vérification de l&apos;accès...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-brand-navy text-brand-cream">
 
@@ -492,9 +540,14 @@ export default function BackofficePage() {
             Kinshasa Label — Backoffice
           </h1>
         </div>
-        <Button href="/" variant="secondary" size="sm">
-          ← Retour au Média
-        </Button>
+        <div className="flex items-center gap-2.5">
+          <Button variant="ghost" size="sm" onClick={handleLogout}>
+            Se déconnecter
+          </Button>
+          <Button href="/" variant="secondary" size="sm">
+            ← Retour au Média
+          </Button>
+        </div>
       </nav>
 
       <div className="max-w-[1000px] mx-auto px-4 py-7">
@@ -943,10 +996,14 @@ export default function BackofficePage() {
                 disabled={bnImageUploading}
                 className="text-sm text-brand-cream file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-navy file:font-semibold file:text-xs file:cursor-pointer"
               />
+              <p className="text-xs text-brand-muted mt-1.5">
+                Toute image fonctionne — elle s&apos;affiche en entier, sans recadrage. Une image large
+                (type bannière, ex. 1200×300px) rendra mieux qu&apos;une photo carrée ou verticale.
+              </p>
               {bnImageUploading && <p className="text-xs text-brand-muted mt-2">Envoi de l&apos;image...</p>}
               {bnImageUrl && !bnImageUploading && (
                 <div className="mt-3 flex items-center gap-3">
-                  <img src={bnImageUrl} alt="Aperçu de la bannière" className="w-[160px] h-20 object-cover rounded-md border border-brand-navy-border" />
+                  <img src={bnImageUrl} alt="Aperçu de la bannière" className="w-[160px] h-20 object-contain bg-brand-navy rounded-md border border-brand-navy-border" />
                   <Button type="button" variant="ghost" size="sm" onClick={() => setBnImageUrl('')}>
                     Retirer l&apos;image
                   </Button>
@@ -969,7 +1026,7 @@ export default function BackofficePage() {
               {bannerList.map((b) => (
                 <div key={b.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
                   {b.image_url && (
-                    <img src={b.image_url} alt="" className="w-20 h-14 object-cover rounded-md shrink-0 border border-brand-navy-border" />
+                    <img src={b.image_url} alt="" className="w-20 h-14 object-contain bg-brand-navy rounded-md shrink-0 border border-brand-navy-border" />
                   )}
                   <div className="flex-1 min-w-[280px]">
                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${b.active ? 'bg-brand-green text-brand-navy' : 'bg-brand-navy-border text-brand-muted'}`}>

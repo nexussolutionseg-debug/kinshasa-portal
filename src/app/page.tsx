@@ -500,7 +500,7 @@ export default function HomePage() {
               <img
                 src={banner.image_url}
                 alt=""
-                className="w-14 h-14 object-cover rounded-lg shrink-0 hidden sm:block"
+                className="h-14 w-auto max-w-[140px] object-contain rounded-lg shrink-0 hidden sm:block"
               />
             )}
             <p className="text-sm text-brand-cream m-0 flex-1 min-w-[180px]">{banner.message}</p>
