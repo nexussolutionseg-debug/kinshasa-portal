@@ -494,16 +494,18 @@ export default function HomePage() {
         </div>
 
         {/* BANNER — set from the backoffice, hidden entirely when there's no active one.
-            A real full-width banner strip when there's an image (a fixed, sensible
-            aspect ratio — taller on narrow phone screens, leaner on desktop — so any
-            uploaded image scales to fill the page cleanly on both instead of being
-            squeezed into a tiny thumbnail), or just the compact text-only bar when
-            there isn't. */}
+            A fixed-height, generously-sized display area with object-contain (never
+            object-cover): editors upload all kinds of shapes — wide landscape banners,
+            portrait posters/flyers, square photos — and a fixed aspect-ratio crop cuts
+            off whichever ones don't match it (a portrait movie-poster-style flyer lost
+            its top and bottom to a wide 3:1 crop). Contain always shows the whole
+            image, scaled to fit, letterboxed on whichever axis has room to spare —
+            the one approach that looks right no matter what gets uploaded. */}
         {banner && (
           <div className="mt-4 rounded-xl border border-brand-gold/40 bg-brand-gold/10 overflow-hidden">
             {banner.image_url && (
-              <div className="w-full aspect-[16/9] sm:aspect-[3/1] bg-brand-navy-light">
-                <img src={banner.image_url} alt="" className="w-full h-full object-cover" />
+              <div className="w-full h-64 sm:h-80 flex items-center justify-center bg-brand-navy-light">
+                <img src={banner.image_url} alt="" className="max-w-full max-h-full object-contain" />
               </div>
             )}
             <div className="flex items-center justify-between gap-3 flex-wrap px-4 py-3">
