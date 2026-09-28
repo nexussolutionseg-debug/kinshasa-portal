@@ -997,13 +997,16 @@ export default function BackofficePage() {
                 className="text-sm text-brand-cream file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-navy file:font-semibold file:text-xs file:cursor-pointer"
               />
               <p className="text-xs text-brand-muted mt-1.5">
-                Toute image fonctionne — elle s&apos;affiche en entier, sans recadrage. Une image large
-                (type bannière, ex. 1200×300px) rendra mieux qu&apos;une photo carrée ou verticale.
+                Elle s&apos;affiche en pleine largeur en haut de la page d&apos;accueil. Utilisez une image
+                large (format paysage, idéalement autour de 1200×500px) — l&apos;aperçu ci-dessous montre
+                exactement comment elle sera recadrée sur le site.
               </p>
               {bnImageUploading && <p className="text-xs text-brand-muted mt-2">Envoi de l&apos;image...</p>}
               {bnImageUrl && !bnImageUploading && (
-                <div className="mt-3 flex items-center gap-3">
-                  <img src={bnImageUrl} alt="Aperçu de la bannière" className="w-[160px] h-20 object-contain bg-brand-navy rounded-md border border-brand-navy-border" />
+                <div className="mt-3 flex flex-col gap-2">
+                  <div className="w-full max-w-[420px] aspect-[3/1] rounded-md border border-brand-navy-border overflow-hidden bg-brand-navy">
+                    <img src={bnImageUrl} alt="Aperçu de la bannière" className="w-full h-full object-cover" />
+                  </div>
                   <Button type="button" variant="ghost" size="sm" onClick={() => setBnImageUrl('')}>
                     Retirer l&apos;image
                   </Button>
@@ -1026,7 +1029,9 @@ export default function BackofficePage() {
               {bannerList.map((b) => (
                 <div key={b.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
                   {b.image_url && (
-                    <img src={b.image_url} alt="" className="w-20 h-14 object-contain bg-brand-navy rounded-md shrink-0 border border-brand-navy-border" />
+                    <div className="w-24 aspect-[3/1] rounded-md shrink-0 border border-brand-navy-border overflow-hidden bg-brand-navy">
+                      <img src={b.image_url} alt="" className="w-full h-full object-cover" />
+                    </div>
                   )}
                   <div className="flex-1 min-w-[280px]">
                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${b.active ? 'bg-brand-green text-brand-navy' : 'bg-brand-navy-border text-brand-muted'}`}>

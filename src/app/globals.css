@@ -18,3 +18,41 @@ html {
 * {
   box-sizing: border-box;
 }
+
+/* Slim, brand-colored scrollbars everywhere on the site, with the
+   up/down (or left/right) step-arrow buttons some browsers/OS scrollbar
+   themes draw at each end removed entirely — those arrow buttons were
+   showing up as stray clutter next to the category tabs row on some
+   Windows browser setups. Firefox uses the scrollbar-width/-color
+   properties instead (no arrow buttons to remove there in the first
+   place). Applies globally, including the horizontally-scrollable
+   category tab row and any other scrollable container on the site. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #22385C #0B1E3A;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #0B1E3A;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #22385C;
+  border-radius: 8px;
+  border: 2px solid #0B1E3A;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #C8992E;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}

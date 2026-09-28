@@ -493,27 +493,32 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* BANNER — set from the backoffice, hidden entirely when there's no active one */}
+        {/* BANNER — set from the backoffice, hidden entirely when there's no active one.
+            A real full-width banner strip when there's an image (a fixed, sensible
+            aspect ratio — taller on narrow phone screens, leaner on desktop — so any
+            uploaded image scales to fill the page cleanly on both instead of being
+            squeezed into a tiny thumbnail), or just the compact text-only bar when
+            there isn't. */}
         {banner && (
-          <div className="mt-4 flex items-center justify-between gap-3 flex-wrap rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-3">
+          <div className="mt-4 rounded-xl border border-brand-gold/40 bg-brand-gold/10 overflow-hidden">
             {banner.image_url && (
-              <img
-                src={banner.image_url}
-                alt=""
-                className="h-14 w-auto max-w-[140px] object-contain rounded-lg shrink-0 hidden sm:block"
-              />
+              <div className="w-full aspect-[16/9] sm:aspect-[3/1] bg-brand-navy-light">
+                <img src={banner.image_url} alt="" className="w-full h-full object-cover" />
+              </div>
             )}
-            <p className="text-sm text-brand-cream m-0 flex-1 min-w-[180px]">{banner.message}</p>
-            {banner.link_url && (
-              <a
-                href={banner.link_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold no-underline hover:text-brand-gold-light"
-              >
-                {banner.link_label || 'En savoir plus'} <IconExternalLink size={11} />
-              </a>
-            )}
+            <div className="flex items-center justify-between gap-3 flex-wrap px-4 py-3">
+              <p className="text-sm text-brand-cream m-0 flex-1 min-w-[180px]">{banner.message}</p>
+              {banner.link_url && (
+                <a
+                  href={banner.link_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold no-underline hover:text-brand-gold-light"
+                >
+                  {banner.link_label || 'En savoir plus'} <IconExternalLink size={11} />
+                </a>
+              )}
+            </div>
           </div>
         )}
       </section>
