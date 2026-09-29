@@ -8,6 +8,7 @@ import communesData from '../data/communes.json';
 import { IconStar, IconChat, IconExternalLink, IconUser, IconPin, IconGlobe } from '../components/icons';
 import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
+import { NewsletterSignup } from '../components/NewsletterSignup';
 import { Button } from '../components/Button';
 import { TRAFFIC_LEVELS, TRAFFIC_COLORS, TRAFFIC_LABELS, DEFAULT_COMMUNE_COLOR, TRAFFIC_FILL_EXPRESSION } from '../lib/traffic';
 
@@ -450,6 +451,15 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-brand-navy text-brand-cream flex flex-col">
       <SiteHeader />
+
+      {/* NEWSLETTER — moved up from the footer per client request, so it's
+          one of the first things a visitor sees rather than something only
+          reached after scrolling past everything else. */}
+      <div className="bg-brand-gold/10 border-b border-brand-gold/30">
+        <div className="max-w-[1650px] mx-auto px-4 md:px-6 py-3.5">
+          <NewsletterSignup />
+        </div>
+      </div>
 
       {/* HERO */}
       <section className="border-b border-brand-navy-border">
