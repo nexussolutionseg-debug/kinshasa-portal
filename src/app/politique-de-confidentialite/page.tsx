@@ -36,9 +36,11 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="font-display text-xl text-brand-river font-semibold mb-2">2. Cookies et suivi</h2>
             <p>
-              Ce site n&apos;utilise pas de cookies publicitaires ni d&apos;outils de suivi tiers (pas de pixels
-              publicitaires, pas d&apos;analytics tiers à ce jour). Le stockage local du navigateur mentionné
-              ci-dessus n&apos;est pas un cookie et n&apos;est pas partagé avec des tiers.
+              Ce site n&apos;utilise pas de cookies publicitaires. Nous utilisons Vercel Web Analytics pour
+              suivre la fréquentation générale du site (pages consultées, pays, type d&apos;appareil) de manière
+              agrégée et anonyme : cet outil ne dépose pas de cookie et ne permet pas de vous identifier
+              personnellement ni de vous suivre d&apos;un site à l&apos;autre. Le stockage local du navigateur
+              mentionné ci-dessus n&apos;est pas un cookie et n&apos;est pas partagé avec des tiers.
             </p>
           </section>
 
