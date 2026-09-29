@@ -3,6 +3,7 @@
 // professional site rather than a single-screen prototype.
 import Link from 'next/link';
 import { KinshasaSeal } from './BrandMark';
+import { NewsletterSignup } from './NewsletterSignup';
 import { SocialLinks } from './SocialLinks';
 import { IconMail } from './icons';
 
@@ -14,6 +15,10 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-brand-navy-border bg-brand-navy-light">
+      <div className="max-w-[1650px] mx-auto px-4 md:px-6 py-8 border-b border-brand-navy-border">
+        <NewsletterSignup />
+      </div>
+
       <div className="max-w-[1650px] mx-auto px-4 md:px-6 py-10 md:py-12 grid grid-cols-1 gap-9 md:grid-cols-[1.4fr_1fr_1fr]">
         <div className="flex gap-5">
           <KinshasaSeal size={84} />
