@@ -1,6 +1,7 @@
 
 import './globals.css';
 import { Analytics } from '@vercel/analytics/next';
+import { CookieConsentBanner } from '../components/CookieConsentBanner';
 
 export const metadata = {
   title: 'Kinshasa Label — Le Guide de Référence de Kinshasa',
@@ -22,6 +23,9 @@ export default function RootLayout({
             for the project (it just no-ops), so this goes live the moment
             it's enabled in Vercel → Project → Analytics, no redeploy needed. */}
         <Analytics />
+        {/* Google Analytics — only actually loads once a visitor accepts in
+            the banner; see src/components/CookieConsentBanner.tsx. */}
+        <CookieConsentBanner />
       </body>
     </html>
   );

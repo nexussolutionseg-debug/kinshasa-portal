@@ -39,8 +39,15 @@ export default function PrivacyPolicyPage() {
               Ce site n&apos;utilise pas de cookies publicitaires. Nous utilisons Vercel Web Analytics pour
               suivre la fréquentation générale du site (pages consultées, pays, type d&apos;appareil) de manière
               agrégée et anonyme : cet outil ne dépose pas de cookie et ne permet pas de vous identifier
-              personnellement ni de vous suivre d&apos;un site à l&apos;autre. Le stockage local du navigateur
-              mentionné ci-dessus n&apos;est pas un cookie et n&apos;est pas partagé avec des tiers.
+              personnellement ni de vous suivre d&apos;un site à l&apos;autre.
+            </p>
+            <p className="mt-3">
+              Nous utilisons également Google Analytics, qui dépose des cookies de mesure d&apos;audience —
+              mais uniquement si vous l&apos;acceptez via la bannière affichée lors de votre première visite.
+              Sans votre accord, le script Google Analytics n&apos;est jamais chargé par votre navigateur et
+              aucun cookie n&apos;est déposé. Vous pouvez revenir sur votre choix à tout moment via le lien
+              « Gérer les cookies » en pied de page. Le stockage local du navigateur mentionné ci-dessus
+              (hors cookies Google Analytics) n&apos;est pas partagé avec des tiers.
             </p>
           </section>
 

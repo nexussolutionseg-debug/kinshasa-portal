@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { KinshasaSeal } from './BrandMark';
 import { NewsletterSignup } from './NewsletterSignup';
 import { SocialLinks } from './SocialLinks';
+import { ManageCookiesLink } from './ManageCookiesLink';
 import { IconMail } from './icons';
 
 const FOOTER_COMMUNES = ['Gombe', 'Limete', 'Ngaliema', 'Kalamu', 'Lemba', 'Masina'];
@@ -87,6 +88,9 @@ export function SiteFooter() {
               <Link href="/politique-de-confidentialite" className="text-sm text-brand-cream/70 no-underline hover:text-brand-gold transition-colors">
                 Politique de confidentialité
               </Link>
+            </li>
+            <li>
+              <ManageCookiesLink />
             </li>
           </ul>
         </div>
