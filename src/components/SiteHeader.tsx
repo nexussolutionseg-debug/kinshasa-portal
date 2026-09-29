@@ -5,8 +5,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from './Button';
-import { IconPin, IconClose, IconMenu } from './icons';
+import { IconClose, IconMenu } from './icons';
 import { KinshasaMark } from './BrandMark';
 
 const NAV_LINKS = [
@@ -48,12 +47,6 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="hidden lg:block shrink-0">
-          <Button href="/backoffice" variant="primary" size="sm">
-            <IconPin size={14} /> Proposer un Lieu
-          </Button>
-        </div>
-
         <button
           type="button"
           aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
@@ -77,9 +70,6 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Button href="/backoffice" variant="primary" size="sm" fullWidth>
-            <IconPin size={14} /> Proposer un Lieu
-          </Button>
         </div>
       )}
     </header>

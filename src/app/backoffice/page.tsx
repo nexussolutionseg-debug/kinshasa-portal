@@ -465,7 +465,7 @@ export default function BackofficePage() {
     setSubmitting(true);
     setStatusMsg(null);
     const payload = {
-      message: bnMessage.trim(),
+      message: bnMessage.trim() || null,
       link_url: bnLinkUrl.trim() || null,
       link_label: bnLinkLabel.trim() || null,
       active: bnActive,
@@ -974,8 +974,8 @@ export default function BackofficePage() {
               )}
             </div>
             <div className="mb-4">
-              <label className={labelClass}>Message *</label>
-              <input type="text" value={bnMessage} onChange={(e) => setBnMessage(e.target.value)} required placeholder="ex: Kin Sécurité est en ligne — signalez un poste manquant" className={inputClass} />
+              <label className={labelClass}>Message (optionnel)</label>
+              <input type="text" value={bnMessage} onChange={(e) => setBnMessage(e.target.value)} placeholder="ex: Kin Sécurité est en ligne — signalez un poste manquant" className={inputClass} />
             </div>
             <div className="grid gap-4 mb-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
               <div>
@@ -1037,7 +1037,7 @@ export default function BackofficePage() {
                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${b.active ? 'bg-brand-green text-brand-navy' : 'bg-brand-navy-border text-brand-muted'}`}>
                       {b.active ? 'Active' : 'Inactive'}
                     </span>
-                    <p className="text-sm text-brand-cream mt-1.5 m-0">{b.message}</p>
+                    {b.message && <p className="text-sm text-brand-cream mt-1.5 m-0">{b.message}</p>}
                   </div>
                   <div className="flex gap-2.5">
                     <Button variant="secondary" size="sm" onClick={() => handleToggleBanner(b)}>

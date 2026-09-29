@@ -503,23 +503,38 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* BANNER — set from the backoffice, hidden entirely when there's no active one.
-            A fixed-height, generously-sized display area with object-contain (never
-            object-cover): editors upload all kinds of shapes — wide landscape banners,
-            portrait posters/flyers, square photos — and a fixed aspect-ratio crop cuts
-            off whichever ones don't match it (a portrait movie-poster-style flyer lost
-            its top and bottom to a wide 3:1 crop). Contain always shows the whole
-            image, scaled to fit, letterboxed on whichever axis has room to spare —
-            the one approach that looks right no matter what gets uploaded. */}
-        {banner && (
-          <div className="mt-4 rounded-xl border border-brand-gold/40 bg-brand-gold/10 overflow-hidden">
-            {banner.image_url && (
-              <div className="w-full h-64 sm:h-80 flex items-center justify-center bg-brand-navy-light">
-                <img src={banner.image_url} alt="" className="max-w-full max-h-full object-contain" />
-              </div>
-            )}
-            <div className="flex items-center justify-between gap-3 flex-wrap px-4 py-3">
-              <p className="text-sm text-brand-cream m-0 flex-1 min-w-[180px]">{banner.message}</p>
+      </section>
+
+      {/* BANNER — set from the backoffice, hidden entirely when there's no active one.
+          Full-bleed: deliberately placed OUTSIDE the max-w-[1650px] container above so
+          the image spans the full browser width edge-to-edge rather than sitting inside
+          the page's padded content column.
+
+          The box uses aspect-[3/1] (not a fixed pixel height) so its shape scales with
+          the page's own width — a fixed height was the reason an earlier version still
+          left visible gaps on the sides even at full container width: object-contain
+          fits the image to whichever box dimension is tighter, and a short fixed height
+          on a very wide container meant height was always the tighter constraint, so a
+          landscape image never grew past a fairly narrow band in the middle. With a
+          3:1 box instead, a banner image close to that same 3:1 ratio now fills the
+          full width edge-to-edge with no gaps at any screen size. Editors should aim
+          for roughly 3:1 (e.g. 2100x700, 1800x600) for that true full-bleed look; a
+          differently-shaped image (portrait poster, square photo) still displays
+          completely uncropped via object-contain, just letterboxed within the box
+          rather than filling it — never crop is still the rule, this only changes what
+          "fills the width" requires of the image. */}
+      {banner && (
+        <div className="w-full mt-4 bg-brand-gold/10 border-y border-brand-gold/40">
+          {banner.image_url && (
+            <div className="w-full aspect-[3/1] max-h-[440px] flex items-center justify-center bg-brand-navy-light overflow-hidden">
+              <img src={banner.image_url} alt="" className="w-full h-full object-contain" />
+            </div>
+          )}
+          {(banner.message || banner.link_url) && (
+            <div className="max-w-[1650px] mx-auto px-4 md:px-6 flex items-center justify-between gap-3 flex-wrap py-3">
+              {banner.message && (
+                <p className="text-sm text-brand-cream m-0 flex-1 min-w-[180px]">{banner.message}</p>
+              )}
               {banner.link_url && (
                 <a
                   href={banner.link_url}
@@ -531,9 +546,9 @@ export default function HomePage() {
                 </a>
               )}
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </div>
+      )}
 
       {/* MAIN GRID: MAP + LISTINGS */}
       <section className="max-w-[1650px] mx-auto px-4 md:px-6 py-8 w-full flex-1">

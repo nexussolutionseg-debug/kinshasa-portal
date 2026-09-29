@@ -79,16 +79,6 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/backoffice" className="text-sm text-brand-cream/70 no-underline hover:text-brand-gold transition-colors">
-                Proposer un lieu
-              </Link>
-            </li>
-            <li>
-              <Link href="/login" className="text-sm text-brand-cream/70 no-underline hover:text-brand-gold transition-colors">
-                Backoffice
-              </Link>
-            </li>
-            <li>
               <Link href="/politique-de-confidentialite" className="text-sm text-brand-cream/70 no-underline hover:text-brand-gold transition-colors">
                 Politique de confidentialité
               </Link>
