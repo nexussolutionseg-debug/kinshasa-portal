@@ -21,6 +21,30 @@ function pickMeta(head: string, keys: string[]): string | null {
   return link ? link[1] : null;
 }
 
+// First real photo in the article body: the WordPress featured image
+// (wp-post-image) if present, else the first <img> from an uploads/files
+// folder. Looks at src, data-src / data-lazy-src (lazy loading) and srcset.
+function pickBodyImage(html: string, base: string): string | null {
+  const body = html.split(/<\/head>/i)[1] || '';
+  const tags = body.match(/<img\b[^>]*>/gi) || [];
+  const srcOf = (tag: string) => {
+    const attr = (n: string) => tag.match(new RegExp(`\\s${n}=["']([^"']+)["']`, 'i'))?.[1];
+    const set = attr('srcset') || attr('data-srcset');
+    return attr('data-src') || attr('data-lazy-src') || attr('src') || (set ? set.split(',')[0].trim().split(/\s+/)[0] : undefined);
+  };
+  const ordered = [...tags.filter((t) => /wp-post-image|featured|attachment-/i.test(t)), ...tags];
+  for (const tag of ordered) {
+    const src = srcOf(tag);
+    if (!src || src.startsWith('data:')) continue;
+    if (!/uploads|\/files\/|\/images?\/|\/media\//i.test(src)) continue;
+    const w = Number(tag.match(/\swidth=["']?(\d+)/i)?.[1] || 0);
+    if (w && w < 200) continue; // icons, avatars, share buttons
+    const abs = absolutize(src, base);
+    if (abs) return abs;
+  }
+  return null;
+}
+
 function absolutize(src: string, base: string): string | null {
   try {
     const u = new URL(src.replace(/&amp;/g, '&'), base);
@@ -45,16 +69,23 @@ export async function findShareImage(articleUrl: string, headers: Record<string,
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let html = '';
+      let headDone = false;
       while (html.length < MAX_BYTES) {
         const { done, value } = await reader.read();
         if (done) break;
         html += decoder.decode(value, { stream: true });
-        if (/<\/head>/i.test(html)) break;
+        if (!headDone && /<\/head>/i.test(html)) {
+          headDone = true;
+          const raw = pickMeta(html.split(/<\/head>/i)[0], ['og:image:secure_url', 'og:image', 'twitter:image', 'twitter:image:src']);
+          result = raw ? absolutize(raw, res.url || articleUrl) : null;
+          if (result) break; // share image found: no need for the body
+        }
+        // Some sites (e.g. Provinces26 RDC) declare no share image: fall back
+        // to the article's main photo — stop once one is found.
+        if (headDone && pickBodyImage(html, res.url || articleUrl)) break;
       }
       reader.cancel().catch(() => {});
-      const head = html.split(/<\/head>/i)[0];
-      const raw = pickMeta(head, ['og:image:secure_url', 'og:image', 'twitter:image', 'twitter:image:src']);
-      result = raw ? absolutize(raw, res.url || articleUrl) : null;
+      if (!result) result = pickBodyImage(html, res.url || articleUrl);
     }
   } catch {
     result = null;
