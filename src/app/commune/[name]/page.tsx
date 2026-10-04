@@ -9,7 +9,7 @@ import Link from 'next/link';
 import maplibregl from '../../../lib/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../../../lib/supabase';
-import { escapeHtml } from '../../../lib/html';
+import { createPlacePin } from '../../../lib/mapPins';
 import { IconHome, IconChevronRight, IconClock, IconChart, IconPin, IconArrowRight } from '../../../components/icons';
 import { SiteHeader } from '../../../components/SiteHeader';
 import { SiteFooter } from '../../../components/SiteFooter';
@@ -80,27 +80,8 @@ export default function CommuneDetailPage() {
       const lat = p.lat ? parseFloat(p.lat) : communeInfo.lat;
       const lng = p.lng ? parseFloat(p.lng) : communeInfo.lng;
       const color = PIN_COLORS[p.vertical] || '#1A82F5';
-      const el = document.createElement('button');
-      el.type = 'button';
-      el.setAttribute('aria-label', p.name);
-      const avg = getAverageRating(p);
-      el.title = p.name;
-      el.style.cssText = `position:relative;width:30px;height:30px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 6px 14px -4px rgba(11,37,69,.55);cursor:pointer;padding:0;transition:transform .15s;`;
-      // Compact round pin; the name pops up on hover/focus so dense areas stay readable.
-      const label = document.createElement('span');
-      label.style.cssText = `position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);background:#fff;color:#0B2545;font:700 11px system-ui,sans-serif;padding:4px 8px;border-radius:999px;white-space:nowrap;box-shadow:0 6px 16px -6px rgba(11,37,69,.45);display:none;pointer-events:none;`;
-      label.innerHTML = `${escapeHtml(p.name)}${avg !== null ? ` <span style="color:#B98A00">★ ${avg.toFixed(1)}</span>` : ''}`;
-      el.appendChild(label);
-      const show = () => { label.style.display = 'block'; el.style.transform = 'scale(1.15)'; el.style.zIndex = '5'; };
-      const hide = () => { label.style.display = 'none'; el.style.transform = ''; el.style.zIndex = ''; };
-      el.addEventListener('mouseenter', show);
-      el.addEventListener('mouseleave', hide);
-      el.addEventListener('focus', show);
-      el.addEventListener('blur', hide);
-      el.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        setOpenPlace(p);
-      });
+      const el = createPlacePin({ name: p.name, color, rating: getAverageRating(p), onSelect: () => setOpenPlace(p) });
+
       markersRef.current.push(new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map.current!));
     });
   }, [communeName, communeInfo, placeList]);

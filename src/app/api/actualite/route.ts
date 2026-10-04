@@ -8,11 +8,15 @@
 import { NextResponse } from 'next/server';
 import { NEWS_SOURCES, parseFeed, filterKinshasa, type NewsItem } from '../../../lib/news';
 import { withUtm } from '../../../lib/utm';
+import { findShareImage, mapLimit } from '../../../lib/ogImage';
 
 export const revalidate = 900;
+// Article share-image lookups can take a few seconds in total; the refresh
+// runs in the background (visitors always get the cached feed instantly).
+export const maxDuration = 60;
 
 const FEED_TIMEOUT_MS = 8000;
-const MAX_ITEMS = 80;
+const MAX_ITEMS = 60;
 
 // Some WordPress sites sit behind firewalls that refuse requests that look
 // like bots, so we identify as a normal browser-compatible client and fall
@@ -57,7 +61,7 @@ export async function GET() {
         if (seen.has(key) || seen.has(item.link)) continue;
         seen.add(key);
         seen.add(item.link);
-        items.push({ ...item, link: withUtm(item.link, 'kin_actualite', item.sourceId) });
+        items.push(item);
       }
       return { id: s.id, name: s.name, site: s.site, color: s.color, ok: true, count: r.value.length };
     }
@@ -65,10 +69,17 @@ export async function GET() {
   });
 
   items.sort((a, b) => (b.date ? Date.parse(b.date) : 0) - (a.date ? Date.parse(a.date) : 0));
+  const top = items.slice(0, MAX_ITEMS);
+
+  // Feeds without pictures (Le Point.cd, Mediacongo, Beto.cd, Provinces26…):
+  // take the article's own share image so every card has a photo.
+  await mapLimit(top, 10, async (item) => {
+    if (!item.image) item.image = await findShareImage(item.link, HEADERS);
+  });
 
   return NextResponse.json({
     updatedAt: new Date().toISOString(),
-    items: items.slice(0, MAX_ITEMS),
+    items: top.map((item) => ({ ...item, link: withUtm(item.link, 'kin_actualite', item.sourceId) })),
     sources,
   });
 }

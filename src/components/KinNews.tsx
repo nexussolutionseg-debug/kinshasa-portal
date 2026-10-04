@@ -85,7 +85,12 @@ export function NewsCard({ item, variant = 'card' }: { item: NewsItem; variant?:
   const hasLink = !!item.link;
   const Wrapper: any = hasLink ? 'a' : 'div';
   const wrapperProps = hasLink
-    ? { href: item.link, target: /^https?:/.test(item.link) ? '_blank' : undefined, rel: 'noopener noreferrer' }
+    ? {
+        href: item.link,
+        target: /^https?:/.test(item.link) ? '_blank' : undefined,
+        rel: 'noopener noreferrer',
+        'aria-label': `${item.title} — lire l’article sur ${item.pinned ? 'la source' : item.sourceName} (nouvel onglet)`,
+      }
     : {};
 
   const meta = (
@@ -110,10 +115,15 @@ export function NewsCard({ item, variant = 'card' }: { item: NewsItem; variant?:
         <div className="min-w-0 flex-1">
           {meta}
           <p className="text-sm font-bold text-brand-ink leading-snug mt-1 mb-0 group-hover:text-brand-blue-deep line-clamp-2">{item.title}</p>
+          {hasLink && /^https?:/.test(item.link) && (
+            <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-bold text-brand-blue-deep group-hover:underline">
+              Lire l’article <IconExternalLink size={11} />
+            </span>
+          )}
         </div>
         {item.image && imgOk && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image} alt="" loading="lazy" onError={() => setImgOk(false)} className="w-20 h-16 rounded-xl object-cover shrink-0" />
+          <img src={item.image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setImgOk(false)} className="w-20 h-16 rounded-xl object-cover shrink-0" />
         )}
       </Wrapper>
     );
@@ -130,7 +140,7 @@ export function NewsCard({ item, variant = 'card' }: { item: NewsItem; variant?:
       <div className={`relative overflow-hidden ${feature ? 'aspect-[16/9] lg:aspect-auto lg:flex-1 lg:min-h-[260px]' : 'aspect-[16/9] shrink-0'}`}>
         {item.image && imgOk ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image} alt="" loading="lazy" onError={() => setImgOk(false)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={item.image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setImgOk(false)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
           <div
             className="w-full h-full flex items-center justify-center"
@@ -156,8 +166,10 @@ export function NewsCard({ item, variant = 'card' }: { item: NewsItem; variant?:
           item.teaser && <p className="text-sm text-brand-muted leading-relaxed m-0 line-clamp-2">{item.teaser}</p>
         )}
         {hasLink && /^https?:/.test(item.link) && (
-          <span className="mt-auto pt-2 inline-flex items-center gap-1 text-xs font-bold text-brand-blue-deep">
-            Lire sur {item.pinned ? 'la source' : item.sourceName} <IconExternalLink size={11} />
+          <span className="mt-auto pt-3">
+            <span className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-brand-blue-soft text-brand-blue-deep text-sm font-bold group-hover:bg-brand-blue group-hover:text-white transition-colors">
+              Lire l’article sur {item.pinned ? 'la source' : item.sourceName} <IconExternalLink size={13} />
+            </span>
           </span>
         )}
       </div>
