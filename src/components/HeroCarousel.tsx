@@ -20,8 +20,16 @@ import { SpinningWheel } from './BrandMark';
 import { LiveDot } from './SiteHeader';
 import type { NewsItem } from '../lib/news';
 import { timeAgo } from '../lib/news';
+import { withUtm } from '../lib/utm';
 
-type Banner = { id: number | string; image_url?: string | null; message?: string | null; link_url?: string | null; link_label?: string | null };
+export type Banner = {
+  id: number | string;
+  image_url?: string | null;         // desktop / tablet image
+  mobile_image_url?: string | null;  // optional phone image (portrait); falls back to image_url
+  message?: string | null;
+  link_url?: string | null;
+  link_label?: string | null;
+};
 
 type Slide = { key: string; render: () => ReactNode; dark: boolean };
 
@@ -30,23 +38,30 @@ export function HeroCarousel({
   headlines,
   weekendCount,
   onSurprise,
+  brandSlides = true,
 }: {
   banners: Banner[];
   headlines: NewsItem[];
   weekendCount: number;
   onSurprise: () => void;
+  /** Show the built-in Explore / Kin Actualité / Weekend slides after the banners. */
+  brandSlides?: boolean;
 }) {
   const slides: Slide[] = [
     ...banners
-      .filter((b) => b.image_url || b.message)
+      .filter((b) => b.image_url || b.mobile_image_url || b.message)
       .map<Slide>((b) => ({
         key: `banner-${b.id}`,
         dark: true,
         render: () => <BannerSlide banner={b} />,
       })),
-    { key: 'explore', dark: true, render: () => <ExploreSlide onSurprise={onSurprise} /> },
-    { key: 'actu', dark: true, render: () => <ActuSlide headlines={headlines} /> },
-    { key: 'weekend', dark: false, render: () => <WeekendSlide count={weekendCount} /> },
+    ...(brandSlides || banners.length === 0
+      ? [
+          { key: 'explore', dark: true, render: () => <ExploreSlide onSurprise={onSurprise} /> },
+          { key: 'actu', dark: true, render: () => <ActuSlide headlines={headlines} /> },
+          { key: 'weekend', dark: false, render: () => <WeekendSlide count={weekendCount} /> },
+        ]
+      : []),
   ];
 
   const [index, setIndex] = useState(0);
@@ -148,29 +163,51 @@ export function HeroCarousel({
 
 // ---------------------------------------------------------------------------
 
-function BannerSlide({ banner }: { banner: Banner }) {
+// Exported so the backoffice preview renders banners exactly like the site.
+// variant "auto" (site): <picture> serves mobile_image_url below 768px wide.
+// "desktop" / "mobile": forced, for the side-by-side previews.
+export function BannerSlide({ banner, variant = 'auto' }: { banner: Banner; variant?: 'auto' | 'desktop' | 'mobile' }) {
   const isExternal = banner.link_url && /^https?:\/\//.test(banner.link_url);
+  const desktop = banner.image_url || banner.mobile_image_url || '';
+  const mobile = banner.mobile_image_url || banner.image_url || '';
+  const forcedSrc = variant === 'mobile' ? mobile : desktop;
+  const small = variant === 'mobile';
+  const img = (cls: string, alt: string, hidden = false) =>
+    variant === 'auto' ? (
+      <picture>
+        {banner.mobile_image_url && <source media="(max-width: 767px)" srcSet={banner.mobile_image_url} />}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={desktop} alt={alt} aria-hidden={hidden || undefined} className={cls} />
+      </picture>
+    ) : (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={forcedSrc} alt={alt} aria-hidden={hidden || undefined} className={cls} />
+    );
   return (
-    <div className="absolute inset-0 bg-brand-navy">
-      {banner.image_url && (
+    <div className="absolute inset-0 bg-brand-navy overflow-hidden">
+      {desktop && (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={banner.image_url} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={banner.image_url} alt={banner.message || 'Bannière'} className="absolute inset-0 w-full h-full object-contain" />
+          {img('absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60', '', true)}
+          {img('absolute inset-0 w-full h-full object-contain', banner.message || 'Bannière')}
         </>
       )}
       {(banner.message || banner.link_url) && (
-        <div className="absolute left-0 right-0 bottom-0 p-5 pb-12 md:p-8 md:pb-14 bg-gradient-to-t from-black/70 to-transparent flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div
+          className={`absolute left-0 right-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col gap-3 ${
+            small ? 'p-3 pb-6' : 'p-5 pb-12 md:p-8 md:pb-14 md:flex-row md:items-end md:justify-between'
+          }`}
+        >
           {banner.message && (
-            <p className="font-display text-xl md:text-3xl font-bold text-white m-0 max-w-2xl drop-shadow">{banner.message}</p>
+            <p className={`font-display font-bold text-white m-0 max-w-2xl drop-shadow ${small ? 'text-sm' : 'text-xl md:text-3xl'}`}>{banner.message}</p>
           )}
           {banner.link_url && (
             <a
-              href={banner.link_url}
+              href={withUtm(banner.link_url, 'banner', String(banner.id))}
               target={isExternal ? '_blank' : undefined}
               rel={isExternal ? 'noopener noreferrer' : undefined}
-              className="self-start md:self-auto shrink-0 inline-flex items-center gap-1.5 bg-brand-yellow text-brand-ink font-bold text-sm px-5 py-2.5 rounded-full no-underline hover:bg-white"
+              className={`self-start shrink-0 inline-flex items-center gap-1.5 bg-brand-yellow text-brand-ink font-bold rounded-full no-underline hover:bg-white ${
+                small ? 'text-[10px] px-3 py-1.5' : 'text-sm px-5 py-2.5 md:self-auto'
+              }`}
             >
               {banner.link_label || 'En savoir plus'} {isExternal ? <IconExternalLink size={13} /> : <IconArrowRight size={14} />}
             </a>

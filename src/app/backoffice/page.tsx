@@ -3,7 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock } from '../../components/icons';
+import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock, IconSparkle, IconPin, IconCalendar, IconNews, IconMail } from '../../components/icons';
+import { ShowcasePanel } from '../../components/backoffice/ShowcasePanel';
+import { DashboardHome } from '../../components/backoffice/DashboardHome';
+import { uploadImage } from '../../lib/upload';
 import { Button } from '../../components/Button';
 import { SubscribersPanel } from '../../components/backoffice/SubscribersPanel';
 import { KinshasaMark } from '../../components/BrandMark';
@@ -12,7 +15,7 @@ const COMMUNES = [
   'Gombe', 'Limete', 'Ngaliema', "N'sele", "N'djili", 'Kintambo',
   'Barumbu', 'Kinshasa', 'Lingwala', 'Kasa-Vubu', 'Bandalungwa',
   'Kalamu', 'Ngiri-Ngiri', 'Bumbu', 'Selembao', 'Makala', 'Ngaba',
-  'Lemba', 'Matete', 'Masina', 'Kimbanseke', 'Mont-Ngafula', 'Maluku', 'Ouanza'
+  'Lemba', 'Matete', 'Masina', 'Kimbanseke', 'Mont-Ngafula', 'Maluku', 'Kisenso'
 ];
 
 export default function BackofficePage() {
@@ -53,7 +56,7 @@ export default function BackofficePage() {
   };
 
   // Which content type the backoffice is managing right now.
-  const [section, setSection] = useState<'places' | 'events' | 'news' | 'banner' | 'subscribers'>('places');
+  const [section, setSection] = useState<'home' | 'places' | 'events' | 'news' | 'showcase' | 'subscribers'>('home');
 
   const [activeTab, setActiveTab] = useState<'manage' | 'add'>('manage');
   const [submitting, setSubmitting] = useState(false);
@@ -67,6 +70,7 @@ export default function BackofficePage() {
   const [placeName, setPlaceName] = useState('');
   const [googleMapsUrl, setGoogleMapsUrl] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [photoUploading, setPhotoUploading] = useState(false);
   const [commune, setCommune] = useState('Gombe');
   const [vertical, setVertical] = useState('kin_food');
   const [address, setAddress] = useState('');
@@ -246,7 +250,7 @@ export default function BackofficePage() {
     if (!error && data) setEventsList(data);
   };
 
-  useEffect(() => { fetchEvents(); fetchNewsItems(); fetchBanners(); }, []);
+  useEffect(() => { fetchEvents(); fetchNewsItems(); }, []);
 
   const resetEventForm = () => {
     setEditingEventId(null);
@@ -397,121 +401,6 @@ export default function BackofficePage() {
     }
   };
 
-  // ---------------------------------------------------------------------
-  // BANNIÈRE — a small announcement strip shown under the category tabs
-  // on the homepage. Only the most recently created row with active=true
-  // is ever displayed there; older/inactive ones stay listed here for
-  // re-use.
-  // ---------------------------------------------------------------------
-  const [bannerList, setBannerList] = useState<any[]>([]);
-  const [editingBannerId, setEditingBannerId] = useState<number | null>(null);
-  const [bnMessage, setBnMessage] = useState('');
-  const [bnLinkUrl, setBnLinkUrl] = useState('');
-  const [bnLinkLabel, setBnLinkLabel] = useState('');
-  const [bnActive, setBnActive] = useState(true);
-  const [bnImageUrl, setBnImageUrl] = useState('');
-  const [bnImageUploading, setBnImageUploading] = useState(false);
-
-  const fetchBanners = async () => {
-    const { data, error } = await supabase.from('banners').select('*').order('created_at', { ascending: false });
-    if (!error && data) setBannerList(data);
-  };
-
-  const resetBannerForm = () => {
-    setEditingBannerId(null);
-    setBnMessage('');
-    setBnLinkUrl('');
-    setBnLinkLabel('');
-    setBnActive(true);
-    setBnImageUrl('');
-  };
-
-  const startEditingBanner = (b: any) => {
-    setEditingBannerId(b.id);
-    setBnMessage(b.message || '');
-    setBnLinkUrl(b.link_url || '');
-    setBnLinkLabel(b.link_label || '');
-    setBnActive(!!b.active);
-    setBnImageUrl(b.image_url || '');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Uploads a banner image file straight to the public "banners" Supabase
-  // Storage bucket and stores the resulting public URL — same idea as the
-  // image_url text field already used for places, but with a real file
-  // upload instead of pasting a URL, since editors won't always have one.
-  const handleBannerImageSelect = async (file: File | null) => {
-    if (!file) return;
-    setBnImageUploading(true);
-    setStatusMsg(null);
-    try {
-      const ext = file.name.split('.').pop() || 'jpg';
-      const path = `banner-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('banners').upload(path, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-      if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('banners').getPublicUrl(path);
-      setBnImageUrl(data.publicUrl);
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: `Échec de l'envoi de l'image : ${err.message}` });
-    } finally {
-      setBnImageUploading(false);
-    }
-  };
-
-  const handleSaveBanner = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setStatusMsg(null);
-    const payload = {
-      message: bnMessage.trim() || null,
-      link_url: bnLinkUrl.trim() || null,
-      link_label: bnLinkLabel.trim() || null,
-      active: bnActive,
-      image_url: bnImageUrl.trim() || null,
-    };
-    try {
-      if (editingBannerId) {
-        const { error } = await supabase.from('banners').update(payload).eq('id', editingBannerId);
-        if (error) throw error;
-        setStatusMsg({ type: 'success', text: 'Bannière mise à jour !' });
-      } else {
-        const { error } = await supabase.from('banners').insert([payload]);
-        if (error) throw error;
-        setStatusMsg({ type: 'success', text: 'Bannière ajoutée !' });
-      }
-      resetBannerForm();
-      fetchBanners();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.message });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleToggleBanner = async (b: any) => {
-    try {
-      const { error } = await supabase.from('banners').update({ active: !b.active }).eq('id', b.id);
-      if (error) throw error;
-      fetchBanners();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.message });
-    }
-  };
-
-  const handleDeleteBanner = async (id: number) => {
-    if (!confirm('Supprimer cette bannière ?')) return;
-    try {
-      const { error } = await supabase.from('banners').delete().eq('id', id);
-      if (error) throw error;
-      fetchBanners();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.message });
-    }
-  };
-
   const inputClass = "w-full box-border px-3 py-2.5 bg-brand-bg border border-brand-line text-brand-ink rounded-lg text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-red";
   const labelClass = "block text-[11px] text-brand-muted uppercase font-bold mb-1.5";
 
@@ -529,29 +418,28 @@ export default function BackofficePage() {
   return (
     <main className="min-h-screen bg-brand-bg text-brand-ink">
 
-      {/* Simplified admin header — no marketing hero/footer needed here */}
-      <nav className="flex justify-between items-center max-w-[1000px] mx-auto px-4 py-4 border-b border-brand-line flex-wrap gap-2.5">
-        <div className="flex items-center gap-3">
-          <KinshasaMark size={28} />
-          <Link href="/" className="inline-flex items-center gap-1.5 text-brand-blue no-underline font-semibold text-sm hover:text-brand-red-dark">
-            <IconHome size={14} /> Accueil
-          </Link>
-          <span className="text-brand-line">/</span>
-          <h1 className="font-display text-lg font-semibold text-brand-ink m-0">
-            Kinshasa Label — Backoffice
-          </h1>
+      {/* Admin header — sticky, with one-click access to the live site */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-brand-line">
+        <div className="max-w-[1150px] mx-auto px-4 h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <KinshasaMark size={36} />
+            <div className="min-w-0">
+              <p className="font-display text-base md:text-lg font-extrabold text-brand-ink m-0 leading-none truncate">Kinshasa Label</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-brand-blue m-0 mt-1">Backoffice</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button href="/" target="_blank" rel="noopener noreferrer" variant="secondary" size="sm">
+              <IconExternalLink size={13} /> <span className="hidden sm:inline">Voir le site</span><span className="sm:hidden">Site</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              Déconnexion
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2.5">
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            Se déconnecter
-          </Button>
-          <Button href="/" variant="secondary" size="sm">
-            ← Retour au Média
-          </Button>
-        </div>
-      </nav>
+      </header>
 
-      <div className="max-w-[1000px] mx-auto px-4 py-7">
+      <div className="max-w-[1150px] mx-auto px-4 py-6 md:py-8">
 
         {/* Status Notification */}
         {statusMsg && (
@@ -564,24 +452,39 @@ export default function BackofficePage() {
           </div>
         )}
 
-        {/* SECTION SWITCHER — which content type is being managed */}
-        <div className="flex gap-2.5 mb-6 flex-wrap">
-          <Button variant={section === 'places' ? 'primary' : 'secondary'} onClick={() => setSection('places')}>
-            Lieux
-          </Button>
-          <Button variant={section === 'events' ? 'primary' : 'secondary'} onClick={() => setSection('events')}>
-            Événements (Kin Weekend)
-          </Button>
-          <Button variant={section === 'news' ? 'primary' : 'secondary'} onClick={() => setSection('news')}>
-            À la une (Kin Actualité)
-          </Button>
-          <Button variant={section === 'banner' ? 'primary' : 'secondary'} onClick={() => setSection('banner')}>
-            Bannière
-          </Button>
-          <Button variant={section === 'subscribers' ? 'primary' : 'secondary'} onClick={() => setSection('subscribers')}>
-            Abonnés newsletter
-          </Button>
-        </div>
+        {/* SECTION SWITCHER — big, icon-led tabs; scrolls sideways on phones */}
+        <nav aria-label="Sections du backoffice" className="rail flex gap-2 overflow-x-auto pb-2 mb-6 -mx-4 px-4 md:mx-0 md:px-0">
+          {([
+            ['home', 'Tableau de bord', IconHome],
+            ['showcase', 'Vitrine (accueil)', IconSparkle],
+            ['places', 'Lieux', IconPin],
+            ['events', 'Kin Weekend', IconCalendar],
+            ['news', 'À la une', IconNews],
+            ['subscribers', 'Abonnés', IconMail],
+          ] as const).map(([id, l, Icon]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => { setSection(id); setStatusMsg(null); window.scrollTo({ top: 0 }); }}
+              className={`shrink-0 inline-flex items-center gap-2 h-11 px-4 rounded-full text-sm font-bold border-2 cursor-pointer transition-colors ${
+                section === id ? 'bg-brand-ink text-white border-brand-ink' : 'bg-white text-brand-ink border-brand-line hover:border-brand-blue'
+              }`}
+            >
+              <Icon size={16} /> {l}
+            </button>
+          ))}
+        </nav>
+
+        {section === 'home' && (
+          <DashboardHome
+            go={(id) => { setSection(id); window.scrollTo({ top: 0 }); }}
+            addPlace={() => { setSection('places'); setActiveTab('add'); resetForm(); }}
+            placesCount={placesList.length}
+            placesNoPhoto={placesList.filter((p) => !p.image_url).length}
+            eventsCount={eventsList.filter((e: any) => !e.event_date || new Date(e.event_date) >= new Date(new Date().toDateString())).length}
+            newsCount={newsList.length}
+          />
+        )}
 
         {section === 'subscribers' && <SubscribersPanel />}
 
@@ -693,8 +596,32 @@ export default function BackofficePage() {
             </div>
 
             <div className="mb-4">
-              <label className={labelClass}>Lien Photo (URL)</label>
-              <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className={inputClass} />
+              <label className={labelClass}>Photo du lieu</label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <label className="shrink-0 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-brand-blue text-white text-sm font-bold cursor-pointer hover:bg-brand-blue-deep">
+                  {photoUploading ? 'Envoi…' : 'Importer une photo'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = '';
+                      if (!f) return;
+                      setPhotoUploading(true);
+                      try {
+                        setImageUrl(await uploadImage(f, 'places', 1400));
+                      } catch (err: any) {
+                        setStatusMsg({ type: 'error', text: `Échec de l'envoi de la photo : ${err.message || err}` });
+                      } finally {
+                        setPhotoUploading(false);
+                      }
+                    }}
+                  />
+                </label>
+                <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="… ou collez un lien https://" className={inputClass} />
+              </div>
+              <p className="text-[11px] text-brand-muted mt-1.5 mb-0">Format conseillé : paysage 4:3 (ex. 1200 × 900). Les grosses photos sont allégées automatiquement.</p>
               {imageUrl && (
                 <div className="mt-2.5">
                   <img src={imageUrl} alt="Aperçu" className="w-[120px] h-20 object-cover rounded-md border border-brand-line" />
@@ -958,110 +885,7 @@ export default function BackofficePage() {
         </>
         )}
 
-        {/* BANNIÈRE SECTION */}
-        {section === 'banner' && (
-        <div className="bg-brand-surface border border-brand-line rounded-2xl p-6">
-          <h2 className="font-display text-xl text-brand-blue mt-0 mb-2 font-semibold">
-            Bannière du site
-          </h2>
-          <p className="text-xs text-brand-muted mb-5 leading-relaxed">
-            Chaque bannière active devient une diapositive du carrousel en haut de la page d&apos;accueil (les plus récentes en premier). Désactivez une bannière pour la retirer du carrousel. Format conseillé : paysage, environ 2,5:1 (ex. 2000×800) — l&apos;image n&apos;est jamais recadrée.
-          </p>
-
-          <form onSubmit={handleSaveBanner} className="mb-6 pb-6 border-b border-brand-line">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm text-brand-ink font-semibold m-0">
-                {editingBannerId ? 'Éditer la bannière' : 'Nouvelle bannière'}
-              </h3>
-              {editingBannerId && (
-                <Button type="button" variant="ghost" size="sm" onClick={resetBannerForm}>
-                  Annuler
-                </Button>
-              )}
-            </div>
-            <div className="mb-4">
-              <label className={labelClass}>Message (optionnel)</label>
-              <input type="text" value={bnMessage} onChange={(e) => setBnMessage(e.target.value)} placeholder="ex: Kin Sécurité est en ligne — signalez un poste manquant" className={inputClass} />
-            </div>
-            <div className="grid gap-4 mb-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
-              <div>
-                <label className={labelClass}>Lien (optionnel)</label>
-                <input type="url" value={bnLinkUrl} onChange={(e) => setBnLinkUrl(e.target.value)} placeholder="https://..." className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Texte du lien</label>
-                <input type="text" value={bnLinkLabel} onChange={(e) => setBnLinkLabel(e.target.value)} placeholder="En savoir plus" className={inputClass} />
-              </div>
-            </div>
-            <div className="mb-5">
-              <label className={labelClass}>Image (optionnel)</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleBannerImageSelect(e.target.files?.[0] || null)}
-                disabled={bnImageUploading}
-                className="text-sm text-brand-ink file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-red file:text-white file:font-semibold file:text-xs file:cursor-pointer"
-              />
-              <p className="text-xs text-brand-muted mt-1.5">
-                Elle s&apos;affiche en pleine largeur en haut de la page d&apos;accueil, entière et sans
-                recadrage — paysage, portrait (affiche, flyer) ou carrée, toutes les formes fonctionnent.
-                L&apos;aperçu ci-dessous montre exactement comment elle apparaîtra sur le site.
-              </p>
-              {bnImageUploading && <p className="text-xs text-brand-muted mt-2">Envoi de l&apos;image...</p>}
-              {bnImageUrl && !bnImageUploading && (
-                <div className="mt-3 flex flex-col gap-2">
-                  <div className="w-full max-w-[420px] h-40 flex items-center justify-center rounded-md border border-brand-line overflow-hidden bg-brand-bg">
-                    <img src={bnImageUrl} alt="Aperçu de la bannière" className="max-w-full max-h-full object-contain" />
-                  </div>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setBnImageUrl('')}>
-                    Retirer l&apos;image
-                  </Button>
-                </div>
-              )}
-            </div>
-            <label className="flex items-center gap-2 mb-5 text-sm text-brand-ink">
-              <input type="checkbox" checked={bnActive} onChange={(e) => setBnActive(e.target.checked)} />
-              Active (visible sur le site)
-            </label>
-            <Button type="submit" disabled={submitting || bnImageUploading} variant="primary" size="lg" fullWidth>
-              {submitting ? 'Enregistrement...' : editingBannerId ? 'Enregistrer les Modifications →' : 'Créer la Bannière →'}
-            </Button>
-          </form>
-
-          {bannerList.length === 0 ? (
-            <p className="text-sm text-brand-muted">Aucune bannière créée.</p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {bannerList.map((b) => (
-                <div key={b.id} className="bg-brand-bg border border-brand-line rounded-xl p-4 flex gap-4 items-center flex-wrap">
-                  {b.image_url && (
-                    <div className="w-24 h-16 flex items-center justify-center shrink-0 rounded-md border border-brand-line overflow-hidden bg-brand-bg">
-                      <img src={b.image_url} alt="" className="max-w-full max-h-full object-contain" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-[280px]">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${b.active ? 'bg-brand-blue-deep text-white' : 'bg-brand-line text-brand-muted'}`}>
-                      {b.active ? 'Active' : 'Inactive'}
-                    </span>
-                    {b.message && <p className="text-sm text-brand-ink mt-1.5 m-0">{b.message}</p>}
-                  </div>
-                  <div className="flex gap-2.5">
-                    <Button variant="secondary" size="sm" onClick={() => handleToggleBanner(b)}>
-                      {b.active ? 'Désactiver' : 'Activer'}
-                    </Button>
-                    <Button variant="primary" size="sm" onClick={() => startEditingBanner(b)}>
-                      <IconEdit size={13} /> Éditer
-                    </Button>
-                    <Button variant="danger" size="sm" onClick={() => handleDeleteBanner(b.id)}>
-                      <IconTrash size={13} /> Supprimer
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        )}
+        {section === 'showcase' && <ShowcasePanel />}
 
       </div>
     </main>

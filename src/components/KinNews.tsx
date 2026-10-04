@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import { type NewsItem, timeAgo } from '../lib/news';
+import { withUtm } from '../lib/utm';
 import { IconExternalLink, IconPin, IconMoney, IconNews } from './icons';
 import { LiveDot } from './SiteHeader';
 
@@ -17,7 +18,7 @@ export function editorialToItem(row: any): NewsItem {
   return {
     id: `editorial:${row.id}`,
     title: row.title,
-    link: row.link_url || '',
+    link: withUtm(row.link_url, 'a_la_une'),
     teaser: (row.body || '').slice(0, 180),
     body: row.body || null,
     date: row.published_date ? new Date(row.published_date).toISOString() : null,

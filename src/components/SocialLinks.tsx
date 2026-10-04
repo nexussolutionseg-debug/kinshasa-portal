@@ -1,5 +1,5 @@
-// Social-media icon row. The client's accounts aren't live yet, so every
-// entry ships with href: null and renders as a greyed-out, non-clickable
+// Social-media icon row. Instagram is live (2026-10-04); the others still
+// ship with href: null and renders as a greyed-out, non-clickable
 // placeholder with a "Bientôt disponible" tooltip. The moment a real
 // account exists, just fill in its href below — no other code changes
 // needed, the icon lights up and becomes a link automatically.
@@ -14,7 +14,7 @@ type SocialLink = {
 
 const SOCIAL_LINKS: SocialLink[] = [
   { name: 'Facebook', Icon: IconFacebook, href: null },
-  { name: 'Instagram', Icon: IconInstagram, href: null },
+  { name: 'Instagram', Icon: IconInstagram, href: 'https://www.instagram.com/kinshasalabel' },
   { name: 'X (Twitter)', Icon: IconX, href: null },
   { name: 'LinkedIn', Icon: IconLinkedin, href: null },
   { name: 'TikTok', Icon: IconTiktok, href: null },

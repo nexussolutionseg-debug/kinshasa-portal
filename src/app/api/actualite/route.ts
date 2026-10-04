@@ -7,6 +7,7 @@
 // service is involved — it's plain public RSS. Cost: $0.
 import { NextResponse } from 'next/server';
 import { NEWS_SOURCES, parseFeed, filterKinshasa, type NewsItem } from '../../../lib/news';
+import { withUtm } from '../../../lib/utm';
 
 export const revalidate = 900;
 
@@ -56,7 +57,7 @@ export async function GET() {
         if (seen.has(key) || seen.has(item.link)) continue;
         seen.add(key);
         seen.add(item.link);
-        items.push(item);
+        items.push({ ...item, link: withUtm(item.link, 'kin_actualite', item.sourceId) });
       }
       return { id: s.id, name: s.name, site: s.site, color: s.color, ok: true, count: r.value.length };
     }

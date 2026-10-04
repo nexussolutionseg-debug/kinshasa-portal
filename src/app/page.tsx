@@ -12,7 +12,8 @@
 //   8. Commune carousel
 //   9. "Surprends-moi" band
 // Every place card opens the same detail sheet (rating + comments).
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, Fragment, type ReactNode } from 'react';
+import { DEFAULT_SETTINGS, loadSiteSettings, isBannerLive, sortBanners, type SiteSettings, type SectionId } from '../lib/siteSettings';
 import Link from 'next/link';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -58,6 +59,7 @@ export default function HomePage() {
   const [places, setPlaces] = useState<any[] | null>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [mapFilter, setMapFilter] = useState('all');
   const [selectedCommune, setSelectedCommune] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -83,9 +85,12 @@ export default function HomePage() {
       .from('banners')
       .select('*')
       .eq('active', true)
-      .order('created_at', { ascending: false })
       .then(({ data }) => setBanners(data || []));
+    loadSiteSettings().then(setSettings);
   }, []);
+
+  // Scheduled (start/end dates) and ordered in Backoffice → Vitrine.
+  const liveBanners = useMemo(() => sortBanners(banners.filter((b) => isBannerLive(b))), [banners]);
 
   const placeList = useMemo(() => places || [], [places]);
 
@@ -98,6 +103,11 @@ export default function HomePage() {
     [placeList]
   );
   const newest = useMemo(() => placeList.slice(0, 12), [placeList]);
+  // Hand-picked in Backoffice → Vitrine → Coups de cœur.
+  const featuredPlaces = useMemo(
+    () => placeList.filter((p) => p.featured).sort((a, b) => (a.featured_rank ?? 0) - (b.featured_rank ?? 0)),
+    [placeList]
+  );
   const byCategory = useMemo(() => {
     const m: Record<string, any[]> = {};
     for (const p of placeList) (m[p.vertical] ||= []).push(p);
@@ -257,18 +267,12 @@ export default function HomePage() {
   const gridNews = allNews.slice(1, 3);
   const sideNews = allNews.slice(3, 9);
 
-  return (
-    <main className="min-h-screen flex flex-col">
-      <SiteHeader />
-      <NewsTicker items={allNews} />
-      <NewsletterPopup />
-
-      <div className="max-w-[1400px] w-full mx-auto px-4 md:px-6 pt-5 md:pt-8 flex flex-col gap-14 md:gap-20 pb-16">
-        {/* 1. HERO CAROUSEL */}
-        <HeroCarousel banners={banners} headlines={news.live} weekendCount={upcomingEvents.length} onSurprise={surprise} />
-
+  // ---- homepage sections (rendered in the order set in the backoffice) ---
+  const sections: Record<SectionId, ReactNode> = {
+    categories: (
+      <>
         {/* 2. CATEGORY TILES */}
-        <section aria-label="Catégories" className="-mt-6 md:-mt-10">
+        <section aria-label="Catégories">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
             {CATEGORIES.map((c) => {
               const count =
@@ -319,6 +323,10 @@ export default function HomePage() {
           </div>
         </section>
 
+      </>
+    ),
+    actualite: (
+      <>
         {/* 3. KIN ACTUALITÉ */}
         <section id="kin-actualite" aria-labelledby="kin-actualite-title">
           <div className="flex items-end justify-between gap-4 mb-5">
@@ -362,14 +370,29 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* 4. PLACE CAROUSELS */}
-        {places === null ? (
-          <RailSkeleton />
-        ) : (
-          <>
+      </>
+    ),
+    featured: places === null ? <RailSkeleton /> : (
+      <>
+            {featuredPlaces.length > 0 && (
+              <Carousel
+                title={<>Coups de cœur <span className="text-brand-red">de la rédaction</span></>}
+                subtitle="Notre sélection du moment à Kinshasa."
+                eyebrow={<span className="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-brand-red"><IconStar size={13} filled /> Sélection Kinshasa Label</span>}
+                seeAllHref="/#explorer"
+              >
+                {featuredPlaces.map((p) => (
+                  <PlaceCard key={p.id} place={p} onOpen={setOpenPlace} badge="Coup de cœur" />
+                ))}
+              </Carousel>
+            )}
+      </>
+    ),
+    topRated: places === null ? null : (
+      <>
             {topRated.length > 0 && (
               <Carousel
-                title={<>Les coups de cœur <span className="text-brand-red">des Kinois</span></>}
+                title={<>Les mieux notés <span className="text-brand-red">par les Kinois</span></>}
                 subtitle="Les adresses les mieux notées par la communauté."
                 eyebrow={<span className="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-brand-yellow-deep"><IconStar size={13} filled /> Top notés</span>}
                 seeAllHref="/#explorer"
@@ -379,7 +402,10 @@ export default function HomePage() {
                 ))}
               </Carousel>
             )}
-
+      </>
+    ),
+    newest: places === null ? null : (
+      <>
             {newest.length > 0 && (
               <Carousel title="Nouveaux lieux à découvrir" subtitle="Fraîchement ajoutés à la sélection Kinshasa Label." seeAllHref="/#explorer">
                 {newest.map((p) => (
@@ -387,10 +413,10 @@ export default function HomePage() {
                 ))}
               </Carousel>
             )}
-
-            {/* One rail per category once it has enough to scroll through
-                (security posts live on the map / commune pages instead —
-                not a "discovery" rail). */}
+      </>
+    ),
+    categoryRails: places === null ? null : (
+      <>
             {CATEGORIES.filter((c) => c.id !== 'kin_securite' && (byCategory[c.id] || []).length >= 3).map((c) => (
               <Carousel
                 key={c.id}
@@ -409,9 +435,10 @@ export default function HomePage() {
                 ))}
               </Carousel>
             ))}
-          </>
-        )}
-
+      </>
+    ),
+    weekend: (
+      <>
         {/* 5. KIN WEEKEND */}
         <section id="kin-weekend" className="rounded-[28px] p-5 md:p-8" style={{ background: 'linear-gradient(135deg,#EFE6FD 0%,#FFF7D1 100%)' }}>
           {upcomingEvents.length === 0 ? (
@@ -433,6 +460,10 @@ export default function HomePage() {
           )}
         </section>
 
+      </>
+    ),
+    map: (
+      <>
         {/* 6. MAP EXPLORER */}
         <section id="explorer" aria-labelledby="explorer-title">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
@@ -564,6 +595,10 @@ export default function HomePage() {
           </div>
         </section>
 
+      </>
+    ),
+    communes: (
+      <>
         {/* 7. COMMUNES */}
         <Carousel
           id="communes"
@@ -613,6 +648,10 @@ export default function HomePage() {
           })}
         </Carousel>
 
+      </>
+    ),
+    surprise: (
+      <>
         {/* 8. SURPRISE BAND */}
         <section className="relative overflow-hidden rounded-[28px] bg-brand-yellow px-6 py-10 md:px-12 md:py-12 flex flex-col md:flex-row md:items-center gap-6 justify-between">
           <span className="absolute -right-16 -bottom-24 opacity-60 pointer-events-none">
@@ -631,6 +670,28 @@ export default function HomePage() {
             <IconDice size={22} /> Surprends-moi
           </button>
         </section>
+      </>
+    ),
+  };
+
+  return (
+    <main className="min-h-screen flex flex-col">
+      <SiteHeader />
+      {settings.ticker && <NewsTicker items={allNews} />}
+      {settings.newsletterPopup && <NewsletterPopup />}
+
+      <div className="max-w-[1400px] w-full mx-auto px-4 md:px-6 pt-5 md:pt-8 flex flex-col gap-14 md:gap-20 pb-16">
+        {/* 1. HERO CAROUSEL */}
+        <HeroCarousel banners={liveBanners} headlines={news.live} weekendCount={upcomingEvents.length} onSurprise={surprise} brandSlides={settings.brandSlides} />
+
+        {/* 2+. SECTIONS — order and visibility come from Backoffice → Vitrine */}
+        {settings.sections
+          .filter((sec) => sec.visible)
+          .map((sec, idx) => (
+            <Fragment key={sec.id}>
+              {sec.id === 'categories' && idx === 0 ? <div className="-mt-6 md:-mt-10">{sections.categories}</div> : sections[sec.id]}
+            </Fragment>
+          ))}
       </div>
 
       <SiteFooter />

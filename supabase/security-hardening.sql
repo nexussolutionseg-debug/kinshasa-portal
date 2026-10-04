@@ -17,6 +17,10 @@
 --     right now (the team's existing logins). A random person who signs up
 --     later is NOT an admin.
 --
+-- ALSO (2026-10-04, merchandising): adds the columns/table the backoffice
+-- "Vitrine" tab uses — banner mobile image, order and schedule; featured
+-- places ("Coups de cœur"); homepage section settings. Section 0 below.
+--
 -- HOW TO RUN: Supabase dashboard → project → SQL Editor → New query → paste
 -- this whole file → Run. Safe to run more than once.
 -- AFTER RUNNING: Authentication → Sign In / Providers → turn OFF
@@ -24,6 +28,21 @@
 -- =============================================================================
 
 begin;
+
+-- 0. Merchandising fields (safe to re-run) -----------------------------------
+alter table public.banners add column if not exists mobile_image_url text;
+alter table public.banners add column if not exists position int not null default 0;
+alter table public.banners add column if not exists starts_at timestamptz;
+alter table public.banners add column if not exists ends_at timestamptz;
+alter table public.places add column if not exists featured boolean not null default false;
+alter table public.places add column if not exists featured_rank int not null default 0;
+
+create table if not exists public.site_settings (
+  id int primary key default 1 check (id = 1),
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+insert into public.site_settings (id, data) values (1, '{}'::jsonb) on conflict do nothing;
 
 -- 1. Team allow-list -----------------------------------------------------------
 create table if not exists public.kl_admins (
@@ -58,7 +77,7 @@ begin
   for r in
     select schemaname, tablename, policyname from pg_policies
     where schemaname = 'public'
-      and tablename in ('places','events','news','banners','comments','subscribers','partner_inquiries')
+      and tablename in ('places','events','news','banners','site_settings','comments','subscribers','partner_inquiries')
   loop
     execute format('drop policy if exists %I on %I.%I', r.policyname, r.schemaname, r.tablename);
   end loop;
@@ -68,7 +87,7 @@ end $$;
 do $$
 declare t text;
 begin
-  foreach t in array array['places','events','news','banners'] loop
+  foreach t in array array['places','events','news','banners','site_settings'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('create policy "public read" on public.%I for select to anon, authenticated using (true)', t);
     execute format('create policy "team insert" on public.%I for insert to authenticated with check (public.is_kl_admin())', t);
