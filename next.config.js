@@ -19,13 +19,18 @@
 // still satisfies "restrict script sources to trusted origins" per the
 // scan's own suggested fix, it just doesn't additionally block inline
 // script/style execution.
+// Google Analytics (G-RV9MFJSSNX, loaded only after cookie consent — see
+// src/components/CookieConsentBanner.tsx) needs gtag.js from
+// www.googletagmanager.com and sends hits to *.google-analytics.com /
+// *.analytics.google.com. These were missing when GA was added, so the
+// policy silently blocked GA entirely (fixed 2026-10-04).
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://maps.googleapis.com",
+  "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' https: data:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co https://server.arcgisonline.com https://demotiles.maplibre.org https://maps.googleapis.com",
+  "connect-src 'self' https://*.supabase.co https://server.arcgisonline.com https://demotiles.maplibre.org https://maps.googleapis.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com",
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
   "frame-ancestors 'none'",
