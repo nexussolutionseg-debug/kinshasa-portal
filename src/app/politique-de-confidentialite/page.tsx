@@ -55,12 +55,11 @@ export default function PrivacyPolicyPage() {
                 <strong>Navigation sans compte.</strong> Vous pouvez consulter tout le site sans vous inscrire ni donner votre nom.
               </li>
               <li>
-                <strong>Notes (1 à 5 étoiles).</strong> Enregistrées de façon anonyme : seul le total des notes d&apos;un lieu est
-                conservé, sans nom, e-mail ni identifiant.
-              </li>
-              <li>
-                <strong>Avis (commentaires).</strong> Le prénom ou pseudo que vous saisissez (facultatif) et votre texte sont
-                publiés publiquement sous le lieu concerné. N&apos;y indiquez pas d&apos;informations personnelles.
+                <strong>Avis (1 à 5 étoiles + commentaire facultatif).</strong> La note, le prénom ou pseudo que vous saisissez
+                (facultatif) et votre texte sont publiés sous le lieu concerné. N&apos;y indiquez pas d&apos;informations
+                personnelles. Pour limiter les abus (votes multiples, spam), nous conservons avec chaque avis une empreinte
+                chiffrée et irréversible de votre adresse IP — jamais l&apos;adresse elle-même. L&apos;équipe peut masquer ou
+                supprimer un avis abusif.
               </li>
               <li>
                 <strong>Newsletter.</strong> Votre adresse e-mail et la date d&apos;inscription, uniquement si vous vous abonnez.
@@ -139,7 +138,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc pl-5 m-0 flex flex-col gap-1.5">
               <li>E-mail newsletter : jusqu&apos;à votre désinscription.</li>
               <li>Demandes de partenariat : 24 mois après notre dernier échange.</li>
-              <li>Avis publiés : tant qu&apos;ils sont en ligne, ou jusqu&apos;à votre demande de suppression.</li>
+              <li>Avis publiés (et leur empreinte anti-spam) : tant qu&apos;ils sont en ligne, ou jusqu&apos;à votre demande de suppression.</li>
               <li>Google Analytics : 14 mois maximum (voir section 4).</li>
             </ul>
           </section>

@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock, IconSparkle, IconPin, IconCalendar, IconNews, IconMail } from '../../components/icons';
+import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock, IconSparkle, IconPin, IconCalendar, IconNews, IconMail, IconChat } from '../../components/icons';
+import { ReviewsPanel } from '../../components/backoffice/ReviewsPanel';
 import { ShowcasePanel } from '../../components/backoffice/ShowcasePanel';
 import { DashboardHome } from '../../components/backoffice/DashboardHome';
 import { uploadImage } from '../../lib/upload';
@@ -56,7 +57,7 @@ export default function BackofficePage() {
   };
 
   // Which content type the backoffice is managing right now.
-  const [section, setSection] = useState<'home' | 'places' | 'events' | 'news' | 'showcase' | 'subscribers'>('home');
+  const [section, setSection] = useState<'home' | 'places' | 'events' | 'news' | 'showcase' | 'reviews' | 'subscribers'>('home');
 
   const [activeTab, setActiveTab] = useState<'manage' | 'add'>('manage');
   const [submitting, setSubmitting] = useState(false);
@@ -460,6 +461,7 @@ export default function BackofficePage() {
             ['places', 'Lieux', IconPin],
             ['events', 'Kin Weekend', IconCalendar],
             ['news', 'À la une', IconNews],
+            ['reviews', 'Avis', IconChat],
             ['subscribers', 'Abonnés', IconMail],
           ] as const).map(([id, l, Icon]) => (
             <button
@@ -886,6 +888,7 @@ export default function BackofficePage() {
         )}
 
         {section === 'showcase' && <ShowcasePanel />}
+        {section === 'reviews' && <ReviewsPanel />}
 
       </div>
     </main>

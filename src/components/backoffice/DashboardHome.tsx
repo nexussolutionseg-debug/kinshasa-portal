@@ -10,7 +10,7 @@ import { buildTrackingLink, SITE_URL } from '../../lib/utm';
 import { ALL_KINSHASA_COMMUNES } from '../../data/communeDetails';
 import { IconPlus, IconSparkle, IconCalendar, IconNews, IconMail, IconPin, IconExternalLink, IconWarning } from '../icons';
 
-type Section = 'home' | 'places' | 'events' | 'news' | 'showcase' | 'subscribers';
+type Section = 'home' | 'places' | 'events' | 'news' | 'showcase' | 'reviews' | 'subscribers';
 
 const SOURCES = [
   { id: 'ig_bio', label: 'Instagram — lien en bio', source: 'instagram', medium: 'social', content: 'bio' },
