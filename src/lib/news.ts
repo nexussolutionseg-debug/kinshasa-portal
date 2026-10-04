@@ -25,6 +25,8 @@ export type NewsSource = {
   name: string;
   site: string;
   feed: string;
+  /** Backup feed addresses, tried in order if the main one fails. */
+  altFeeds?: string[];
   color: string;
 };
 
@@ -32,11 +34,11 @@ export const NEWS_SOURCES: NewsSource[] = [
   { id: 'radiookapi', name: 'Radio Okapi', site: 'https://www.radiookapi.net', feed: 'https://feeds.feedburner.com/radiookapi/actu?format=xml', color: '#0E5FC9' },
   { id: 'actualite', name: 'Actualite.cd', site: 'https://actualite.cd', feed: 'https://actualite.cd/feed', color: '#D21C2E' },
   { id: 'mediacongo', name: 'Mediacongo', site: 'https://www.mediacongo.net', feed: 'https://www.mediacongo.net/flux_rss.html?type=actualite', color: '#1A82F5' },
-  { id: 'lepoint', name: 'Le Point.cd', site: 'https://lepoint.cd', feed: 'https://lepoint.cd/feed/', color: '#A60E1D' },
-  { id: 'acp', name: 'ACP', site: 'https://acp.cd', feed: 'https://acp.cd/feed/', color: '#0A2A66' },
+  { id: 'lepoint', name: 'Le Point.cd', site: 'https://lepoint.cd', feed: 'https://lepoint.cd/feed/', altFeeds: ['https://lepoint.cd/?feed=rss2', 'https://www.lepoint.cd/feed/'], color: '#A60E1D' },
+  { id: 'acp', name: 'ACP', site: 'https://acp.cd', feed: 'https://acp.cd/feed/', altFeeds: ['https://acp.cd/?feed=rss2', 'https://www.acp.cd/feed/'], color: '#0A2A66' },
   { id: 'provinces26', name: 'Provinces26 RDC', site: 'https://provinces26rdc.com', feed: 'https://provinces26rdc.com/feed/', color: '#2E7D32' },
   { id: 'zoomeco', name: 'Zoom Eco', site: 'https://zoom-eco.net', feed: 'https://zoom-eco.net/feed/', color: '#E8590C' },
-  { id: 'mines', name: 'Mines.cd', site: 'https://mines.cd', feed: 'https://mines.cd/feed/', color: '#6D4C41' },
+  { id: 'mines', name: 'Mines.cd', site: 'https://mines.cd', feed: 'https://mines.cd/feed/', altFeeds: ['https://mines.cd/?feed=rss2', 'https://www.mines.cd/feed/'], color: '#6D4C41' },
   { id: 'beto', name: 'Beto.cd', site: 'https://beto.cd', feed: 'https://beto.cd/feed/', color: '#7B3FE4' },
 ];
 
@@ -57,7 +59,7 @@ export type NewsItem = {
 // ---------------------------------------------------------------------------
 // Kinshasa-only filter (client decision, 2026-10-04): most sources cover the
 // whole DRC, so an item is kept only if its title, teaser or categories
-// mention Kinshasa, Kinois(e), or one of the city's 24 communes.
+// are about the city itself (see isAboutKinshasa below for the exact rule).
 
 export const KINSHASA_COMMUNES = [
   'Bandalungwa', 'Barumbu', 'Bumbu', 'Gombe', 'Kalamu', 'Kasa-Vubu', 'Kimbanseke',
@@ -79,15 +81,40 @@ const COMMUNE_PATTERNS: [RegExp, string][] = [
 // "Bandal" is how everyone says Bandalungwa.
 COMMUNE_PATTERNS.push([/\bBandal\b/i, 'Bandalungwa']);
 
-const KINSHASA_RE = /\bkin(?:shasa|ois|oise|oises)\b|\bKin la belle\b|\bville[- ]province\b/i;
+// "Kinshasa" alone is NOT enough: Congolese press also uses it to mean the
+// national government ("Kinshasa veut…", "entre Kinshasa et Kigali"). So an
+// item counts as Kinshasa news only when it:
+//   - names one of the 24 communes, or says Kinois / Kinoise, or
+//   - opens with the "Kinshasa :" dateline the local press uses for city news, or
+//   - places the story IN the city ("à Kinshasa", "ville de Kinshasa",
+//     "gouverneur de Kinshasa", "habitants de Kinshasa", …).
+// Checked against the headline and the short teaser only — not the whole
+// article body, which mentions Kinshasa in passing far too often.
+const KINOIS_RE = /kinois(?:e|es)?|Kin la belle/i;
+const DATELINE_RE = /^\s*(?:RDC\s*[-–:]\s*)?Kinshasa\s*[:,–]/i;
+// "à Kinshasa" in a HEADLINE means the story is about the city ("coupures
+// d'électricité à Kinshasa"); in a teaser it's usually just where a national
+// announcement was made ("le ministre a annoncé à Kinshasa…"), so it only
+// counts in the title.
+const IN_CITY_TITLE_RE = /(?:^|\s)(?:à|a|dans|sur)\s+Kinshasa\b/i;
+const CITY_RE =
+  /\b(?:de la ville de|ville de|ville-province de|province de|gouverneur de|gouvernorat de|habitants de|rues de|routes de|quartiers? de|communes? de|marchés? de|bourgmestres? de|embouteillages? (?:à|de)|inondations? (?:à|de)|planification de|urbanisme de|aménagement de|assainissement de|mobilité (?:à|de)|transports? (?:à|de)|circulation (?:à|de)|desserte (?:à|de))\s+Kinshasa\b|\bKinshasa\b[^.]{0,60}\burgences urbaines\b|\bKinshasa[\s-]ville\b|\bville[- ]province\b/i;
 
 export function detectCommune(text: string): string | null {
   for (const [re, name] of COMMUNE_PATTERNS) if (re.test(text)) return name;
   return null;
 }
 
-export function isAboutKinshasa(text: string): boolean {
-  return KINSHASA_RE.test(text) || detectCommune(text) !== null;
+export function isAboutKinshasa(title: string, teaser = ''): boolean {
+  const both = `${title} ${teaser}`;
+  return (
+    detectCommune(both) !== null ||
+    KINOIS_RE.test(both) ||
+    DATELINE_RE.test(title) ||
+    DATELINE_RE.test(teaser) ||
+    IN_CITY_TITLE_RE.test(title) ||
+    CITY_RE.test(both)
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -212,7 +239,8 @@ export function parseFeed(xml: string, source: NewsSource): NewsItem[] {
     const safeLink = safeHttpUrl(decodeEntities(link));
     if (!title || !safeLink) continue;
 
-    const haystack = `${title} ${plain.slice(0, 600)} ${cats}`;
+    void cats;
+    const haystack = JSON.stringify([title, teaserOf(plain, 400)]);
     out.push({
       id: `${source.id}:${safeLink}`,
       title,
@@ -222,7 +250,7 @@ export function parseFeed(xml: string, source: NewsSource): NewsItem[] {
       image: safeHttpUrl(firstImage(it, html)),
       sourceId: source.id,
       sourceName: source.name,
-      commune: detectCommune(`${title} ${plain.slice(0, 600)}`),
+      commune: detectCommune(`${title} ${teaserOf(plain, 400)}`),
     });
     // keep the haystack check for the caller
     (out[out.length - 1] as NewsItem & { _hay?: string })._hay = haystack;
@@ -232,7 +260,11 @@ export function parseFeed(xml: string, source: NewsSource): NewsItem[] {
 
 export function filterKinshasa(items: NewsItem[]): NewsItem[] {
   return items
-    .filter((i) => isAboutKinshasa((i as NewsItem & { _hay?: string })._hay || `${i.title} ${i.teaser}`))
+    .filter((i) => {
+      const hay = (i as NewsItem & { _hay?: string })._hay;
+      const [title, teaser] = hay ? (JSON.parse(hay) as [string, string]) : [i.title, i.teaser];
+      return isAboutKinshasa(title, teaser);
+    })
     .map((i) => {
       const { _hay, ...rest } = i as NewsItem & { _hay?: string };
       void _hay;

@@ -13,18 +13,34 @@ export const revalidate = 900;
 const FEED_TIMEOUT_MS = 8000;
 const MAX_ITEMS = 80;
 
+// Some WordPress sites sit behind firewalls that refuse requests that look
+// like bots, so we identify as a normal browser-compatible client and fall
+// back to each site's alternative feed addresses before giving up.
+const HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 (compatible; KinshasaLabel/1.0; +https://kinshasalabel.com)',
+  Accept: 'application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5',
+  'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.6',
+};
+
 async function fetchSource(source: (typeof NEWS_SOURCES)[number]) {
-  const res = await fetch(source.feed, {
-    headers: {
-      'User-Agent': 'KinshasaLabelBot/1.0 (+https://kinshasalabel.com; news headlines with links to the source)',
-      Accept: 'application/rss+xml, application/xml, text/xml, */*',
-    },
-    signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
-    next: { revalidate },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const xml = await res.text();
-  return filterKinshasa(parseFeed(xml, source));
+  let lastError: unknown = null;
+  for (const url of [source.feed, ...(source.altFeeds || [])]) {
+    try {
+      const res = await fetch(url, {
+        headers: HEADERS,
+        signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+        next: { revalidate },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const xml = await res.text();
+      if (!/<(rss|feed|rdf:RDF)[\s>]/i.test(xml)) throw new Error('not a feed');
+      return filterKinshasa(parseFeed(xml, source));
+    } catch (e) {
+      lastError = e;
+    }
+  }
+  throw lastError;
 }
 
 export async function GET() {

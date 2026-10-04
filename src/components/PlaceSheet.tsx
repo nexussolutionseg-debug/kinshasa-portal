@@ -91,7 +91,14 @@ export function PlaceSheet({
     onUpdated?.(updated);
     try {
       localStorage.setItem(RATED_KEY, JSON.stringify(ids));
-      await supabase.from('places').update({ rating_sum: updated.rating_sum, rating_count: updated.rating_count }).eq('id', current.id);
+      // Preferred path: the `rate_place` database function, which adds one
+      // 1-5 vote atomically and is the ONLY write visitors are allowed on
+      // `places` once supabase/security-hardening.sql is applied. Falls back
+      // to the old direct update only while that SQL hasn't been run yet.
+      const { error } = await supabase.rpc('rate_place', { p_place_id: current.id, p_value: value });
+      if (error) {
+        await supabase.from('places').update({ rating_sum: updated.rating_sum, rating_count: updated.rating_count }).eq('id', current.id);
+      }
     } catch (err) {
       console.error('Error updating rating:', err);
     }

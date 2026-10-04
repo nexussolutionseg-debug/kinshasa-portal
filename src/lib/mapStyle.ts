@@ -6,7 +6,7 @@
 // (server.arcgisonline.com) — already allowed by the CSP in next.config.js.
 // (History: CARTO's GL style was dropped on 2026-09-01 because its tiles
 // now require an API key.)
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 
 export const MAP_STYLE: maplibregl.StyleSpecification = {
   version: 8,

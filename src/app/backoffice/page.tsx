@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock } from '../../components/icons';
 import { Button } from '../../components/Button';
+import { SubscribersPanel } from '../../components/backoffice/SubscribersPanel';
 import { KinshasaMark } from '../../components/BrandMark';
 
 const COMMUNES = [
@@ -52,7 +53,7 @@ export default function BackofficePage() {
   };
 
   // Which content type the backoffice is managing right now.
-  const [section, setSection] = useState<'places' | 'events' | 'news' | 'banner'>('places');
+  const [section, setSection] = useState<'places' | 'events' | 'news' | 'banner' | 'subscribers'>('places');
 
   const [activeTab, setActiveTab] = useState<'manage' | 'add'>('manage');
   const [submitting, setSubmitting] = useState(false);
@@ -577,7 +578,12 @@ export default function BackofficePage() {
           <Button variant={section === 'banner' ? 'primary' : 'secondary'} onClick={() => setSection('banner')}>
             Bannière
           </Button>
+          <Button variant={section === 'subscribers' ? 'primary' : 'secondary'} onClick={() => setSection('subscribers')}>
+            Abonnés newsletter
+          </Button>
         </div>
+
+        {section === 'subscribers' && <SubscribersPanel />}
 
         {section === 'places' && (
         <>
