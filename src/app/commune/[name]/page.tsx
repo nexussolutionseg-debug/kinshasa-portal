@@ -190,7 +190,7 @@ export default function CommuneDetailPage() {
       </section>
 
       <div className="max-w-[1400px] mx-auto px-4 md:px-6 w-full flex-1 py-8 md:py-10 flex flex-col gap-12 md:gap-16 pb-16">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+        <div className="grid grid-cols-1 gap-8 [&>*]:min-w-0 lg:grid-cols-[minmax(0,1fr)_400px]">
           {/* LEFT: story */}
           <div className="flex flex-col gap-6 min-w-0">
             <p className="text-lg md:text-xl text-brand-ink/85 leading-relaxed m-0">{communeInfo.specification}</p>

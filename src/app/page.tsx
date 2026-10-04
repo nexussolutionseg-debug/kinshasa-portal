@@ -336,12 +336,12 @@ export default function HomePage() {
           </div>
 
           {allNews.length === 0 ? (
-            <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+            <div className="grid grid-cols-1 gap-5 [&>*]:min-w-0 lg:grid-cols-[1fr_320px]">
               <NewsEmpty loading={news.loading} />
               <ExchangeRateCard />
             </div>
           ) : (
-            <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr_0.95fr]">
+            <div className="grid grid-cols-1 gap-5 [&>*]:min-w-0 lg:grid-cols-[1.35fr_1fr_0.95fr]">
               <div>{featuredNews && <NewsCard item={featuredNews} variant="feature" />}</div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1 content-start">
                 {gridNews.map((n) => (
@@ -474,7 +474,7 @@ export default function HomePage() {
             })}
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
+          <div className="grid grid-cols-1 gap-5 [&>*]:min-w-0 lg:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
             <div className="bg-white rounded-3xl border border-brand-line shadow-card p-2.5">
               <div ref={mapContainer} className="w-full h-[380px] md:h-[560px] rounded-2xl overflow-hidden" />
             </div>

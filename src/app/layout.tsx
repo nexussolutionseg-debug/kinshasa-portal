@@ -11,6 +11,9 @@ export const metadata = {
 };
 
 export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover', // lets env(safe-area-inset-*) work under iPhone notches / home bar
   themeColor: '#1A82F5',
 };
 

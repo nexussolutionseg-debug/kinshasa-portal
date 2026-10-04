@@ -94,7 +94,7 @@ export function ActualiteClient() {
               <h2 className="font-display text-2xl font-extrabold text-brand-ink m-0 mb-4">
                 <span className="bg-brand-yellow px-2 rounded-lg">À la une</span> par la rédaction
               </h2>
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 [&>*]:min-w-0 sm:grid-cols-2">
                 {filteredPinned.slice(0, 4).map((n) => (
                   <NewsCard key={n.id} item={n} />
                 ))}
@@ -111,7 +111,7 @@ export function ActualiteClient() {
               <NewsEmpty loading={news.loading} />
             ) : (
               <>
-                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-5 [&>*]:min-w-0 sm:grid-cols-2 xl:grid-cols-3">
                   {filteredLive.slice(0, shown).map((n, i) => (
                     <div key={n.id} className={i === 0 && !commune && !source ? 'sm:col-span-2' : ''}>
                       <NewsCard item={n} variant={i === 0 && !commune && !source ? 'feature' : 'card'} />

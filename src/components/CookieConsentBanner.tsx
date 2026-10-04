@@ -47,25 +47,30 @@ export function CookieConsentBanner() {
       {consent === 'granted' && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
 
       {hydrated && consent === 'unknown' && (
-        <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-brand-line bg-white shadow-lift backdrop-blur px-4 py-4 md:px-6">
+        <div
+          role="region"
+          aria-label="Cookies"
+          className="fixed inset-x-3 bottom-3 md:inset-x-0 md:bottom-0 z-[55] rounded-2xl md:rounded-none border border-brand-line bg-white shadow-lift px-4 py-3.5 md:px-6 md:py-4 mb-[env(safe-area-inset-bottom)]"
+        >
           <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
-            <p className="text-sm text-brand-ink/80 m-0 flex-1">
-              Nous utilisons Google Analytics pour comprendre comment ce site est utilisé
-              (pages visitées, provenance des visiteurs). Vous pouvez accepter ou refuser ce
-              suivi ; votre choix reste modifiable à tout moment depuis le pied de page.{' '}
-              <Link
-                href="/politique-de-confidentialite"
-                className="text-brand-red-dark no-underline hover:text-brand-red"
-              >
+            <p className="text-sm text-brand-ink/80 m-0 flex-1 leading-snug">
+              <span className="md:hidden">
+                🍪 Nous mesurons l&apos;audience avec Google Analytics, si vous l&apos;acceptez.{' '}
+              </span>
+              <span className="hidden md:inline">
+                Nous utilisons Google Analytics pour comprendre comment ce site est utilisé (pages visitées,
+                provenance des visiteurs). Vous pouvez accepter ou refuser ce suivi ; votre choix reste modifiable à
+                tout moment depuis le pied de page.{' '}
+              </span>
+              <Link href="/politique-de-confidentialite" className="text-brand-red-dark no-underline hover:text-brand-red font-semibold">
                 En savoir plus
               </Link>
-              .
             </p>
-            <div className="flex gap-2.5 shrink-0">
-              <Button type="button" variant="secondary" size="sm" onClick={() => choose('denied')}>
+            <div className="grid grid-cols-2 md:flex gap-2.5 shrink-0">
+              <Button type="button" variant="secondary" size="md" onClick={() => choose('denied')}>
                 Refuser
               </Button>
-              <Button type="button" variant="primary" size="sm" onClick={() => choose('granted')}>
+              <Button type="button" variant="primary" size="md" onClick={() => choose('granted')}>
                 Accepter
               </Button>
             </div>

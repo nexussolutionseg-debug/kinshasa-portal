@@ -15,7 +15,22 @@ body {
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 6rem;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
+
+/* Mobile safety net (2026-10-04): nothing may make the page wider than the
+   screen — a single over-wide element makes phones zoom the whole page out.
+   `clip` (unlike `hidden`) keeps the sticky header working. */
+html, body { overflow-x: clip; }
+
+/* iOS zooms the page in when a form field under 16px gets focus. */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* Tap highlight off; we provide our own pressed/hover states. */
+* { -webkit-tap-highlight-color: transparent; }
 
 * {
   box-sizing: border-box;
