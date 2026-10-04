@@ -11,7 +11,7 @@ export function ManageCookiesLink() {
     <button
       type="button"
       onClick={resetConsent}
-      className="text-sm text-brand-cream/70 hover:text-brand-gold transition-colors bg-transparent border-0 p-0 text-left cursor-pointer font-normal"
+      className="text-sm text-brand-ink/70 hover:text-brand-red transition-colors bg-transparent border-0 p-0 text-left cursor-pointer font-normal"
     >
       Gérer les cookies
     </button>

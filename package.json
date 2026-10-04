@@ -8,10 +8,12 @@
     "start": "next start"
   },
   "dependencies": {
+    "@fontsource-variable/outfit": "^5.3.0",
     "@next/third-parties": "^16.3.6",
     "@supabase/supabase-js": "^2.43.4",
     "@turf/turf": "^7.1.0",
     "@vercel/analytics": "^2.0.1",
+    "fast-xml-parser": "^5.11.2",
     "maplibre-gl": "^4.7.1",
     "next": "^14.2.35",
     "react": "^18.3.1",

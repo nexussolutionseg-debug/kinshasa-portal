@@ -46,9 +46,9 @@ export const TRAFFIC_LEVELS: Record<string, TrafficLevel> = {
 };
 
 export const TRAFFIC_COLORS: Record<TrafficLevel, string> = {
-  heavy: '#C4453A',
-  moderate: '#C8992E',
-  light: '#2F6B45',
+  heavy: '#D21C2E',
+  moderate: '#F5B400',
+  light: '#22A45D',
 };
 
 export const TRAFFIC_LABELS: Record<TrafficLevel, string> = {
@@ -57,11 +57,11 @@ export const TRAFFIC_LABELS: Record<TrafficLevel, string> = {
   light: 'Fluide',
 };
 
-export const DEFAULT_COMMUNE_COLOR = '#14294A';
+export const DEFAULT_COMMUNE_COLOR = '#1A82F5';
 
 // MapLibre expression that colors a commune shape by its traffic level,
 // matched on the commune's `name` property (the homepage's overview map
-// only — falls back to the default navy used everywhere else).
+// only — falls back to the default logo blue used everywhere else).
 export const TRAFFIC_FILL_EXPRESSION: any[] = [
   'match',
   ['get', 'name'],

@@ -84,28 +84,28 @@ export function NewsletterPopup() {
       onClick={close}
     >
       <div
-        className="relative w-full max-w-md bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
+        className="relative w-full max-w-md bg-brand-surface border border-brand-line rounded-2xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           aria-label="Fermer"
           onClick={close}
-          className="absolute top-3 right-3 inline-flex items-center justify-center w-8 h-8 text-brand-muted hover:text-brand-cream"
+          className="absolute top-3 right-3 inline-flex items-center justify-center w-8 h-8 text-brand-muted hover:text-brand-ink"
         >
           <IconClose size={18} />
         </button>
 
-        <h3 className="font-display text-xl font-semibold text-brand-cream m-0 flex items-center gap-2 pr-6">
+        <h3 className="font-display text-xl font-semibold text-brand-ink m-0 flex items-center gap-2 pr-6">
           <IconMail size={20} /> Restez informé
         </h3>
-        <p className="text-sm text-brand-cream/60 mt-2 mb-5">
+        <p className="text-sm text-brand-ink/60 mt-2 mb-5">
           Recevez les nouveautés, sorties du week-end et actualités de Kinshasa directement par
           e-mail.
         </p>
 
         {status === 'success' ? (
-          <p className="text-sm text-brand-gold-light font-medium m-0">
+          <p className="text-sm text-brand-red-dark font-medium m-0">
             Merci ! Vous êtes bien inscrit(e).
           </p>
         ) : (
@@ -117,7 +117,7 @@ export function NewsletterPopup() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="votre@email.com"
-              className="w-full box-border px-3.5 py-2.5 bg-brand-navy border border-brand-navy-border text-brand-cream rounded-lg text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-gold"
+              className="w-full box-border px-3.5 py-2.5 bg-brand-bg border border-brand-line text-brand-ink rounded-lg text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-red"
             />
             <Button type="submit" variant="primary" size="md" fullWidth disabled={status === 'loading'}>
               {status === 'loading' ? 'Envoi...' : "S'abonner"}

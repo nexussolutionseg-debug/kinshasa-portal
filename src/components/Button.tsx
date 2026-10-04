@@ -1,7 +1,7 @@
 // Shared button system: a small set of consistent treatments used across
 // the whole site instead of one-off ad-hoc classNames on every CTA.
 //
-//   primary   — solid gold, for the single most important action in a view
+//   primary   — solid Congo red, for the single most important action in a view
 //   secondary — outline/ghost background, for supporting actions
 //   ghost     — text-only link style, for tertiary actions
 //   danger    — outline red, reserved for destructive actions (delete)
@@ -18,23 +18,23 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const BASE =
-  'inline-flex items-center justify-center gap-1.5 font-semibold rounded-md transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none';
+  'inline-flex items-center justify-center gap-1.5 font-bold rounded-full no-underline transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none cursor-pointer';
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
-    'bg-brand-gold text-brand-navy hover:bg-brand-gold-light hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-8px_rgba(200,153,46,0.6)] active:translate-y-0',
+    'bg-brand-red text-white hover:bg-brand-red-dark hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-8px_rgba(210,28,46,0.55)] active:translate-y-0',
   secondary:
-    'bg-transparent text-brand-cream border border-brand-navy-border hover:border-brand-gold hover:bg-brand-navy-light',
+    'bg-white text-brand-ink border border-brand-line hover:border-brand-blue hover:text-brand-blue-deep',
   ghost:
-    'bg-transparent text-brand-gold-light hover:text-brand-gold underline-offset-4 hover:underline px-0 py-0',
+    'bg-transparent text-brand-blue-deep hover:text-brand-blue underline-offset-4 hover:underline px-0 py-0',
   danger:
     'bg-transparent text-brand-danger border border-brand-danger/70 hover:bg-brand-danger/10',
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  sm: 'text-xs px-3 py-1.5',
-  md: 'text-sm px-4 py-2.5',
-  lg: 'text-base px-6 py-3.5',
+  sm: 'text-xs px-3.5 py-2',
+  md: 'text-sm px-5 py-2.5',
+  lg: 'text-base px-7 py-3.5',
 };
 
 type CommonProps = {

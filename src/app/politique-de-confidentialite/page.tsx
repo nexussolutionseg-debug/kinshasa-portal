@@ -11,17 +11,17 @@ import { SiteFooter } from '../../components/SiteFooter';
 // compliant with any specific regulation.
 export default function PrivacyPolicyPage() {
   return (
-    <main className="min-h-screen bg-brand-navy text-brand-cream flex flex-col">
+    <main className="min-h-screen bg-brand-bg text-brand-ink flex flex-col">
       <SiteHeader />
       <div className="max-w-[760px] mx-auto px-4 md:px-6 py-12 md:py-16 flex-1 w-full">
-        <h1 className="font-display text-3xl md:text-4xl font-semibold text-brand-cream mb-2">
+        <h1 className="font-display text-3xl md:text-4xl font-semibold text-brand-ink mb-2">
           Politique de confidentialité
         </h1>
         <p className="text-sm text-brand-muted mb-10">Dernière mise à jour : {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
 
-        <div className="flex flex-col gap-7 text-sm md:text-base text-brand-cream/80 leading-relaxed">
+        <div className="flex flex-col gap-7 text-sm md:text-base text-brand-ink/80 leading-relaxed">
           <section>
-            <h2 className="font-display text-xl text-brand-river font-semibold mb-2">1. Quelles données sont collectées</h2>
+            <h2 className="font-display text-xl text-brand-blue font-semibold mb-2">1. Quelles données sont collectées</h2>
             <p>
               Kinshasa Label ne demande pas de créer de compte et ne vous identifie pas personnellement pour
               consulter le site. Les seules données traitées sont :
@@ -34,7 +34,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-xl text-brand-river font-semibold mb-2">2. Cookies et suivi</h2>
+            <h2 className="font-display text-xl text-brand-blue font-semibold mb-2">2. Cookies et suivi</h2>
             <p>
               Ce site n&apos;utilise pas de cookies publicitaires. Nous utilisons Vercel Web Analytics pour
               suivre la fréquentation générale du site (pages consultées, pays, type d&apos;appareil) de manière
@@ -52,7 +52,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-xl text-brand-river font-semibold mb-2">3. Partage des données</h2>
+            <h2 className="font-display text-xl text-brand-blue font-semibold mb-2">3. Partage des données</h2>
             <p>
               Les données sont hébergées chez Supabase (base de données) et Vercel (hébergement du site). Elles
               ne sont ni vendues, ni partagées avec des annonceurs. Les lieux, notes et actualités publiés sur le
@@ -61,7 +61,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-xl text-brand-river font-semibold mb-2">4. Vos droits</h2>
+            <h2 className="font-display text-xl text-brand-blue font-semibold mb-2">4. Vos droits</h2>
             <p>
               Pour toute question sur les données présentes sur ce site, ou pour demander le retrait d&apos;un
               contenu que vous avez soumis, contactez l&apos;équipe éditoriale via les coordonnées indiquées sur
@@ -70,7 +70,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-xl text-brand-river font-semibold mb-2">5. Modifications</h2>
+            <h2 className="font-display text-xl text-brand-blue font-semibold mb-2">5. Modifications</h2>
             <p>
               Cette politique peut être mise à jour à mesure que le site évolue. La date de dernière mise à jour
               figure en haut de cette page.

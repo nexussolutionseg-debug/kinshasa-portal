@@ -26,25 +26,25 @@ const AUDIENCES = [
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-brand-navy text-brand-cream flex flex-col">
+    <main className="min-h-screen bg-brand-bg text-brand-ink flex flex-col">
       <SiteHeader />
 
       <div className="max-w-[960px] mx-auto px-4 md:px-6 py-12 md:py-20 flex-1 w-full">
         <div className="flex flex-col items-center text-center mb-14">
           <KinshasaSeal size={104} />
-          <h1 className="font-display text-3xl md:text-5xl font-semibold text-brand-cream mt-6 mb-3">
+          <h1 className="font-display text-3xl md:text-5xl font-semibold text-brand-ink mt-6 mb-3">
             Qui sommes-nous
           </h1>
-          <p className="text-sm uppercase tracking-[3px] text-brand-gold font-semibold">
+          <p className="text-sm uppercase tracking-[3px] text-brand-red font-semibold">
             Connaître. Vivre. Investir.
           </p>
         </div>
 
         <section className="mb-14 max-w-[720px] mx-auto text-center">
-          <h2 className="font-display text-xl md:text-2xl text-brand-river font-semibold mb-3">
+          <h2 className="font-display text-xl md:text-2xl text-brand-blue font-semibold mb-3">
             Notre vision
           </h2>
-          <p className="text-base md:text-lg text-brand-cream/85 leading-relaxed">
+          <p className="text-base md:text-lg text-brand-ink/85 leading-relaxed">
             « Une ville connue, cartographiée et valorisée. » Kinshasa Label est né d&apos;un constat simple :
             une ville de plus de 24 communes, en forte croissance, mérite une information fiable et
             accessible à tous ceux qui la vivent, la visitent ou y investissent. Nous transformons
@@ -54,35 +54,35 @@ export default function AboutPage() {
         </section>
 
         <section className="mb-14">
-          <h2 className="font-display text-xl md:text-2xl text-brand-river font-semibold mb-6 text-center">
+          <h2 className="font-display text-xl md:text-2xl text-brand-blue font-semibold mb-6 text-center">
             Ce que nous faisons
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {VALUE_CHAIN.map((step, i) => (
-              <div key={step.title} className="bg-brand-navy-light border border-brand-navy-border rounded-xl p-5">
-                <span className="text-xs font-bold text-brand-gold">0{i + 1}</span>
-                <h3 className="font-display text-base font-semibold text-brand-cream mt-1 mb-1.5">
+              <div key={step.title} className="bg-brand-surface border border-brand-line rounded-xl p-5">
+                <span className="text-xs font-bold text-brand-red">0{i + 1}</span>
+                <h3 className="font-display text-base font-semibold text-brand-ink mt-1 mb-1.5">
                   {step.title}
                 </h3>
-                <p className="text-sm text-brand-cream/70 leading-relaxed m-0">{step.desc}</p>
+                <p className="text-sm text-brand-ink/70 leading-relaxed m-0">{step.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
         <section className="mb-14">
-          <h2 className="font-display text-xl md:text-2xl text-brand-river font-semibold mb-6 text-center">
+          <h2 className="font-display text-xl md:text-2xl text-brand-blue font-semibold mb-6 text-center">
             Pour qui
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {AUDIENCES.map(({ icon: Icon, label, desc }) => (
-              <div key={label} className="flex items-start gap-3.5 bg-brand-navy-light border border-brand-navy-border rounded-xl p-5">
-                <span className="shrink-0 w-9 h-9 rounded-full bg-brand-gold/15 text-brand-gold flex items-center justify-center">
+              <div key={label} className="flex items-start gap-3.5 bg-brand-surface border border-brand-line rounded-xl p-5">
+                <span className="shrink-0 w-9 h-9 rounded-full bg-brand-red/15 text-brand-red flex items-center justify-center">
                   <Icon size={18} />
                 </span>
                 <div>
-                  <h3 className="text-sm font-semibold text-brand-cream m-0">{label}</h3>
-                  <p className="text-sm text-brand-cream/65 mt-1 mb-0 leading-relaxed">{desc}</p>
+                  <h3 className="text-sm font-semibold text-brand-ink m-0">{label}</h3>
+                  <p className="text-sm text-brand-ink/65 mt-1 mb-0 leading-relaxed">{desc}</p>
                 </div>
               </div>
             ))}
@@ -90,7 +90,7 @@ export default function AboutPage() {
         </section>
 
         <section className="max-w-[640px] mx-auto text-center">
-          <p className="text-base text-brand-cream/80 leading-relaxed">
+          <p className="text-base text-brand-ink/80 leading-relaxed">
             Kinshasa Label, c&apos;est une approche par commune, des données locales et une vision à la fois
             culturelle et économique de la ville — pour qu&apos;on connaisse mieux Kinshasa, qu&apos;on y vive
             mieux, et qu&apos;on y investisse mieux.

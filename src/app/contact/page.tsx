@@ -7,21 +7,21 @@ const CONTACT_EMAIL = 'contact@kinshasalabel.com';
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-brand-navy text-brand-cream flex flex-col">
+    <main className="min-h-screen bg-brand-bg text-brand-ink flex flex-col">
       <SiteHeader />
 
       <div className="max-w-[640px] mx-auto px-4 md:px-6 py-14 md:py-20 flex-1 w-full text-center">
-        <h1 className="font-display text-3xl md:text-4xl font-semibold text-brand-cream mb-3">
+        <h1 className="font-display text-3xl md:text-4xl font-semibold text-brand-ink mb-3">
           Contactez-nous
         </h1>
-        <p className="text-base text-brand-cream/70 leading-relaxed mb-10">
+        <p className="text-base text-brand-ink/70 leading-relaxed mb-10">
           Une question, une suggestion, un lieu à signaler ? Écrivez-nous directement — nous vous
           répondons au plus vite.
         </p>
 
         <a
           href={`mailto:${CONTACT_EMAIL}`}
-          className="inline-flex items-center gap-2.5 bg-brand-navy-light border border-brand-navy-border rounded-xl px-6 py-4 text-lg font-semibold text-brand-gold-light no-underline hover:border-brand-gold hover:text-brand-gold transition-colors"
+          className="inline-flex items-center gap-2.5 bg-brand-surface border border-brand-line rounded-xl px-6 py-4 text-lg font-semibold text-brand-red-dark no-underline hover:border-brand-red hover:text-brand-red transition-colors"
         >
           <IconMail size={20} /> {CONTACT_EMAIL}
         </a>

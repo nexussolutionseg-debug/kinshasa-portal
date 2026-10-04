@@ -22,6 +22,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   const staticEntries = [
+    { path: '/actualite', priority: 0.9 },
     { path: '/qui-sommes-nous', priority: 0.6 },
     { path: '/contact', priority: 0.5 },
     { path: '/devenir-partenaire', priority: 0.5 },

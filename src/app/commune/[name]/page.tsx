@@ -1,311 +1,27 @@
 'use client';
+// Commune page — v4 joyful redesign (2026-10-04): colorful hero banner,
+// fact cards, the commune's own Kin Actualité headlines, place carousels
+// (same cards + detail sheet as the homepage), events, and the map.
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../../../lib/supabase';
 import { escapeHtml } from '../../../lib/html';
-import { IconHome, IconExternalLink, IconChevronRight, IconClock, IconChart } from '../../../components/icons';
+import { IconHome, IconChevronRight, IconClock, IconChart, IconPin, IconArrowRight } from '../../../components/icons';
 import { SiteHeader } from '../../../components/SiteHeader';
 import { SiteFooter } from '../../../components/SiteFooter';
+import { SpinningWheel } from '../../../components/BrandMark';
+import { Carousel } from '../../../components/Carousel';
+import { PlaceCard, CategoryIcon } from '../../../components/PlaceCard';
+import { PlaceSheet } from '../../../components/PlaceSheet';
+import { useKinNews, NewsCard, LiveDot } from '../../../components/KinNews';
 import { getTrafficLevel, TRAFFIC_COLORS, TRAFFIC_LABELS } from '../../../lib/traffic';
-
-// Same fix as the homepage map: CARTO's hosted GL vector style now gates
-// actual tile pixels behind a required API key (confirmed live — the
-// style/sprite JSON still load, but tiles return an "API key required"
-// placeholder), which is why the production map showed no basemap under
-// the markers. Esri's raster tiles need no key.
-const MAP_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    'esri-dark-gray-base': {
-      type: 'raster',
-      tiles: [
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-      ],
-      tileSize: 256,
-      attribution: 'Tiles &copy; Esri',
-    },
-    'esri-dark-gray-labels': {
-      type: 'raster',
-      tiles: [
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-      ],
-      tileSize: 256,
-    },
-  },
-  layers: [
-    { id: 'esri-dark-gray-base-layer', type: 'raster', source: 'esri-dark-gray-base' },
-    { id: 'esri-dark-gray-labels-layer', type: 'raster', source: 'esri-dark-gray-labels' },
-  ],
-};
-
-const COMMUNE_DETAILS: Record<string, {
-  tagline: string;
-  specification: string;
-  history: string;
-  economy: string;
-  keyDistricts: string[];
-  lat: number;
-  lng: number;
-  zoom: number;
-}> = {
-  Bandalungwa: {
-    tagline: 'Le temple de la sapologie, de la musique et de la vie nocturne kinois.',
-    specification: 'Surnommée "Bandal c\'est Paris", cette commune festive est le cœur battant de la jeunesse, des maquis traditionnels, du couper-décaler et des tendances culinaires urbaines.',
-    history: 'Conçue dans les années 1950 comme une cité ouvrière modèle avec un plan en damier rigoureux, Bandal a progressivement été investie par les artistes et musiciens de la Rumba Congolaise.',
-    economy: 'Économie créative et de divertissement : centaines de bars/maquis, terrasses lounge, salons de coiffure de luxe, boutiques de mode et restauration rapide locale.',
-    keyDistricts: ['Bandal Synfact', 'Makelele', 'Bandal Moulaert', 'Tshibangu'],
-    lat: -4.340,
-    lng: 15.285,
-    zoom: 14.0
-  },
-  Barumbu: {
-    tagline: 'Le pôle historique portuaire et aéronautique du vieux Kinshasa.',
-    specification: 'Située au nord le long du fleuve Congo et jouxtant Gombe, Barumbu abrite l\'Aéroport de Ndolo ainsi que des zones portuaires et artisanales historiques.',
-    history: 'Une des communes fondatrices de la capitale coloniale Léopoldville, développée au début du XXe siècle pour accueillir les travailleurs des installations portuaires et ferroviaires.',
-    economy: 'Transport aérien secondaire, logistique portuaire, pièces de rechange automobile, dépôts de matériaux de construction et marchés informels.',
-    keyDistricts: ['Aéroport de Ndolo', 'Bon Marché', 'Quartier du Port'],
-    lat: -4.308,
-    lng: 15.315,
-    zoom: 14.0
-  },
-  Bumbu: {
-    tagline: 'La cité populaire sud au dynamisme artisanal et communautaire.',
-    specification: 'Commune populaire et dense du sud de Kinshasa, caractérisée par une intense vie de quartier et un artisanat prolifique.',
-    history: 'Développée lors de la forte poussée démographique post-indépendance des années 1960 et 1970.',
-    economy: 'Petits commerces de quartier, ateliers de menuiserie et ferronnerie, couturiers et marchés alimentaires de proximité.',
-    keyDistricts: ['Avenue de la Foire', 'Bumbu Centre', 'Rond-point Kasavubu'],
-    lat: -4.370,
-    lng: 15.295,
-    zoom: 14.0
-  },
-  Gombe: {
-    tagline: 'Le centre névralgique des affaires, du pouvoir et de la haute gastronomie.',
-    specification: 'Gombe (anciennement Kalina) est le Centre d\'Affaires Central (CBD) de Kinshasa. Elle abrite les ministères, ambassades, sièges de banques internationales, hôtels 5 étoiles et restaurants gastronomiques.',
-    history: 'Fondée à l\'époque coloniale autour de la baie de Ngaliema et du fleuve Congo, la commune tire son nom de la rivière Gombe. Elle a longtemps été le quartier européen exclusif avant d\'évoluer en cœur administratif et financier du pays.',
-    economy: 'Secteur tertiaire dominant : services financiers, diplomatie, sièges d\'entreprises multinationales, hôtellerie de luxe et restauration haut de gamme. C\'est la zone à plus forte valeur foncière de RDC.',
-    keyDistricts: ['Blvd du 30 Juin', 'Golf', 'Gare Centrale', 'Socimat', 'Fleuve Congo Hotel'],
-    lat: -4.305,
-    lng: 15.302,
-    zoom: 13.5
-  },
-  Kalamu: {
-    tagline: 'Berceau mythique de la Rumba Congolaise et carrefour culturel.',
-    specification: 'Inscrite au patrimoine culturel avec le mythique quartier Matonge et la Place Victoire, Kalamu est la capitale de l\'expression musicale et populaire de Kinshasa.',
-    history: 'Nommée en hommage à la rivière Kalamu, elle s\'est développée dès 1940. Matonge y est devenu mondialement connu comme le sanctuaire des orchestres de rumba et des stars de la musique.',
-    economy: 'Commerce de proximité, bars musicaux historiques, studios d\'enregistrement, marchés de tissus et confection de mode urbaine.',
-    keyDistricts: ['Matonge', 'Place Victoire', 'Yolo Nord', 'Yolo Sud', 'Stade Tata Raphaël'],
-    lat: -4.345,
-    lng: 15.310,
-    zoom: 13.8
-  },
-  'Kasa-Vubu': {
-    tagline: 'Cité civique et politique nommée en l\'honneur du premier Président.',
-    specification: 'Commune centrale emblématique abritant la Maison Communale historique, l\'avenue Assossa et le marché Mariana.',
-    history: 'Anciennement nommée Dendale, elle a été rebaptisée Kasa-Vubu en hommage au premier président de la République Démocratique du Congo, Joseph Kasa-Vubu.',
-    economy: 'Grand marché artisanal, vente d\'imprimerie et librairies, commerces de vivres frais et restauration populaire.',
-    keyDistricts: ['Place Mariana', 'Avenue Assossa', 'Marché Kasa-Vubu'],
-    lat: -4.335,
-    lng: 15.305,
-    zoom: 14.0
-  },
-  Kimbanseke: {
-    tagline: 'La géante démographique et le carrefour créatif de l\'Est.',
-    specification: 'La plus vaste commune urbaine de Kinshasa en termes de population, réputée pour sa culture populaire vivante et ses communautés de création indépendante.',
-    history: 'Bâtie sur les collines à l\'est de la capitale, elle est nommée d\'après le prophète Simon Kimbangu et conserve un fort patrimoine spirituel et communautaire.',
-    economy: 'Agriculture périurbaine, marchés d\'échange de produits agricoles provenant du Kongo-Central et du Kwango, très forte économie informelle et artisanale.',
-    keyDistricts: ['Mokali', 'Kingasani', 'Tshangu Centre'],
-    lat: -4.420,
-    lng: 15.420,
-    zoom: 12.0
-  },
-  Kinshasa: {
-    tagline: 'Le cœur historique et le géant commercial de Zando.',
-    specification: 'Commune homonyme qui abrite le Marché Central de Kinshasa (surnommé Zando), véritable carrefour d\'approvisionnement de la sous-région.',
-    history: 'Cœur historique du marché colonial initial autour duquel la métropole s\'est métamorphosée.',
-    economy: 'Grossistes textiles, import-export, matériel électronique, friperie et gigantesque hub commercial quotidien.',
-    keyDistricts: ['Grand Marché Zando', 'Avenue Kasa-Vubu', 'Marché Somba Zikida'],
-    lat: -4.315,
-    lng: 15.312,
-    zoom: 14.0
-  },
-  Kintambo: {
-    tagline: 'Carrefour historique et pôle commercial stratégique.',
-    specification: 'Une des plus anciennes communes de la ville, située à la jonction entre Gombe, Ngaliema et le fleuve, réputée pour son pôle commercial de Kintambo Magasin.',
-    history: 'Lieu de contact initial entre les populations autochtones Teke/Humbu et les expéditions européennes à la fin du XIXe siècle.',
-    economy: 'Commerce de transit, grands marchés de vêtements, centres de transport en commun et petits métiers d\'artisanat.',
-    keyDistricts: ['Kintambo Magasin', 'Velodrome', 'Jamaique'],
-    lat: -4.318,
-    lng: 15.280,
-    zoom: 14.0
-  },
-  Kisenso: {
-    tagline: 'La cité escarpée des collines sud.',
-    specification: 'Située au bord du plateau de la rive droite de la N\'djili, Kisenso est une commune résidentielle escarpée à forte cohésion sociale.',
-    history: 'Formée par l\'extension urbaine rapide du sud de Kinshasa au milieu du XXe siècle.',
-    economy: 'Culture maraîchère à petite échelle, commerces vivriers et petite mécanique de quartier.',
-    keyDistricts: ['Regideso Kisenso', 'Kisenso Gare', 'Amba'],
-    lat: -4.425,
-    lng: 15.335,
-    zoom: 13.5
-  },
-  Lemba: {
-    tagline: 'La cité universitaire intellectuelle et estudiantine.',
-    specification: 'Commune académique abritant l\'Université de Kinshasa (UNIKIN) et le Commissariat Général à l\'Énergie Atomique (CGEA).',
-    history: 'Planifiée dans les années 1960 pour accueillir l\'élite universitaire et le personnel enseignant de la première université du pays.',
-    economy: 'Économie du savoir, logements étudiants, papeteries, bars estudiantins, centres de recherche et commerces de restauration populaire.',
-    keyDistricts: ['UNIKIN', 'Lemba Super', 'Righini', 'Echangeur'],
-    lat: -4.410,
-    lng: 15.315,
-    zoom: 13.2
-  },
-  Limete: {
-    tagline: 'Entre pôle industriel, galeries d\'art et résidences de prestige.',
-    specification: 'Séparée par le Boulevard Lumumba en zones Industrielle et Résidentielle, Limete est réputée pour sa verdure, ses brasseries, ses galeries d\'art contemporain et la célèbre Tour de l\'Échangeur.',
-    history: 'Aménagée dans les années 1950 pour concentrer l\'activité industrielle de la capitale, Limete est devenue le symbole de la modernité industrielle congolaise avec ses larges avenues arborées.',
-    economy: 'Lourde présence industrielle (Brasseries Bralima/Haggar, transformation agro-alimentaire, usines textiles), ateliers d\'art, concessions automobiles et secteur résidentiel aisé.',
-    keyDistricts: ['Limete Résidentiel', 'Zone Industrielle', 'Échangeur', 'Météo'],
-    lat: -4.350,
-    lng: 15.330,
-    zoom: 13.0
-  },
-  Lingwala: {
-    tagline: 'Le centre des médias, des institutions parlementaires et du sport.',
-    specification: 'Commune abritant le Palais du Peuple (Parlement), le Stade des Martyrs (80 000 places) et la RTNC (Radio Télévision Nationale Congolaise).',
-    history: 'Autrefois appelée Saint-Jean, Lingwala a été un foyer politique majeur lors de la décolonisation congolaise.',
-    economy: 'Services gouvernementaux, événementiel sportif et culturel, bars-terrasses et sièges d\'entreprises de médias.',
-    keyDistricts: ['Stade des Martyrs', 'Palais du Peuple', 'RTNC', 'Avenue Nyangwe'],
-    lat: -4.320,
-    lng: 15.295,
-    zoom: 14.0
-  },
-  Makala: {
-    tagline: 'Au cœur des voies de communication du sud de Kinshasa.',
-    specification: 'Commune centrale de liaison reliant Selembao, Ngaba et Kalamu via l\'avenue Elengesa.',
-    history: 'Développée au fil de l\'urbanisation spontanée et du désenclavement du sud de la capitale.',
-    economy: 'Marchés de quartier, dépôts de briques et matériaux, réparation automobile et petits commerces.',
-    keyDistricts: ['Elengesa', 'Marché Makala', 'Bongolo'],
-    lat: -4.385,
-    lng: 15.305,
-    zoom: 13.8
-  },
-  Maluku: {
-    tagline: 'Le géant éco-touristique, agricole et industriel sur les rives du fleuve.',
-    specification: 'Superficie record couvrant plus de 75% du territoire de la province de Kinshasa, réputée pour ses fermes, ses parcs nature et son site sidérurgique.',
-    history: 'Vaste réserve territoriale et fluviale historiquement occupée par les Teke humbu, intégrée dans le grand projet d\'industrialisation du pays.',
-    economy: 'Agriculture maraîchère de grande échelle, élevage, parcs éco-touristiques, zones franches industrielles et pêche fluviale.',
-    keyDistricts: ['Maluku Centre', 'Kinkole Pêcheurs', 'N\'douo', 'Menkao'],
-    lat: -4.320,
-    lng: 15.800,
-    zoom: 10.0
-  },
-  Masina: {
-    tagline: 'Surnommée "Chine Populaire" pour sa densité et son dynamisme commercial.',
-    specification: 'Porte d\'entrée Est de Kinshasa longeant le Boulevard Lumumba, connue pour sa vitalité entrepreneuriale et son Marché de la Liberté.',
-    history: 'Surnommée ainsi en référence à son impressionnante densité humaine et à l\'esprit débrouillard et actif de ses habitants.',
-    economy: 'Grand Marché de la Liberté (l\'un des plus grands marchés couverts du pays), transit routier et pièces mécaniques.',
-    keyDistricts: ['Marché de la Liberté', 'Sans Fil', 'PASCAL', 'Abattoir'],
-    lat: -4.380,
-    lng: 15.390,
-    zoom: 12.5
-  },
-  Matete: {
-    tagline: 'Le modèle d\'urbanisme populaire et carrefour marchand.',
-    specification: 'Reconnue pour son plan d\'aménagement régulier en quartiers numérotés et son Marché central de Matete très fréquenté.',
-    history: 'Conçue dans les années 1950 sous un modèle urbanistique exemplaire d\'intégration sociale.',
-    economy: 'Commerce de gros et détail de produits de première nécessité, friperie, quincaillerie et maquis de quartier.',
-    keyDistricts: ['Marché de Matete', 'Quartier Anunga', 'Rond-Point Ngaba / Matete'],
-    lat: -4.380,
-    lng: 15.340,
-    zoom: 13.8
-  },
-  'Mont-Ngafula': {
-    tagline: 'Les collines verdoyantes, le sanctuaire des Bonobos et les cités calmes.',
-    specification: 'Commune collinéraire du sud-ouest réputée pour ses paysages pittoresques, le sanctuaire Lola ya Bonobo et l\'Université Catholique du Congo.',
-    history: 'Zone résidentielle péri-urbaine en plein essor au relief escarpé offrant un climat plus doux que le centre-ville.',
-    economy: 'Espaces de loisirs éco-touristiques, hôtellerie de retraite et de détente, enseignement supérieur et projets immobiliers.',
-    keyDistricts: ['Kimbondo', 'Lola ya Bonobo', 'Mama Mobutu', 'UCC Mont-Ngafula', 'By Pass'],
-    lat: -4.450,
-    lng: 15.250,
-    zoom: 12.0
-  },
-  "N'djili": {
-    tagline: 'La porte d\'entrée aérienne du Congo et la cité Ste Thérèse.',
-    specification: 'Abrite l\'Aéroport International de N\'djili et la célèbre Sainte-Thérèse, grand rassemblement d\'événements culturels et politiques.',
-    history: 'Aménagée à partir de 1952 pour offrir un cadre moderne d\'accession à la propriété pour les familles congolaises.',
-    economy: 'Services aéroportuaires, fret et transit, restauration, salons d\'événementiel et grand marché commercial.',
-    keyDistricts: ['Aéroport International', 'Place Sainte-Thérèse', 'Quartier 1 à 13'],
-    lat: -4.400,
-    lng: 15.370,
-    zoom: 13.0
-  },
-  "N'sele": {
-    tagline: 'L\'oasis champêtre, éco-touristique et fluviale de Kinshasa.',
-    specification: 'Immense commune peri-urbaine située à l\'Est, réputée pour le Parc de la N\'Sele, ses domaines aquatiques et ses résidences secondaires au bord de l\'eau.',
-    history: 'Créée sous la 2ème République pour abriter la cité agro-industrielle présidentielle et le Domaine de la N\'Sele.',
-    economy: 'Tourisme vert, hébergement de weekend, complexes hôteliers au bord du fleuve Congo, agriculture maraîchère et pisciculture.',
-    keyDistricts: ['Kinkole', 'Domaine de la N\'Sele', 'Mikonga'],
-    lat: -4.380,
-    lng: 15.550,
-    zoom: 11.5
-  },
-  Ngaba: {
-    tagline: 'Carrefour commercial et foyer d\'artisanat vivace.',
-    specification: 'Située sur l\'axe stratégique du rond-point Ngaba reliant le centre-ville aux universités et aux communes de l\'est.',
-    history: 'Née de l\'expansion commerciale du quartier sud dans les années 1960-1970.',
-    economy: 'Revente de vivres en provenance du Bas-Congo, réparations électroniques et marchands ambulants.',
-    keyDistricts: ['Rond-point Ngaba', 'Avenue Baobab', 'Marché de Ngaba'],
-    lat: -4.395,
-    lng: 15.320,
-    zoom: 14.0
-  },
-  Ngaliema: {
-    tagline: 'Le sommet diplomatique et résidentiel surplombant le Fleuve Congo.',
-    specification: 'Surplombant le fleuve Congo depuis ses collines verdoyantes, Ngaliema abrite le Palais de la Nation, la Cité de l\'Union Africaine ainsi que les résidences huppées de Binza.',
-    history: 'C\'est ici qu\'Henry Morton Stanley établit son campement en 1881 face au chef Ngaliema. Le Mont Ngaliema conserve les vestiges du passé colonial et présidentiel.',
-    economy: 'Immobilier de très haut standing (Binza Macampagne, Pigeon, IPN), tourisme historique, institutions gouvernementales et complexes hôteliers panoramiques.',
-    keyDistricts: ['Binza Macampagne', 'Binza Pigeon', 'Binza Ozone', 'Mont Ngaliema', 'Kintambo Magasin'],
-    lat: -4.335,
-    lng: 15.260,
-    zoom: 12.8
-  },
-  'Ngiri-Ngiri': {
-    tagline: 'Cité historique compacte et communauté solidaire.',
-    specification: 'Une des communes les plus denses de Kinshasa, réputée pour son ambiance de quartier fraternelle et ses ateliers d\'artisans.',
-    history: 'Bâtie dans les années 1950, elle s\'est développée avec un plan d\'alignement strict autour de l\'Avenue 24 Novembre.',
-    economy: 'Boutiques de tailleurs, garages de réparation, petits marchés de vivres et nganda traditionnels.',
-    keyDistricts: ['Avenue Assossa', 'Avenue Saïo', '24 Novembre Ngiri-Ngiri'],
-    lat: -4.355,
-    lng: 15.298,
-    zoom: 14.2
-  },
-  Selembao: {
-    tagline: 'Commune des collines ouest et lieu de passage vers le Kongo-Central.',
-    specification: 'S\'étendant le long de la route de Matadi sur les hauteurs de la ville, avec un panorama imprenable sur le bassin kinois.',
-    history: 'Commune pionnière pour l\'accueil des voyageurs et marchandises en provenance de la côte Atlantique.',
-    economy: 'Transit de marchandises, carrières de pierres de construction, dépôts de matériaux et fermes maraîchères.',
-    keyDistricts: ['Badiadingi', 'Marché Selembao', 'Cité Verte'],
-    lat: -4.365,
-    lng: 15.275,
-    zoom: 13.5
-  }
-};
-
-const ALL_KINSHASA_COMMUNES = Object.keys(COMMUNE_DETAILS).sort();
-
-const DEFAULT_COMMUNE_BRIEF = {
-  tagline: 'Une commune vivante et authentique du grand Kinshasa.',
-  specification: 'Commune intégrante du tissu urbain de Kinshasa, caractérisée par une vie communautaire dynamique, des marchés locaux animés et une population accueillante.',
-  history: 'Développée au cours de la grande expansion démographique de la capitale congolaise au XXe siècle.',
-  economy: 'Commerce de détail, marchés publics de vivres frais, services de proximité et petites entreprises artisanales.',
-  keyDistricts: ['Centre Commune', 'Grand Marché', 'Avenue Principale'],
-  lat: -4.325,
-  lng: 15.300,
-  zoom: 12.5
-};
+import { CATEGORIES, getAverageRating } from '../../../lib/categories';
+import { COMMUNE_DETAILS, ALL_KINSHASA_COMMUNES, DEFAULT_COMMUNE_BRIEF } from '../../../data/communeDetails';
+import { MAP_STYLE, PIN_COLORS } from '../../../lib/mapStyle';
 
 export default function CommuneDetailPage() {
   const params = useParams();
@@ -313,309 +29,286 @@ export default function CommuneDetailPage() {
 
   const rawName = (params?.name as string) || 'Gombe';
   const communeName = decodeURIComponent(rawName).trim();
-  const communeInfo = COMMUNE_DETAILS[communeName] || DEFAULT_COMMUNE_BRIEF;
+  const communeInfo = COMMUNE_DETAILS[communeName] || COMMUNE_DETAILS[communeName.replace(' ', '-')] || DEFAULT_COMMUNE_BRIEF;
 
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
 
-  const [places, setPlaces] = useState<any[]>([]);
+  const [places, setPlaces] = useState<any[] | null>(null);
   const [events, setEvents] = useState<any[]>([]);
+  const [openPlace, setOpenPlace] = useState<any | null>(null);
+  const news = useKinNews(communeName);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data: placeData } = await supabase
-        .from('places')
-        .select('*')
-        .ilike('commune', `%${communeName}%`)
-        .order('created_at', { ascending: false });
-
-      const { data: eventData } = await supabase
-        .from('events')
-        .select('*')
-        .ilike('commune', `%${communeName}%`)
-        .order('event_date', { ascending: true });
-
-      setPlaces(placeData || []);
-      setEvents(eventData || []);
-    };
-
-    fetchData();
+    setPlaces(null);
+    supabase
+      .from('places')
+      .select('*')
+      .ilike('commune', `%${communeName}%`)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setPlaces(data || []));
+    supabase
+      .from('events')
+      .select('*')
+      .ilike('commune', `%${communeName}%`)
+      .order('event_date', { ascending: true })
+      .then(({ data }) => setEvents(data || []));
   }, [communeName]);
+
+  const placeList = useMemo(() => places || [], [places]);
 
   useEffect(() => {
     if (!mapContainer.current) return;
-
     if (map.current) {
-      map.current.flyTo({
-        center: [communeInfo.lng, communeInfo.lat],
-        zoom: communeInfo.zoom,
-        essential: true
-      });
+      map.current.flyTo({ center: [communeInfo.lng, communeInfo.lat], zoom: communeInfo.zoom, essential: true });
     } else {
       map.current = new maplibregl.Map({
         container: mapContainer.current,
         style: MAP_STYLE,
         center: [communeInfo.lng, communeInfo.lat],
         zoom: communeInfo.zoom,
-        pitch: 35
+        pitch: 35,
+        cooperativeGestures: true,
       });
-
-      map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+      map.current.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     }
 
-    // Add map markers for verified places
-    places.forEach((p) => {
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
+    placeList.forEach((p) => {
       const lat = p.lat ? parseFloat(p.lat) : communeInfo.lat;
       const lng = p.lng ? parseFloat(p.lng) : communeInfo.lng;
-
-      const el = document.createElement('div');
-      el.style.backgroundColor = '#0B1E3A';
-      el.style.color = '#F4F1E9';
-      el.style.padding = '4px 8px';
-      el.style.borderRadius = '12px';
-      el.style.fontSize = '10px';
-      el.style.fontWeight = 'bold';
-      el.style.border = '2px solid #C8992E';
-      el.style.boxShadow = '0 0 8px rgba(200, 153, 46, 0.55)';
-      el.innerText = p.name;
-
-      const popup = new maplibregl.Popup({ offset: 20 }).setHTML(`
-        <div style="color: #0B1E3A; font-family: system-ui; padding: 4px;">
-          <h4 style="margin:0 0 4px 0; font-weight:800;">${escapeHtml(p.name)}</h4>
-          <p style="margin:0; font-size:11px; color:#5B5548;">${escapeHtml(p.description || '')}</p>
-        </div>
-      `);
-
-      new maplibregl.Marker({ element: el })
-        .setLngLat([lng, lat])
-        .setPopup(popup)
-        .addTo(map.current!);
+      const color = PIN_COLORS[p.vertical] || '#1A82F5';
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.setAttribute('aria-label', p.name);
+      const avg = getAverageRating(p);
+      el.title = p.name;
+      el.style.cssText = `position:relative;width:30px;height:30px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 6px 14px -4px rgba(11,37,69,.55);cursor:pointer;padding:0;transition:transform .15s;`;
+      // Compact round pin; the name pops up on hover/focus so dense areas stay readable.
+      const label = document.createElement('span');
+      label.style.cssText = `position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);background:#fff;color:#0B2545;font:700 11px system-ui,sans-serif;padding:4px 8px;border-radius:999px;white-space:nowrap;box-shadow:0 6px 16px -6px rgba(11,37,69,.45);display:none;pointer-events:none;`;
+      label.innerHTML = `${escapeHtml(p.name)}${avg !== null ? ` <span style="color:#B98A00">★ ${avg.toFixed(1)}</span>` : ''}`;
+      el.appendChild(label);
+      const show = () => { label.style.display = 'block'; el.style.transform = 'scale(1.15)'; el.style.zIndex = '5'; };
+      const hide = () => { label.style.display = 'none'; el.style.transform = ''; el.style.zIndex = ''; };
+      el.addEventListener('mouseenter', show);
+      el.addEventListener('mouseleave', hide);
+      el.addEventListener('focus', show);
+      el.addEventListener('blur', hide);
+      el.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        setOpenPlace(p);
+      });
+      markersRef.current.push(new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map.current!));
     });
+  }, [communeName, communeInfo, placeList]);
 
-  }, [communeName, communeInfo, places]);
+  const byCategory = useMemo(() => {
+    const m: Record<string, any[]> = {};
+    for (const p of placeList) (m[p.vertical] ||= []).push(p);
+    return m;
+  }, [placeList]);
 
-  const foodPlaces = places.filter(p => p.vertical === 'kin_food');
-  const otherPlaces = places.filter(p => p.vertical === 'kin_places');
-  const culturePlaces = places.filter(p => p.vertical === 'kin_culture');
-  const stylePlaces = places.filter(p => p.vertical === 'kin_style');
-  const securitePlaces = places.filter(p => p.vertical === 'kin_securite');
-
-  // UI-only state for the category tab interface below (replaces four
-  // permanently-visible boxes with a single tabbed section).
-  const CATEGORY_TABS = [
-    { id: 'kin_food', label: 'Kin Food', items: foodPlaces, empty: 'Aucune adresse pour le moment.', text: 'text-brand-green', border: 'border-brand-green' },
-    { id: 'kin_places', label: 'Kin Places', items: otherPlaces, empty: 'Aucun lieu répertorié.', text: 'text-brand-river', border: 'border-brand-river' },
-    { id: 'kin_culture', label: 'Kin Culture', items: culturePlaces, empty: 'Aucun espace culturel.', text: 'text-brand-gold', border: 'border-brand-gold' },
-    { id: 'kin_style', label: 'Kin Style', items: stylePlaces, empty: 'Aucune adresse mode.', text: 'text-brand-plum', border: 'border-brand-plum' },
-    { id: 'kin_securite', label: 'Kin Sécurité', items: securitePlaces, empty: 'Aucun poste de sécurité répertorié.', text: 'text-brand-danger', border: 'border-brand-danger' },
-  ] as const;
-  const [activeCategoryTab, setActiveCategoryTab] = useState<string>('kin_food');
-  const activeTab = CATEGORY_TABS.find(t => t.id === activeCategoryTab) || CATEGORY_TABS[0];
+  const updatePlace = useCallback((u: any) => setPlaces((prev) => (prev || []).map((p) => (p.id === u.id ? u : p))), []);
+  const closeSheet = useCallback(() => setOpenPlace(null), []);
 
   const trafficLevel = getTrafficLevel(communeName);
-
-  const renderPlaceCard = (p: any) => (
-    <div key={p.id} className="border-b border-brand-navy-border py-4 last:border-0 last:pb-0">
-      {p.image_url && (
-        <img
-          src={p.image_url}
-          alt={p.name}
-          className="w-full h-[160px] object-cover rounded-lg mb-3"
-        />
-      )}
-      <strong className="block font-display text-base font-semibold text-brand-cream mb-0.5">
-        {p.name} {p.budget ? <span className="text-brand-gold-light font-sans font-semibold text-sm">({p.budget})</span> : ''}
-      </strong>
-      {p.address && <span className="block text-xs text-brand-muted mb-1">{p.address}</span>}
-      <p className="text-sm text-brand-cream/70 mb-2 leading-relaxed">{p.description}</p>
-      {p.google_maps_url && (
-        <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-brand-river font-semibold no-underline hover:text-brand-gold-light">
-          <IconExternalLink size={11} /> Google Maps Itinéraire →
-        </a>
-      )}
-    </div>
-  );
+  const communeNews = [...news.pinned, ...news.live].slice(0, 6);
 
   return (
-    <main className="min-h-screen bg-brand-navy text-brand-cream flex flex-col">
+    <main className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      <div className="max-w-[1650px] mx-auto px-4 md:px-6 w-full flex-1">
+      {/* HERO BANNER */}
+      <section className="relative overflow-hidden text-white" style={{ background: 'linear-gradient(120deg,#0A2A66 0%,#0E5FC9 50%,#1A82F5 100%)' }}>
+        <span className="absolute -right-28 -top-28 opacity-40 pointer-events-none">
+          <SpinningWheel size={460} />
+        </span>
+        <div className="relative max-w-[1400px] mx-auto px-4 md:px-6 pt-5 pb-10 md:pb-14">
+          <nav aria-label="Fil d'Ariane" className="flex items-center gap-1.5 text-xs text-white/75">
+            <Link href="/" className="inline-flex items-center gap-1 no-underline text-white/75 hover:text-white">
+              <IconHome size={12} /> Accueil
+            </Link>
+            <IconChevronRight size={12} />
+            <Link href="/#communes" className="no-underline text-white/75 hover:text-white">
+              Communes
+            </Link>
+            <IconChevronRight size={12} />
+            <span className="text-white font-semibold">{communeName}</span>
+          </nav>
 
-        {/* Breadcrumb */}
-        <nav aria-label="Fil d'Ariane" className="flex items-center gap-1.5 text-xs text-brand-muted pt-5">
-          <Link href="/" className="inline-flex items-center gap-1 no-underline text-brand-muted hover:text-brand-gold-light">
-            <IconHome size={12} /> Accueil
-          </Link>
-          <IconChevronRight size={12} />
-          <Link href="/commune/Gombe" className="no-underline text-brand-muted hover:text-brand-gold-light">
-            Communes
-          </Link>
-          <IconChevronRight size={12} />
-          <span className="text-brand-cream/80 font-medium">{communeName}</span>
-        </nav>
-
-        {/* HERO / INTRO */}
-        <section className="pt-4 pb-8 border-b border-brand-navy-border md:pt-6 md:pb-10">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div className="mt-6 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div className="max-w-3xl">
-              <span className="inline-block bg-brand-gold text-brand-navy text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide mb-3">
-                Fiche Officielle Kinshasa Label
+              <span className="inline-flex items-center gap-1.5 bg-brand-yellow text-brand-ink text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wide">
+                <IconPin size={12} /> Commune de Kinshasa
               </span>
-              <h1 className="font-display text-4xl md:text-5xl font-semibold text-brand-cream leading-[1.05] mb-4">
-                {communeName}
-              </h1>
-              <p className="font-display italic text-xl md:text-2xl text-brand-gold-light leading-snug border-l-4 border-brand-gold pl-4">
-                &quot;{communeInfo.tagline}&quot;
-              </p>
-              {trafficLevel && (
-                <p
-                  className="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold"
-                  style={{ color: TRAFFIC_COLORS[trafficLevel] }}
-                  title="Niveau indicatif, pas une donnée de trafic en temps réel."
-                >
+              <h1 className="font-display text-5xl md:text-7xl font-extrabold leading-[1] tracking-tight m-0 mt-3">{communeName}</h1>
+              <p className="text-lg md:text-2xl text-white/90 font-medium m-0 mt-3 max-w-2xl">{communeInfo.tagline}</p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {trafficLevel && (
                   <span
-                    className="w-2 h-2 rounded-full inline-block"
-                    style={{ backgroundColor: TRAFFIC_COLORS[trafficLevel] }}
-                  />
-                  Circulation {TRAFFIC_LABELS[trafficLevel].toLowerCase()} (indicatif)
-                </p>
-              )}
+                    className="inline-flex items-center gap-1.5 bg-white text-xs font-extrabold px-3 py-1.5 rounded-full"
+                    style={{ color: TRAFFIC_COLORS[trafficLevel] }}
+                    title="Niveau indicatif, pas une donnée de trafic en temps réel."
+                  >
+                    <span className="w-2 h-2 rounded-full" style={{ background: TRAFFIC_COLORS[trafficLevel] }} />
+                    Circulation {TRAFFIC_LABELS[trafficLevel].toLowerCase()}
+                  </span>
+                )}
+                {places && (
+                  <span className="inline-flex items-center bg-white/15 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                    {places.length} lieu{places.length > 1 ? 'x' : ''} sélectionné{places.length > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Commune Selector, part of the hero rather than a floating utility */}
             <div className="shrink-0">
-              <label className="block text-[11px] uppercase tracking-wide text-brand-muted font-semibold mb-1.5">
+              <label htmlFor="commune-select" className="block text-[11px] uppercase tracking-wide text-white/80 font-bold mb-1.5">
                 Changer de commune
               </label>
               <select
+                id="commune-select"
                 value={ALL_KINSHASA_COMMUNES.includes(communeName) ? communeName : ''}
                 onChange={(e) => router.push(`/commune/${encodeURIComponent(e.target.value)}`)}
-                className="bg-brand-navy-light border border-brand-gold text-brand-cream px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer min-w-[220px]"
+                className="bg-white text-brand-ink px-4 py-3 rounded-full text-sm font-bold cursor-pointer min-w-[240px] border-0 shadow-lift"
               >
-                <option value="" disabled>Choisir une commune (24)...</option>
-                {ALL_KINSHASA_COMMUNES.map(c => (
-                  <option key={c} value={c}>Commune de {c}</option>
+                <option value="" disabled>
+                  Choisir une commune (24)…
+                </option>
+                {ALL_KINSHASA_COMMUNES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Main Grid: Content Column + Map Sidebar */}
-        <div className="grid grid-cols-1 gap-8 py-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-6 w-full flex-1 py-8 md:py-10 flex flex-col gap-12 md:gap-16 pb-16">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+          {/* LEFT: story */}
+          <div className="flex flex-col gap-6 min-w-0">
+            <p className="text-lg md:text-xl text-brand-ink/85 leading-relaxed m-0">{communeInfo.specification}</p>
 
-          {/* Left Column: Briefs & Vertical Listings */}
-          <div>
-
-            {/* Lead paragraph — unboxed, editorial */}
-            <p className="text-lg text-brand-cream/80 leading-relaxed max-w-3xl mb-8">
-              {communeInfo.specification}
-            </p>
-
-            {/* Histoire / Économie — two-column fact layout, icon-led */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mb-8 pb-8 border-b border-brand-navy-border">
-              <div>
-                <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-brand-river mb-2">
-                  <IconClock size={16} /> Aperçu Historique
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="bg-brand-blue-soft rounded-3xl p-5">
+                <h2 className="inline-flex items-center gap-2 text-sm font-extrabold text-brand-blue-deep m-0 mb-2">
+                  <IconClock size={16} /> Un peu d’histoire
                 </h2>
-                <p className="text-sm text-brand-cream/70 leading-relaxed">
-                  {communeInfo.history}
-                </p>
+                <p className="text-sm text-brand-ink/80 leading-relaxed m-0">{communeInfo.history}</p>
               </div>
-              <div>
-                <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-brand-green mb-2">
-                  <IconChart size={16} /> Économie &amp; Activités
+              <div className="bg-brand-yellow-soft rounded-3xl p-5">
+                <h2 className="inline-flex items-center gap-2 text-sm font-extrabold text-brand-yellow-deep m-0 mb-2">
+                  <IconChart size={16} /> Économie &amp; activités
                 </h2>
-                <p className="text-sm text-brand-cream/70 leading-relaxed">
-                  {communeInfo.economy}
-                </p>
+                <p className="text-sm text-brand-ink/80 leading-relaxed m-0">{communeInfo.economy}</p>
               </div>
             </div>
 
-            {/* Quartiers Phares */}
-            <div className="mb-9">
-              <h3 className="text-xs text-brand-muted uppercase tracking-wide font-semibold mb-3">
-                Quartiers &amp; Repères Clés
-              </h3>
+            <div>
+              <h3 className="text-xs text-brand-muted uppercase tracking-wide font-bold mb-3 mt-0">Quartiers &amp; repères</h3>
               <div className="flex gap-2 flex-wrap">
-                {communeInfo.keyDistricts.map(d => (
-                  <span key={d} className="bg-brand-navy-light text-brand-river border border-brand-navy-border px-3 py-1 rounded-full text-xs font-semibold">
+                {communeInfo.keyDistricts.map((d) => (
+                  <span key={d} className="bg-white text-brand-ink border border-brand-line px-3.5 py-1.5 rounded-full text-sm font-semibold shadow-sm">
                     {d}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* KIN WEEKEND HIGHLIGHT */}
-            <section className="bg-brand-navy-light border border-brand-plum/60 rounded-2xl p-5 md:p-6 mb-9">
-              <h2 className="text-base font-semibold text-brand-plum mb-4">
-                Kin Weekend — À faire ce weekend à {communeName} ({events.length})
-              </h2>
-              <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
-                {events.length === 0 ? (
-                  <p className="text-sm text-brand-muted">Aucun événement ce weekend dans cette commune.</p>
-                ) : (
-                  events.map(e => (
-                    <div key={e.id} className="bg-brand-navy border border-brand-navy-border rounded-lg p-3.5">
-                      <span className="text-[11px] text-brand-plum font-semibold uppercase tracking-wide">{e.category} · {e.event_date}</span>
-                      <h3 className="text-sm font-semibold text-brand-cream my-1">{e.title}</h3>
-                      <p className="text-sm text-brand-cream/70 m-0 leading-relaxed">{e.description}</p>
-                    </div>
-                  ))
-                )}
+            {/* Commune news */}
+            <section className="bg-white rounded-3xl border border-brand-line shadow-card p-5">
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <h2 className="font-display text-xl font-extrabold text-brand-ink m-0 inline-flex items-center gap-2">
+                  <LiveDot /> Kin Actualité à {communeName}
+                </h2>
+                <Link href="/actualite" className="text-sm font-bold text-brand-blue-deep no-underline shrink-0">
+                  Toute l’actu →
+                </Link>
               </div>
+              {communeNews.length === 0 ? (
+                <p className="text-sm text-brand-muted m-0 py-3">
+                  {news.loading ? 'Chargement…' : `Pas d’actualité récente mentionnant ${communeName}.`}
+                </p>
+              ) : (
+                communeNews.map((n) => <NewsCard key={n.id} item={n} variant="row" />)
+              )}
             </section>
-
-            {/* CATEGORY TABS — replaces 4 permanently-visible boxes */}
-            <section>
-              <h2 className="text-xs uppercase tracking-wide text-brand-muted font-semibold mb-3">
-                Adresses recommandées par catégorie
-              </h2>
-              <div className="flex gap-6 overflow-x-auto border-b border-brand-navy-border">
-                {CATEGORY_TABS.map((tab) => {
-                  const isActive = tab.id === activeCategoryTab;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveCategoryTab(tab.id)}
-                      className={`shrink-0 whitespace-nowrap pb-3 text-sm font-semibold border-b-2 -mb-px transition-colors cursor-pointer ${
-                        isActive ? `${tab.text} ${tab.border}` : 'text-brand-cream/55 border-transparent hover:text-brand-cream'
-                      }`}
-                    >
-                      {tab.label} <span className="font-normal text-brand-muted">({tab.items.length})</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="pt-1">
-                {activeTab.items.length === 0 ? (
-                  <p className="text-sm text-brand-muted py-4">{activeTab.empty}</p>
-                ) : (
-                  activeTab.items.map(renderPlaceCard)
-                )}
-              </div>
-            </section>
-
           </div>
 
-          {/* Sidebar Interactive Map */}
+          {/* RIGHT: map */}
           <aside>
-            <div className="sticky top-24 bg-brand-navy-light border border-brand-navy-border rounded-2xl p-3.5">
-              <h3 className="text-xs text-brand-river uppercase font-semibold mt-0 mb-2.5">
-                Carte Interactive de {communeName}
-              </h3>
-              <div ref={mapContainer} className="w-full h-[440px] rounded-[10px] overflow-hidden" />
-              <p className="text-[11px] text-brand-muted mt-2 mb-0 text-center">
-                {places.length} lieu(x) certifié(s) géolocalisé(s)
+            <div className="lg:sticky lg:top-24 bg-white border border-brand-line rounded-3xl shadow-card p-2.5">
+              <div ref={mapContainer} className="w-full h-[360px] lg:h-[460px] rounded-2xl overflow-hidden" />
+              <p className="text-xs text-brand-muted mt-2 mb-1 text-center font-semibold">
+                Touchez une épingle pour ouvrir le lieu
               </p>
             </div>
           </aside>
-
         </div>
+
+        {/* EVENTS */}
+        {events.length > 0 && (
+          <section className="rounded-[28px] p-5 md:p-8" style={{ background: 'linear-gradient(135deg,#EFE6FD 0%,#FFF7D1 100%)' }}>
+            <Carousel title={`Kin Weekend à ${communeName}`} subtitle="Les sorties au programme dans la commune." itemClassName="w-[82%] sm:w-[46%] lg:w-[32%]">
+              {events.map((e) => (
+                <article key={e.id} className="h-full bg-white rounded-2xl border border-brand-line shadow-card p-4">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wide text-[#7B3FE4]">
+                    {[e.category, e.event_date && new Date(e.event_date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                  <h3 className="font-display text-lg font-bold text-brand-ink m-0 mt-1">{e.title}</h3>
+                  {e.description && <p className="text-sm text-brand-muted m-0 mt-1 line-clamp-3">{e.description}</p>}
+                </article>
+              ))}
+            </Carousel>
+          </section>
+        )}
+
+        {/* PLACES BY CATEGORY */}
+        {places === null ? (
+          <div className="flex items-center gap-3 text-brand-muted">
+            <SpinningWheel size={40} /> Chargement des adresses…
+          </div>
+        ) : placeList.length === 0 ? (
+          <div className="rounded-3xl border-2 border-dashed border-brand-line p-8 text-center">
+            <SpinningWheel size={64} spin={false} className="mx-auto" />
+            <h2 className="font-display text-2xl font-extrabold text-brand-ink mt-3 mb-1">Aucune adresse à {communeName} pour l’instant</h2>
+            <p className="text-brand-muted m-0">Vous connaissez un bon plan dans la commune ? Dites-le-nous.</p>
+            <Link href="/contact" className="inline-flex items-center gap-1.5 mt-4 bg-brand-red text-white font-bold px-5 py-3 rounded-full no-underline">
+              Proposer un lieu <IconArrowRight size={14} />
+            </Link>
+          </div>
+        ) : (
+          CATEGORIES.filter((c) => (byCategory[c.id] || []).length > 0).map((c) => (
+            <Carousel
+              key={c.id}
+              title={
+                <span className="inline-flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl inline-flex items-center justify-center text-white" style={{ background: c.gradient }}>
+                    <CategoryIcon id={c.id} size={18} />
+                  </span>
+                  {c.label} à {communeName}
+                </span>
+              }
+              subtitle={c.tagline}
+            >
+              {byCategory[c.id].map((p) => (
+                <PlaceCard key={p.id} place={p} onOpen={setOpenPlace} />
+              ))}
+            </Carousel>
+          ))
+        )}
       </div>
 
       <SiteFooter />
+      <PlaceSheet place={openPlace} onClose={closeSheet} onUpdated={updatePlace} />
     </main>
   );
 }

@@ -31,7 +31,7 @@ export function SocialLinks({ size = 17 }: { size?: number }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={name}
-            className="w-8 h-8 inline-flex items-center justify-center rounded-full border border-brand-navy-border text-brand-cream/80 hover:text-brand-gold hover:border-brand-gold transition-colors"
+            className="w-8 h-8 inline-flex items-center justify-center rounded-full border border-brand-line text-brand-ink/80 hover:text-brand-red hover:border-brand-red transition-colors"
           >
             <Icon size={size} />
           </a>
@@ -40,7 +40,7 @@ export function SocialLinks({ size = 17 }: { size?: number }) {
             key={name}
             title={`${name} — bientôt disponible`}
             aria-label={`${name} — bientôt disponible`}
-            className="w-8 h-8 inline-flex items-center justify-center rounded-full border border-brand-navy-border text-brand-muted/50 cursor-not-allowed"
+            className="w-8 h-8 inline-flex items-center justify-center rounded-full border border-brand-line text-brand-muted/50 cursor-not-allowed"
           >
             <Icon size={size} />
           </span>

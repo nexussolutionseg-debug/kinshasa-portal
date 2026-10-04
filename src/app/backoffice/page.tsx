@@ -511,7 +511,7 @@ export default function BackofficePage() {
     }
   };
 
-  const inputClass = "w-full box-border px-3 py-2.5 bg-brand-navy border border-brand-navy-border text-brand-cream rounded-lg text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-gold";
+  const inputClass = "w-full box-border px-3 py-2.5 bg-brand-bg border border-brand-line text-brand-ink rounded-lg text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-red";
   const labelClass = "block text-[11px] text-brand-muted uppercase font-bold mb-1.5";
 
   // Nothing is rendered until the session check above resolves — avoids a
@@ -519,24 +519,24 @@ export default function BackofficePage() {
   // redirected to /login.
   if (!authChecked) {
     return (
-      <main className="min-h-screen bg-brand-navy text-brand-cream flex items-center justify-center">
+      <main className="min-h-screen bg-brand-bg text-brand-ink flex items-center justify-center">
         <p className="text-sm text-brand-muted">Vérification de l&apos;accès...</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-brand-navy text-brand-cream">
+    <main className="min-h-screen bg-brand-bg text-brand-ink">
 
       {/* Simplified admin header — no marketing hero/footer needed here */}
-      <nav className="flex justify-between items-center max-w-[1000px] mx-auto px-4 py-4 border-b border-brand-navy-border flex-wrap gap-2.5">
+      <nav className="flex justify-between items-center max-w-[1000px] mx-auto px-4 py-4 border-b border-brand-line flex-wrap gap-2.5">
         <div className="flex items-center gap-3">
           <KinshasaMark size={28} />
-          <Link href="/" className="inline-flex items-center gap-1.5 text-brand-river no-underline font-semibold text-sm hover:text-brand-gold-light">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-brand-blue no-underline font-semibold text-sm hover:text-brand-red-dark">
             <IconHome size={14} /> Accueil
           </Link>
-          <span className="text-brand-navy-border">/</span>
-          <h1 className="font-display text-lg font-semibold text-brand-cream m-0">
+          <span className="text-brand-line">/</span>
+          <h1 className="font-display text-lg font-semibold text-brand-ink m-0">
             Kinshasa Label — Backoffice
           </h1>
         </div>
@@ -556,7 +556,7 @@ export default function BackofficePage() {
         {statusMsg && (
           <div className={`p-3.5 rounded-xl mb-5 font-semibold text-sm border ${
             statusMsg.type === 'success'
-              ? 'bg-brand-green/20 text-brand-green border-brand-green'
+              ? 'bg-brand-blue-deep/20 text-brand-blue-deep border-brand-blue-deep'
               : 'bg-brand-danger/20 text-brand-danger border-brand-danger'
           }`}>
             {statusMsg.text}
@@ -572,7 +572,7 @@ export default function BackofficePage() {
             Événements (Kin Weekend)
           </Button>
           <Button variant={section === 'news' ? 'primary' : 'secondary'} onClick={() => setSection('news')}>
-            Actualités (Kin News)
+            À la une (Kin Actualité)
           </Button>
           <Button variant={section === 'banner' ? 'primary' : 'secondary'} onClick={() => setSection('banner')}>
             Bannière
@@ -601,8 +601,8 @@ export default function BackofficePage() {
 
         {/* LIST & EDIT TAB */}
         {activeTab === 'manage' && (
-          <div className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
-            <h2 className="font-display text-xl text-brand-river mt-0 mb-5 font-semibold">
+          <div className="bg-brand-surface border border-brand-line rounded-2xl p-6">
+            <h2 className="font-display text-xl text-brand-blue mt-0 mb-5 font-semibold">
               Lieux Répertoriés à Kinshasa
             </h2>
 
@@ -611,34 +611,34 @@ export default function BackofficePage() {
             ) : (
               <div className="flex flex-col gap-3">
                 {placesList.map((item) => (
-                  <div key={item.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
+                  <div key={item.id} className="bg-brand-bg border border-brand-line rounded-xl p-4 flex gap-4 items-center flex-wrap">
                     {item.image_url ? (
-                      <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-lg shrink-0 border border-brand-navy-border" />
+                      <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-lg shrink-0 border border-brand-line" />
                     ) : (
-                      <div className="w-20 h-20 bg-brand-navy-light rounded-lg flex items-center justify-center text-[10px] text-brand-muted shrink-0 border border-dashed border-brand-navy-border">
+                      <div className="w-20 h-20 bg-brand-surface rounded-lg flex items-center justify-center text-[10px] text-brand-muted shrink-0 border border-dashed border-brand-line">
                         Pas d&apos;image
                       </div>
                     )}
 
                     <div className="flex-1 min-w-[280px]">
                       <div className="flex gap-2 items-center mb-1.5 flex-wrap">
-                        <span className="text-[10px] bg-brand-gold text-brand-navy px-1.5 py-0.5 rounded font-bold uppercase">{item.vertical}</span>
-                        <span className="text-xs text-brand-green font-semibold">{item.commune}</span>
-                        <span className="text-xs text-brand-gold-light">{item.budget}</span>
-                        <span className={`text-[11px] ${item.lat ? 'text-brand-river' : 'text-brand-danger'}`}>
+                        <span className="text-[10px] bg-brand-red text-white px-1.5 py-0.5 rounded font-bold uppercase">{item.vertical}</span>
+                        <span className="text-xs text-brand-blue-deep font-semibold">{item.commune}</span>
+                        <span className="text-xs text-brand-red-dark">{item.budget}</span>
+                        <span className={`text-[11px] ${item.lat ? 'text-brand-blue' : 'text-brand-danger'}`}>
                           {item.lat ? 'Coordonnées OK' : 'Mode Fallback'}
                         </span>
                       </div>
 
-                      <h3 className="text-base text-brand-cream m-0 mb-1 font-semibold">{item.name}</h3>
+                      <h3 className="text-base text-brand-ink m-0 mb-1 font-semibold">{item.name}</h3>
 
                       {item.google_maps_url && (
-                        <a href={item.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-brand-river no-underline font-semibold mb-1">
+                        <a href={item.google_maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-brand-blue no-underline font-semibold mb-1">
                           <IconExternalLink size={11} /> Google Maps Link
                         </a>
                       )}
 
-                      <p className="text-sm text-brand-cream/70 m-0">{item.description}</p>
+                      <p className="text-sm text-brand-ink/70 m-0">{item.description}</p>
                     </div>
 
                     <div className="flex gap-2.5">
@@ -658,9 +658,9 @@ export default function BackofficePage() {
 
         {/* ADD / EDIT FORM */}
         {activeTab === 'add' && (
-          <form onSubmit={handleSavePlace} className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
-            <div className="flex justify-between items-center mb-5 border-b border-brand-navy-border pb-3">
-              <h2 className="font-display text-xl text-brand-river m-0 font-semibold">
+          <form onSubmit={handleSavePlace} className="bg-brand-surface border border-brand-line rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-5 border-b border-brand-line pb-3">
+              <h2 className="font-display text-xl text-brand-blue m-0 font-semibold">
                 {editingPlaceId ? `Éditer : "${placeName}"` : 'Rechercher & Importer via Google Maps'}
               </h2>
               {editingPlaceId && (
@@ -682,7 +682,7 @@ export default function BackofficePage() {
                 onChange={(e) => setPlaceName(e.target.value)}
                 required
                 placeholder="Tapez le nom d'un établissement à Kinshasa..."
-                className={`${inputClass} border-brand-gold`}
+                className={`${inputClass} border-brand-red`}
               />
             </div>
 
@@ -691,7 +691,7 @@ export default function BackofficePage() {
               <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className={inputClass} />
               {imageUrl && (
                 <div className="mt-2.5">
-                  <img src={imageUrl} alt="Aperçu" className="w-[120px] h-20 object-cover rounded-md border border-brand-navy-border" />
+                  <img src={imageUrl} alt="Aperçu" className="w-[120px] h-20 object-cover rounded-md border border-brand-line" />
                 </div>
               )}
             </div>
@@ -761,8 +761,8 @@ export default function BackofficePage() {
         </div>
 
         {eventTab === 'manage' && (
-          <div className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
-            <h2 className="font-display text-xl text-brand-river mt-0 mb-5 font-semibold">
+          <div className="bg-brand-surface border border-brand-line rounded-2xl p-6">
+            <h2 className="font-display text-xl text-brand-blue mt-0 mb-5 font-semibold">
               Événements — Kin Weekend
             </h2>
             {eventsList.length === 0 ? (
@@ -770,17 +770,17 @@ export default function BackofficePage() {
             ) : (
               <div className="flex flex-col gap-3">
                 {eventsList.map((item) => (
-                  <div key={item.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
+                  <div key={item.id} className="bg-brand-bg border border-brand-line rounded-xl p-4 flex gap-4 items-center flex-wrap">
                     <div className="flex-1 min-w-[280px]">
                       <div className="flex gap-2 items-center mb-1.5 flex-wrap">
-                        {item.category && <span className="text-[10px] bg-brand-gold text-brand-navy px-1.5 py-0.5 rounded font-bold uppercase">{item.category}</span>}
-                        <span className="text-xs text-brand-green font-semibold">{item.commune}</span>
+                        {item.category && <span className="text-[10px] bg-brand-red text-white px-1.5 py-0.5 rounded font-bold uppercase">{item.category}</span>}
+                        <span className="text-xs text-brand-blue-deep font-semibold">{item.commune}</span>
                         <span className="inline-flex items-center gap-1 text-[11px] text-brand-muted">
                           <IconClock size={11} /> {item.event_date || 'Date non définie'}
                         </span>
                       </div>
-                      <h3 className="text-base text-brand-cream m-0 mb-1 font-semibold">{item.title}</h3>
-                      <p className="text-sm text-brand-cream/70 m-0">{item.description}</p>
+                      <h3 className="text-base text-brand-ink m-0 mb-1 font-semibold">{item.title}</h3>
+                      <p className="text-sm text-brand-ink/70 m-0">{item.description}</p>
                     </div>
                     <div className="flex gap-2.5">
                       <Button variant="primary" size="sm" onClick={() => startEditingEvent(item)}>
@@ -798,9 +798,9 @@ export default function BackofficePage() {
         )}
 
         {eventTab === 'add' && (
-          <form onSubmit={handleSaveEvent} className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
-            <div className="flex justify-between items-center mb-5 border-b border-brand-navy-border pb-3">
-              <h2 className="font-display text-xl text-brand-river m-0 font-semibold">
+          <form onSubmit={handleSaveEvent} className="bg-brand-surface border border-brand-line rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-5 border-b border-brand-line pb-3">
+              <h2 className="font-display text-xl text-brand-blue m-0 font-semibold">
                 {editingEventId ? `Éditer : "${evTitle}"` : 'Nouvel Événement'}
               </h2>
               {editingEventId && (
@@ -858,28 +858,28 @@ export default function BackofficePage() {
         </div>
 
         {newsTab === 'manage' && (
-          <div className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
-            <h2 className="font-display text-xl text-brand-river mt-0 mb-5 font-semibold">
-              Actualités — Kin News
+          <div className="bg-brand-surface border border-brand-line rounded-2xl p-6">
+            <h2 className="font-display text-xl text-brand-blue mt-0 mb-5 font-semibold">
+              À la une — Kin Actualité
             </h2>
             <p className="text-xs text-brand-muted mb-4 leading-relaxed">
-              Flux éditorial saisi à la main par l&apos;équipe — il n&apos;existe pas d&apos;API d&apos;actualités gratuite et sans facturation à brancher automatiquement ici.
+              Sujets de la rédaction, épinglés « À la une » en tête de Kin Actualité (au-dessus du flux en direct des médias congolais, qui se met à jour tout seul).
             </p>
             {newsList.length === 0 ? (
               <p className="text-sm text-brand-muted">Aucune actualité publiée. Ajoutez la première via l&apos;onglet ci-dessus.</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {newsList.map((item) => (
-                  <div key={item.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
+                  <div key={item.id} className="bg-brand-bg border border-brand-line rounded-xl p-4 flex gap-4 items-center flex-wrap">
                     <div className="flex-1 min-w-[280px]">
                       <div className="flex gap-2 items-center mb-1.5 flex-wrap">
-                        {item.commune && <span className="text-xs text-brand-green font-semibold">{item.commune}</span>}
+                        {item.commune && <span className="text-xs text-brand-blue-deep font-semibold">{item.commune}</span>}
                         <span className="inline-flex items-center gap-1 text-[11px] text-brand-muted">
                           <IconClock size={11} /> {item.published_date}
                         </span>
                       </div>
-                      <h3 className="text-base text-brand-cream m-0 mb-1 font-semibold">{item.title}</h3>
-                      <p className="text-sm text-brand-cream/70 m-0">{item.body}</p>
+                      <h3 className="text-base text-brand-ink m-0 mb-1 font-semibold">{item.title}</h3>
+                      <p className="text-sm text-brand-ink/70 m-0">{item.body}</p>
                       {item.source_note && <p className="text-[11px] text-brand-muted/70 m-0 mt-1">{item.source_note}</p>}
                     </div>
                     <div className="flex gap-2.5">
@@ -898,9 +898,9 @@ export default function BackofficePage() {
         )}
 
         {newsTab === 'add' && (
-          <form onSubmit={handleSaveNews} className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
-            <div className="flex justify-between items-center mb-5 border-b border-brand-navy-border pb-3">
-              <h2 className="font-display text-xl text-brand-river m-0 font-semibold">
+          <form onSubmit={handleSaveNews} className="bg-brand-surface border border-brand-line rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-5 border-b border-brand-line pb-3">
+              <h2 className="font-display text-xl text-brand-blue m-0 font-semibold">
                 {editingNewsId ? `Éditer : "${nwTitle}"` : 'Nouvelle Actualité'}
               </h2>
               {editingNewsId && (
@@ -954,17 +954,17 @@ export default function BackofficePage() {
 
         {/* BANNIÈRE SECTION */}
         {section === 'banner' && (
-        <div className="bg-brand-navy-light border border-brand-navy-border rounded-2xl p-6">
-          <h2 className="font-display text-xl text-brand-river mt-0 mb-2 font-semibold">
+        <div className="bg-brand-surface border border-brand-line rounded-2xl p-6">
+          <h2 className="font-display text-xl text-brand-blue mt-0 mb-2 font-semibold">
             Bannière du site
           </h2>
           <p className="text-xs text-brand-muted mb-5 leading-relaxed">
-            Affichée sous les catégories (Kin Food, Kin Places...) sur la page d&apos;accueil. Une seule bannière active à la fois — la plus récente marquée &laquo; active &raquo; est celle qui s&apos;affiche.
+            Chaque bannière active devient une diapositive du carrousel en haut de la page d&apos;accueil (les plus récentes en premier). Désactivez une bannière pour la retirer du carrousel. Format conseillé : paysage, environ 2,5:1 (ex. 2000×800) — l&apos;image n&apos;est jamais recadrée.
           </p>
 
-          <form onSubmit={handleSaveBanner} className="mb-6 pb-6 border-b border-brand-navy-border">
+          <form onSubmit={handleSaveBanner} className="mb-6 pb-6 border-b border-brand-line">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm text-brand-cream font-semibold m-0">
+              <h3 className="text-sm text-brand-ink font-semibold m-0">
                 {editingBannerId ? 'Éditer la bannière' : 'Nouvelle bannière'}
               </h3>
               {editingBannerId && (
@@ -994,7 +994,7 @@ export default function BackofficePage() {
                 accept="image/*"
                 onChange={(e) => handleBannerImageSelect(e.target.files?.[0] || null)}
                 disabled={bnImageUploading}
-                className="text-sm text-brand-cream file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-navy file:font-semibold file:text-xs file:cursor-pointer"
+                className="text-sm text-brand-ink file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-red file:text-white file:font-semibold file:text-xs file:cursor-pointer"
               />
               <p className="text-xs text-brand-muted mt-1.5">
                 Elle s&apos;affiche en pleine largeur en haut de la page d&apos;accueil, entière et sans
@@ -1004,7 +1004,7 @@ export default function BackofficePage() {
               {bnImageUploading && <p className="text-xs text-brand-muted mt-2">Envoi de l&apos;image...</p>}
               {bnImageUrl && !bnImageUploading && (
                 <div className="mt-3 flex flex-col gap-2">
-                  <div className="w-full max-w-[420px] h-40 flex items-center justify-center rounded-md border border-brand-navy-border overflow-hidden bg-brand-navy">
+                  <div className="w-full max-w-[420px] h-40 flex items-center justify-center rounded-md border border-brand-line overflow-hidden bg-brand-bg">
                     <img src={bnImageUrl} alt="Aperçu de la bannière" className="max-w-full max-h-full object-contain" />
                   </div>
                   <Button type="button" variant="ghost" size="sm" onClick={() => setBnImageUrl('')}>
@@ -1013,7 +1013,7 @@ export default function BackofficePage() {
                 </div>
               )}
             </div>
-            <label className="flex items-center gap-2 mb-5 text-sm text-brand-cream">
+            <label className="flex items-center gap-2 mb-5 text-sm text-brand-ink">
               <input type="checkbox" checked={bnActive} onChange={(e) => setBnActive(e.target.checked)} />
               Active (visible sur le site)
             </label>
@@ -1027,17 +1027,17 @@ export default function BackofficePage() {
           ) : (
             <div className="flex flex-col gap-3">
               {bannerList.map((b) => (
-                <div key={b.id} className="bg-brand-navy border border-brand-navy-border rounded-xl p-4 flex gap-4 items-center flex-wrap">
+                <div key={b.id} className="bg-brand-bg border border-brand-line rounded-xl p-4 flex gap-4 items-center flex-wrap">
                   {b.image_url && (
-                    <div className="w-24 h-16 flex items-center justify-center shrink-0 rounded-md border border-brand-navy-border overflow-hidden bg-brand-navy">
+                    <div className="w-24 h-16 flex items-center justify-center shrink-0 rounded-md border border-brand-line overflow-hidden bg-brand-bg">
                       <img src={b.image_url} alt="" className="max-w-full max-h-full object-contain" />
                     </div>
                   )}
                   <div className="flex-1 min-w-[280px]">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${b.active ? 'bg-brand-green text-brand-navy' : 'bg-brand-navy-border text-brand-muted'}`}>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${b.active ? 'bg-brand-blue-deep text-white' : 'bg-brand-line text-brand-muted'}`}>
                       {b.active ? 'Active' : 'Inactive'}
                     </span>
-                    {b.message && <p className="text-sm text-brand-cream mt-1.5 m-0">{b.message}</p>}
+                    {b.message && <p className="text-sm text-brand-ink mt-1.5 m-0">{b.message}</p>}
                   </div>
                   <div className="flex gap-2.5">
                     <Button variant="secondary" size="sm" onClick={() => handleToggleBanner(b)}>

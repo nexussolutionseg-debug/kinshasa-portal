@@ -47,15 +47,15 @@ export function CookieConsentBanner() {
       {consent === 'granted' && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
 
       {hydrated && consent === 'unknown' && (
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-brand-navy-border bg-brand-navy-light/98 backdrop-blur px-4 py-4 md:px-6">
+        <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-brand-line bg-white shadow-lift backdrop-blur px-4 py-4 md:px-6">
           <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
-            <p className="text-sm text-brand-cream/80 m-0 flex-1">
+            <p className="text-sm text-brand-ink/80 m-0 flex-1">
               Nous utilisons Google Analytics pour comprendre comment ce site est utilisé
               (pages visitées, provenance des visiteurs). Vous pouvez accepter ou refuser ce
               suivi ; votre choix reste modifiable à tout moment depuis le pied de page.{' '}
               <Link
                 href="/politique-de-confidentialite"
-                className="text-brand-gold-light no-underline hover:text-brand-gold"
+                className="text-brand-red-dark no-underline hover:text-brand-red"
               >
                 En savoir plus
               </Link>
