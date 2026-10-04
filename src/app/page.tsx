@@ -15,7 +15,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, Fragment, type ReactNode } from 'react';
 import { DEFAULT_SETTINGS, loadSiteSettings, isBannerLive, sortBanners, type SiteSettings, type SectionId } from '../lib/siteSettings';
 import Link from 'next/link';
-import * as maplibregl from 'maplibre-gl';
+import maplibregl from '../lib/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../lib/supabase';
 import { escapeHtml } from '../lib/html';

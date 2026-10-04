@@ -27,3 +27,6 @@ next-env.d.ts
 # editor
 .vscode/
 .idea/
+
+# generated from node_modules at build time (scripts/copy-maplibre-worker.mjs)
+/public/maplibre/
