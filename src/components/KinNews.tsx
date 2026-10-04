@@ -9,7 +9,8 @@ import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import { type NewsItem, timeAgo } from '../lib/news';
 import { withUtm } from '../lib/utm';
-import { IconExternalLink, IconPin, IconMoney, IconNews } from './icons';
+import { loadSiteSettings } from '../lib/siteSettings';
+import { IconExternalLink, IconPin, IconMoney, IconNews, IconClose } from './icons';
 import { LiveDot } from './SiteHeader';
 
 export type SourceStatus = { id: string; name: string; site: string; color: string; ok: boolean; count: number };
@@ -48,12 +49,17 @@ export function useKinNews(commune?: string | null) {
       })
       .catch(() => !cancelled && setLive([]));
 
-    supabase
-      .from('news')
-      .select('*')
-      .order('published_date', { ascending: false })
-      .limit(12)
-      .then(({ data }) => !cancelled && setPinned((data || []).map(editorialToItem)));
+    // The team's own articles only show when switched on in Backoffice →
+    // Vitrine → Sections de l'accueil → "Afficher nos articles À la une".
+    loadSiteSettings().then((settings) => {
+      if (cancelled || !settings.showEditorial) return;
+      supabase
+        .from('news')
+        .select('*')
+        .order('published_date', { ascending: false })
+        .limit(12)
+        .then(({ data }) => !cancelled && setPinned((data || []).map(editorialToItem)));
+    });
 
     return () => {
       cancelled = true;
@@ -79,19 +85,113 @@ function tintFor(name: string) {
   return SOURCE_TINTS[h % SOURCE_TINTS.length];
 }
 
-export function NewsCard({ item, variant = 'card' }: { item: NewsItem; variant?: 'card' | 'row' | 'feature' }) {
-  const [imgOk, setImgOk] = useState(true);
+function NewsImage({ item, className, tint }: { item: NewsItem; className: string; tint: string }) {
+  const [ok, setOk] = useState(true);
+  if (item.image && ok)
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={item.image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setOk(false)} className={`object-cover ${className}`} />
+    );
+  return (
+    <div
+      className={`flex items-center justify-center ${className}`}
+      style={{ background: item.pinned ? 'linear-gradient(135deg,#FFE36B,#F5B400)' : `linear-gradient(135deg, ${tint}, #0A2A66)` }}
+    >
+      {item.pinned ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src="/logo.svg" alt="" aria-hidden="true" className="w-24 md:w-36 rounded-full bg-white p-2 shadow-lift" />
+      ) : (
+        <span className="font-display font-extrabold text-xl px-4 text-center text-white/90">{item.sourceName}</span>
+      )}
+    </div>
+  );
+}
+
+function fullDate(iso: string | null) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+}
+
+// Detail view for one news item, on our site: photo, source, date & time,
+// author, commune, categories, the publisher's own summary, and a clear
+// button to the full article on the source site (plus WhatsApp share).
+// We never republish the article body — the full text stays at the source.
+export function NewsSheet({ item, onClose }: { item: NewsItem | null; onClose: () => void }) {
+  useEffect(() => {
+    if (!item) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [item, onClose]);
+  if (!item) return null;
   const tint = tintFor(item.sourceName);
-  const hasLink = !!item.link;
-  const Wrapper: any = hasLink ? 'a' : 'div';
-  const wrapperProps = hasLink
-    ? {
-        href: item.link,
-        target: /^https?:/.test(item.link) ? '_blank' : undefined,
-        rel: 'noopener noreferrer',
-        'aria-label': `${item.title} — lire l’article sur ${item.pinned ? 'la source' : item.sourceName} (nouvel onglet)`,
-      }
-    : {};
+  const external = /^https?:/.test(item.link);
+  const share = `https://wa.me/?text=${encodeURIComponent(`${item.title} — via Kinshasa Label\n${item.link}`)}`;
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center" role="dialog" aria-modal="true" aria-label={item.title}>
+      <button type="button" aria-label="Fermer" onClick={onClose} className="absolute inset-0 bg-brand-ink/55 backdrop-blur-[2px] cursor-default" />
+      <article className="relative w-full md:max-w-2xl max-h-[92vh] overflow-y-auto bg-white rounded-t-3xl md:rounded-3xl shadow-lift animate-pop-in">
+        <div className="relative aspect-[16/9]">
+          <NewsImage item={item} tint={tint} className="w-full h-full" />
+          <button type="button" onClick={onClose} aria-label="Fermer" className="absolute top-3 right-3 w-11 h-11 rounded-full bg-white/95 text-brand-ink inline-flex items-center justify-center shadow cursor-pointer">
+            <IconClose size={18} />
+          </button>
+          <span className="absolute left-4 bottom-4 inline-flex items-center gap-1.5 bg-white/95 text-xs font-extrabold uppercase tracking-wide px-3 py-1.5 rounded-full" style={{ color: item.pinned ? '#0B2545' : tint }}>
+            {item.pinned ? 'À la une · Kinshasa Label' : item.sourceName}
+          </span>
+        </div>
+        <div className="p-5 md:p-7 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-brand-muted font-semibold">
+            <span className="first-letter:uppercase">{fullDate(item.date)}</span>
+            {item.author && <span>· par {item.author}</span>}
+            {item.commune && (
+              <span className="inline-flex items-center gap-1 text-brand-blue-deep">
+                <IconPin size={13} /> {item.commune}
+              </span>
+            )}
+          </div>
+          <h2 className="font-display text-2xl md:text-3xl font-extrabold text-brand-ink leading-tight mt-2 mb-3">{item.title}</h2>
+          {item.categories && item.categories.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {item.categories.map((c) => (
+                <span key={c} className="text-xs font-bold bg-brand-bg text-brand-ink/70 px-2.5 py-1 rounded-full">{c}</span>
+              ))}
+            </div>
+          )}
+          <p className="text-base text-brand-ink/80 leading-relaxed m-0 whitespace-pre-line">{item.pinned && item.body ? item.body : item.summary || item.teaser}</p>
+
+          <div className="flex flex-col sm:flex-row gap-2.5 mt-6">
+            {external && (
+              <a href={item.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-brand-red text-white font-bold no-underline hover:bg-brand-red-dark">
+                Lire l’article complet sur {item.pinned ? 'la source' : item.sourceName} <IconExternalLink size={15} />
+              </a>
+            )}
+            {external && (
+              <a href={share} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full border-2 border-brand-line text-brand-ink font-bold no-underline hover:border-[#25D366]">
+                Partager sur WhatsApp
+              </a>
+            )}
+          </div>
+          {!item.pinned && (
+            <p className="text-xs text-brand-muted mt-4 mb-0">
+              Résumé et photo fournis par {item.sourceName}. L’article complet et tous les droits appartiennent à son éditeur.
+            </p>
+          )}
+        </div>
+      </article>
+    </div>
+  );
+}
+
+export function NewsCard({ item, variant = 'card' }: { item: NewsItem; variant?: 'card' | 'row' | 'feature' }) {
+  const [open, setOpen] = useState(false);
+  const tint = tintFor(item.sourceName);
+  const clickable = !!item.link || !!item.body || !!item.summary;
 
   const meta = (
     <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide flex-wrap">
@@ -109,71 +209,57 @@ export function NewsCard({ item, variant = 'card' }: { item: NewsItem; variant?:
     </div>
   );
 
+  const sheet = open ? <NewsSheet item={item} onClose={() => setOpen(false)} /> : null;
+  const btnProps = clickable
+    ? { type: 'button' as const, onClick: () => setOpen(true), 'aria-label': `${item.title} — ${item.pinned ? 'Kinshasa Label' : item.sourceName}, voir le détail` }
+    : {};
+  const Wrapper: any = clickable ? 'button' : 'div';
+
   if (variant === 'row') {
     return (
-      <Wrapper {...wrapperProps} className="group flex gap-3 py-3 no-underline border-b border-brand-line last:border-0">
-        <div className="min-w-0 flex-1">
-          {meta}
-          <p className="text-sm font-bold text-brand-ink leading-snug mt-1 mb-0 group-hover:text-brand-blue-deep line-clamp-2">{item.title}</p>
-          {hasLink && /^https?:/.test(item.link) && (
-            <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-bold text-brand-blue-deep group-hover:underline">
-              Lire l’article <IconExternalLink size={11} />
-            </span>
-          )}
-        </div>
-        {item.image && imgOk && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setImgOk(false)} className="w-20 h-16 rounded-xl object-cover shrink-0" />
-        )}
-      </Wrapper>
+      <>
+        <Wrapper {...btnProps} className="group w-full text-left flex gap-3 py-3 border-b border-brand-line last:border-0 cursor-pointer bg-transparent">
+          <div className="min-w-0 flex-1">
+            {meta}
+            <p className="text-sm font-bold text-brand-ink leading-snug mt-1 mb-0 group-hover:text-brand-blue-deep line-clamp-2">{item.title}</p>
+            {clickable && <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-bold text-brand-blue-deep group-hover:underline">Lire la suite →</span>}
+          </div>
+          {item.image && <NewsImage item={item} tint={tint} className="w-20 h-16 rounded-xl shrink-0" />}
+        </Wrapper>
+        {sheet}
+      </>
     );
   }
 
   const feature = variant === 'feature';
   return (
-    <Wrapper
-      {...wrapperProps}
-      className={`group h-full flex flex-col bg-white rounded-2xl overflow-hidden border border-brand-line shadow-card no-underline ${
-        hasLink ? 'hover:shadow-lift hover:-translate-y-1' : ''
-      } transition-all duration-200`}
-    >
-      <div className={`relative overflow-hidden ${feature ? 'aspect-[16/9] lg:aspect-auto lg:flex-1 lg:min-h-[260px]' : 'aspect-[16/9] shrink-0'}`}>
-        {item.image && imgOk ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setImgOk(false)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        ) : (
-          <div
-            className="w-full h-full flex items-center justify-center"
-            style={{ background: item.pinned ? 'linear-gradient(135deg,#FFE36B,#F5B400)' : `linear-gradient(135deg, ${tint}, #0A2A66)` }}
-          >
-            {item.pinned ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src="/logo.svg" alt="" aria-hidden="true" className="w-28 md:w-40 rounded-full bg-white p-2 shadow-lift" />
-            ) : (
-              <span className="font-display font-extrabold text-xl px-4 text-center text-white/90">{item.sourceName}</span>
-            )}
-          </div>
-        )}
-      </div>
-      <div className={`p-4 flex flex-col gap-1.5 ${feature ? 'md:p-6' : 'flex-1'}`}>
-        {meta}
-        <h3 className={`font-display font-bold text-brand-ink leading-snug m-0 group-hover:text-brand-blue-deep ${feature ? 'text-xl md:text-2xl' : 'text-base line-clamp-3'}`}>
-          {item.title}
-        </h3>
-        {item.pinned && item.body ? (
-          <p className="text-sm text-brand-ink/75 leading-relaxed m-0 whitespace-pre-line">{item.body}</p>
-        ) : (
-          item.teaser && <p className="text-sm text-brand-muted leading-relaxed m-0 line-clamp-2">{item.teaser}</p>
-        )}
-        {hasLink && /^https?:/.test(item.link) && (
-          <span className="mt-auto pt-3">
-            <span className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-brand-blue-soft text-brand-blue-deep text-sm font-bold group-hover:bg-brand-blue group-hover:text-white transition-colors">
-              Lire l’article sur {item.pinned ? 'la source' : item.sourceName} <IconExternalLink size={13} />
+    <>
+      <Wrapper
+        {...btnProps}
+        className={`group w-full text-left h-full flex flex-col bg-white rounded-2xl overflow-hidden border border-brand-line shadow-card cursor-pointer ${
+          clickable ? 'hover:shadow-lift hover:-translate-y-1' : ''
+        } transition-all duration-200`}
+      >
+        <div className={`relative overflow-hidden w-full ${feature ? 'aspect-[16/9] lg:aspect-auto lg:flex-1 lg:min-h-[260px]' : 'aspect-[16/9] shrink-0'}`}>
+          <NewsImage item={item} tint={tint} className="w-full h-full group-hover:scale-105 transition-transform duration-500" />
+        </div>
+        <div className={`p-4 flex flex-col gap-1.5 w-full ${feature ? 'md:p-6' : 'flex-1'}`}>
+          {meta}
+          <h3 className={`font-display font-bold text-brand-ink leading-snug m-0 group-hover:text-brand-blue-deep ${feature ? 'text-xl md:text-2xl' : 'text-base line-clamp-3'}`}>
+            {item.title}
+          </h3>
+          {(item.teaser || item.body) && <p className="text-sm text-brand-muted leading-relaxed m-0 line-clamp-2">{item.pinned && item.body ? item.body : item.teaser}</p>}
+          {clickable && (
+            <span className="mt-auto pt-3">
+              <span className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-brand-blue-soft text-brand-blue-deep text-sm font-bold group-hover:bg-brand-blue group-hover:text-white transition-colors">
+                Lire la suite →
+              </span>
             </span>
-          </span>
-        )}
-      </div>
-    </Wrapper>
+          )}
+        </div>
+      </Wrapper>
+      {sheet}
+    </>
   );
 }
 

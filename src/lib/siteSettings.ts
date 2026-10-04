@@ -34,6 +34,8 @@ export type SiteSettings = {
   ticker: boolean;          // scrolling Kin Actu headline bar
   brandSlides: boolean;     // built-in hero slides after your banners
   newsletterPopup: boolean;
+  /** Show the team's own 'À la une' articles alongside pulled news (off until the team starts publishing). */
+  showEditorial: boolean;
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -41,6 +43,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   ticker: true,
   brandSlides: true,
   newsletterPopup: true,
+  showEditorial: false,
 };
 
 export function normalizeSettings(raw: unknown): SiteSettings {
@@ -53,6 +56,7 @@ export function normalizeSettings(raw: unknown): SiteSettings {
     ticker: d.ticker !== false,
     brandSlides: d.brandSlides !== false,
     newsletterPopup: d.newsletterPopup !== false,
+    showEditorial: d.showEditorial === true,
   };
 }
 

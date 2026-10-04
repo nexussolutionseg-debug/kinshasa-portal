@@ -601,6 +601,7 @@ function SectionsTab({ setMsg }: { setMsg: (m: Msg) => void }) {
           ['ticker', 'Bandeau défilant « Kin Actu »', 'La ligne de titres en direct sous le menu'],
           ['brandSlides', 'Diapositives Kinshasa Label dans le carrousel', 'Explorer / Kin Actualité / Kin Weekend, après vos bannières'],
           ['newsletterPopup', 'Invitation newsletter', 'Proposée une fois par visite, après défilement'],
+          ['showEditorial', 'Afficher nos articles « À la une »', 'Vos propres articles (onglet À la une) en tête de Kin Actualité. Désactivé : seules les infos des médias s’affichent'],
         ].map(([k, l, h]) => (
           <li key={k} className="flex items-center gap-3 border border-brand-line rounded-2xl p-3">
             <span className="flex-1">

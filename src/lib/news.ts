@@ -46,7 +46,10 @@ export type NewsItem = {
   id: string;
   title: string;
   link: string;
-  teaser: string;
+  teaser: string;          // ~180 chars, for cards
+  summary?: string;        // up to ~420 chars, for the detail view (publisher's own excerpt)
+  author?: string | null;
+  categories?: string[];
   date: string | null; // ISO
   image: string | null;
   sourceId: string;
@@ -233,7 +236,11 @@ export function parseFeed(xml: string, source: NewsSource): NewsItem[] {
     const contentHtml = unescape(asText(it['content:encoded']) || asText(it.content));
     const html = `${summaryHtml} ${contentHtml}`;
     const plain = stripHtml(summaryHtml || contentHtml);
-    const cats = asText(it.category);
+    const catList = (Array.isArray(it.category) ? it.category : it.category ? [it.category] : [])
+      .map((c) => stripHtml(asText(c)))
+      .filter((c) => c && c.length < 40 && !/^(non class|uncategori|actualit[ée]s?$|a la une|à la une|une$)/i.test(c));
+    const cats = catList.join(' ');
+    const author = stripHtml(asText(it['dc:creator']) || asText(it.author) || '').replace(/^.*\(([^)]+)\)$/, '$1').slice(0, 60) || null;
     const dateRaw = asText(it.pubDate) || asText(it['dc:date']) || asText(it.published) || asText(it.updated);
     const d = dateRaw ? new Date(dateRaw) : null;
     const safeLink = safeHttpUrl(decodeEntities(link));
@@ -246,6 +253,9 @@ export function parseFeed(xml: string, source: NewsSource): NewsItem[] {
       title,
       link: safeLink,
       teaser: teaserOf(plain),
+      summary: teaserOf(plain, 420),
+      author: author && !/admin|redaction@|^\S+@\S+$/i.test(author) ? author : null,
+      categories: [...new Set(catList)].slice(0, 3),
       date: d && !isNaN(d.getTime()) ? d.toISOString() : null,
       image: safeHttpUrl(firstImage(it, html)),
       sourceId: source.id,
