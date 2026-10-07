@@ -13,6 +13,7 @@ import { supabase } from '../../../lib/supabase';
 import { createPlacePin } from '../../../lib/mapPins';
 import { IconHome, IconChevronRight, IconClock, IconChart, IconPin, IconArrowRight } from '../../../components/icons';
 import { SiteHeader } from '../../../components/SiteHeader';
+import { SiteTicker } from '../../../components/SiteTicker';
 import { SiteFooter } from '../../../components/SiteFooter';
 import { SpinningWheel } from '../../../components/BrandMark';
 import { Carousel } from '../../../components/Carousel';
@@ -101,7 +102,7 @@ export default function CommuneDetailPage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <SiteHeader />
+      <SiteHeader below={<SiteTicker />} />
 
       {/* HERO BANNER */}
       <section className="relative overflow-hidden text-white" style={{ background: 'linear-gradient(120deg,#0A2A66 0%,#0E5FC9 50%,#1A82F5 100%)' }}>

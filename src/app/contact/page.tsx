@@ -1,4 +1,5 @@
 import { SiteHeader } from '../../components/SiteHeader';
+import { SiteTicker } from '../../components/SiteTicker';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SocialLinks } from '../../components/SocialLinks';
 import { IconMail, IconGlobe } from '../../components/icons';
@@ -8,7 +9,7 @@ const CONTACT_EMAIL = 'contact@kinshasalabel.com';
 export default function ContactPage() {
   return (
     <main className="min-h-screen bg-brand-bg text-brand-ink flex flex-col">
-      <SiteHeader />
+      <SiteHeader below={<SiteTicker />} />
 
       <div className="max-w-[640px] mx-auto px-4 md:px-6 py-14 md:py-20 flex-1 w-full text-center">
         <h1 className="font-display text-3xl md:text-4xl font-semibold text-brand-ink mb-3">

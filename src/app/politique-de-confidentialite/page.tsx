@@ -1,4 +1,5 @@
 import { SiteHeader } from '../../components/SiteHeader';
+import { SiteTicker } from '../../components/SiteTicker';
 import { SiteFooter } from '../../components/SiteFooter';
 import { ManageCookiesLink } from '../../components/ManageCookiesLink';
 
@@ -28,7 +29,7 @@ function H2({ n, children }: { n: number; children: React.ReactNode }) {
 export default function PrivacyPolicyPage() {
   return (
     <main className="min-h-screen flex flex-col">
-      <SiteHeader />
+      <SiteHeader below={<SiteTicker />} />
       <div className="max-w-[780px] mx-auto px-4 md:px-6 py-10 md:py-14 flex-1 w-full">
         <h1 className="font-display text-3xl md:text-5xl font-extrabold text-brand-ink m-0">Politique de confidentialité</h1>
         <p className="text-sm text-brand-muted mt-2 mb-6">Dernière mise à jour : {LAST_UPDATED}</p>

@@ -1,4 +1,5 @@
 import { SiteHeader } from '../../components/SiteHeader';
+import { SiteTicker } from '../../components/SiteTicker';
 import { SiteFooter } from '../../components/SiteFooter';
 import { KinshasaSeal } from '../../components/BrandMark';
 import { IconGlobe, IconPin, IconChart, IconUser } from '../../components/icons';
@@ -27,7 +28,7 @@ const AUDIENCES = [
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-brand-bg text-brand-ink flex flex-col">
-      <SiteHeader />
+      <SiteHeader below={<SiteTicker />} />
 
       <div className="max-w-[960px] mx-auto px-4 md:px-6 py-12 md:py-20 flex-1 w-full">
         <div className="flex flex-col items-center text-center mb-14">

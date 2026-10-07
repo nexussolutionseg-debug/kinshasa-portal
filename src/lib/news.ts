@@ -144,6 +144,15 @@ const POLITICAL_TITLE_RE = new RegExp(
   ].join('|'),
   'i'
 );
+// "Kinshasa, Luanda et Lusaka veulent…" = governments talking, not the city.
+const CAPITALS = '(?:luanda|lusaka|kigali|kampala|brazzaville|bujumbura|nairobi|pretoria|addis-abeba|moscou|washington|paris|bruxelles|p[ée]kin|londres|doha|lom[ée])';
+const GOVERNMENTS_RE = new RegExp(`\\bkinshasa\\s*(?:,|et)\\s*${CAPITALS}|${CAPITALS}\\s*(?:,|et)\\s*kinshasa\\b`, 'i');
+
+// Social news only (client, 2026-10-07): business deals and investment /
+// trade news are left out too (they are economy, not city life).
+const BUSINESS_TITLE_RE =
+  /investiss|investisseurs?|accords? (?:sign|de financement|de partenariat|commerciaux|commercial)|protocole d['’]accord|chambre de commerce|\banapi\b|export(?:ation)?s?\b|corridor|interconnexion|fonds propres|millions? (?:usd|de dollars)|milliards? (?:usd|de dollars)|d[ée]jeuner-conf[ée]rence|forum [ée]conomique|commerce ext[ée]rieur|zone[s]? [ée]conomique/i;
+
 const POLITICAL_TEASER_RE =
   /[ée]lections?\b|[ée]lectora(?:l|le|ux)|la pr[ée]sidentielle|dialogue national|parti politique|union sacr[ée]e|\budps\b|lamuka|\bm23\b|r[ée]vision constitutionnelle/i;
 const POLITICAL_CATEGORY_RE = /politi|diplomat|[ée]lection|parlement|gouvernance/i;
@@ -151,7 +160,13 @@ const SPORT_RE = /\b(?:foot|football|match|l[ée]opards|fecofa|linafoot|champion
 
 export function isPolitical(title: string, teaser = '', categories: string[] = []): boolean {
   if (SPORT_RE.test(title)) return false;
-  return POLITICAL_TITLE_RE.test(title) || POLITICAL_TEASER_RE.test(teaser) || categories.some((c) => POLITICAL_CATEGORY_RE.test(c));
+  return (
+    POLITICAL_TITLE_RE.test(title) ||
+    GOVERNMENTS_RE.test(title) ||
+    BUSINESS_TITLE_RE.test(title) ||
+    POLITICAL_TEASER_RE.test(teaser) ||
+    categories.some((c) => POLITICAL_CATEGORY_RE.test(c))
+  );
 }
 
 // ---------------------------------------------------------------------------

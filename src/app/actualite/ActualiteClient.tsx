@@ -5,6 +5,7 @@
 // RSS aggregation, refreshed every 15 min); "À la une" from the backoffice.
 import { useMemo, useState } from 'react';
 import { SiteHeader } from '../../components/SiteHeader';
+import { SiteTicker } from '../../components/SiteTicker';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SpinningWheel } from '../../components/BrandMark';
 import { useKinNews, NewsCard, ExchangeRateCard, NewsEmpty, LiveDot } from '../../components/KinNews';
@@ -37,7 +38,7 @@ export function ActualiteClient() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <SiteHeader />
+      <SiteHeader below={<SiteTicker />} />
 
       {/* HERO */}
       <section className="relative overflow-hidden text-white" style={{ background: 'linear-gradient(120deg,#A60E1D 0%,#D21C2E 55%,#F04A3A 100%)' }}>
