@@ -1,11 +1,12 @@
 import type { MetadataRoute } from 'next';
+import { SITE_URL } from '../lib/utm';
 
 // Added in response to a security/SEO scan flagging a missing robots.txt.
 // Disallows the backoffice and API routes from being indexed — they're
 // not secret, but there's no reason for them to show up in search
 // results either. Next.js serves this at /robots.txt automatically.
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kinshasa-portal-virid.vercel.app';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL;
 
   return {
     rules: {

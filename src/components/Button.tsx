@@ -81,7 +81,7 @@ export function Button(props: ButtonProps) {
   const cls = buildClassName(variant, size, fullWidth, className);
 
   if (href) {
-    if (/^https?:\/\//.test(href)) {
+    if (/^(https?:\/\/|tel:|mailto:)/.test(href)) {
       return (
         <a href={href} className={cls} {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)}>
           {children}

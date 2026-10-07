@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Button } from './Button';
 import {
@@ -41,6 +42,11 @@ export function CookieConsentBanner() {
     storeConsent(value);
     setConsent(value);
   };
+
+  // Team pages: no banner covering the backoffice buttons, and no Google
+  // Analytics there either (staff visits would skew the audience numbers).
+  const pathname = usePathname();
+  if (pathname?.startsWith('/backoffice') || pathname?.startsWith('/login')) return null;
 
   return (
     <>

@@ -8,6 +8,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import maplibregl from '../../../lib/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { sameCommune, canonicalCommune } from '../../../lib/communes';
 import { supabase } from '../../../lib/supabase';
 import { createPlacePin } from '../../../lib/mapPins';
 import { IconHome, IconChevronRight, IconClock, IconChart, IconPin, IconArrowRight } from '../../../components/icons';
@@ -28,7 +29,7 @@ export default function CommuneDetailPage() {
   const router = useRouter();
 
   const rawName = (params?.name as string) || 'Gombe';
-  const communeName = decodeURIComponent(rawName).trim();
+  const communeName = canonicalCommune(decodeURIComponent(rawName).trim()) || decodeURIComponent(rawName).trim();
   const communeInfo = COMMUNE_DETAILS[communeName] || COMMUNE_DETAILS[communeName.replace(' ', '-')] || DEFAULT_COMMUNE_BRIEF;
 
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -45,15 +46,14 @@ export default function CommuneDetailPage() {
     supabase
       .from('places')
       .select('*')
-      .ilike('commune', `%${communeName}%`)
       .order('created_at', { ascending: false })
-      .then(({ data }) => setPlaces(data || []));
+      // matched in code so "N'djili" / "Ndjili" / "N'Djili" all count; hidden places skipped
+      .then(({ data }) => setPlaces((data || []).filter((p: any) => p.published !== false && sameCommune(p.commune, communeName))));
     supabase
       .from('events')
       .select('*')
-      .ilike('commune', `%${communeName}%`)
       .order('event_date', { ascending: true })
-      .then(({ data }) => setEvents(data || []));
+      .then(({ data }) => setEvents((data || []).filter((e: any) => sameCommune(e.commune, communeName))));
   }, [communeName]);
 
   const placeList = useMemo(() => places || [], [places]);
@@ -77,8 +77,9 @@ export default function CommuneDetailPage() {
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
     placeList.forEach((p) => {
-      const lat = p.lat ? parseFloat(p.lat) : communeInfo.lat;
-      const lng = p.lng ? parseFloat(p.lng) : communeInfo.lng;
+      if (!(p.lat && p.lng)) return; // no position yet: listed below, no pin
+      const lat = parseFloat(p.lat);
+      const lng = parseFloat(p.lng);
       const color = PIN_COLORS[p.vertical] || '#1A82F5';
       const el = createPlacePin({ name: p.name, color, rating: getAverageRating(p), onSelect: () => setOpenPlace(p) });
 

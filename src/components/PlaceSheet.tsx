@@ -16,7 +16,7 @@ import { supabase } from '../lib/supabase';
 import { categoryOf, getAverageRating } from '../lib/categories';
 import { PlaceImage, CategoryIcon, Stars } from './PlaceCard';
 import { Button } from './Button';
-import { IconClose, IconStar, IconPin, IconExternalLink, IconUser, IconArrowRight } from './icons';
+import { IconClose, IconStar, IconPin, IconExternalLink, IconUser, IconArrowRight, IconPhone } from './icons';
 
 const RATED_KEY = 'kin_rated_places';
 const RATING_WORDS = ['', 'Bof', 'Correct', 'Bien', 'Très bien', 'Top !'];
@@ -94,6 +94,11 @@ export function PlaceSheet({
   if (!place || !current) return null;
 
   const cat = categoryOf(current.vertical);
+  const directions =
+    current.google_maps_url ||
+    (current.lat && current.lng ? `https://www.google.com/maps/dir/?api=1&destination=${current.lat},${current.lng}` : null);
+  const phoneDigits = (current.phone || '').replace(/[^\d+]/g, '');
+  const phoneHref = phoneDigits.length >= 8 ? `tel:${phoneDigits}` : null;
   const avg = getAverageRating(current);
   const alreadyReviewed = rated.includes(current.id);
   const shown = hover || stars;
@@ -153,7 +158,7 @@ export function PlaceSheet({
           </button>
           <div className="absolute left-5 right-5 bottom-4 text-white">
             <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/95" style={{ color: cat.color }}>
-              <CategoryIcon id={current.vertical} size={12} /> {cat.label}
+              <CategoryIcon id={current.vertical} size={12} /> {cat.label}{current.place_type ? ` · ${current.place_type}` : ''}
             </span>
             <h2 className="font-display text-2xl md:text-3xl font-extrabold mt-2 mb-0 leading-tight drop-shadow">{current.name}</h2>
           </div>
@@ -168,14 +173,26 @@ export function PlaceSheet({
               <Stars value={avg ?? 0} size={15} />
               {avg !== null ? <><strong>{avg.toFixed(1)}</strong> · {current.rating_count} avis</> : 'Pas encore noté'}
             </span>
+            {current.google_rating != null && (
+              <span className="inline-flex items-center gap-1 text-brand-muted" title="Note relevée sur Google, indicative">
+                Google <strong className="text-brand-ink">{Number(current.google_rating).toFixed(1).replace('.', ',')}</strong>
+                <IconStar size={12} filled className="text-brand-yellow" />
+                {current.google_reviews ? <>({current.google_reviews})</> : null}
+              </span>
+            )}
           </div>
 
           {current.description && <p className="text-base text-brand-ink/80 leading-relaxed m-0">{current.description}</p>}
 
           <div className="flex flex-wrap gap-2">
-            {current.google_maps_url && (
-              <Button href={current.google_maps_url} target="_blank" rel="noopener noreferrer" variant="primary">
+            {directions && (
+              <Button href={directions} target="_blank" rel="noopener noreferrer" variant="primary">
                 <IconExternalLink size={14} /> Itinéraire Google Maps
+              </Button>
+            )}
+            {phoneHref && (
+              <Button href={phoneHref} variant="secondary">
+                <IconPhone size={14} /> {current.phone}
               </Button>
             )}
             <Button href={`/commune/${encodeURIComponent(current.commune || 'Gombe')}`} variant="secondary">

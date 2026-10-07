@@ -150,7 +150,7 @@ function TrackingLinks() {
         </button>
       </div>
       <p className="text-[11px] text-brand-muted mt-2 mb-0">
-        Lien Instagram (bio) prêt à l’emploi : <span className="font-mono">{buildTrackingLink({ path: '/', source: 'instagram', medium: 'social', campaign: 'bio', content: 'bio' })}</span>
+        Lien Instagram (bio) prêt à l’emploi : <span className="font-mono break-all">{buildTrackingLink({ path: '/', source: 'instagram', medium: 'social', campaign: 'bio', content: 'bio' })}</span>
         {' · '}Les visites ne sont comptées que pour les visiteurs qui acceptent les cookies. Site : <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5">{SITE_URL.replace('https://', '')} <IconExternalLink size={10} /></a>
       </p>
     </div>

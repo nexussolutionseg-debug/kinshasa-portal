@@ -360,3 +360,11 @@ export function IconMoney({ size = 16, ...props }: IconProps) {
     </svg>
   );
 }
+
+export function IconPhone({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M5 3.5h3.2l1.6 4.3-2.1 1.4a11 11 0 0 0 7.1 7.1l1.4-2.1 4.3 1.6V19a1.5 1.5 0 0 1-1.6 1.5A16.5 16.5 0 0 1 3.5 5.1 1.5 1.5 0 0 1 5 3.5Z" />
+    </svg>
+  );
+}

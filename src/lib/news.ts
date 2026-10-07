@@ -121,6 +121,40 @@ export function isAboutKinshasa(title: string, teaser = ''): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// No politics (client decision, 2026-10-07): Kin Actualité shows the city's
+// social life — services, health, schools, culture, sport, markets, works,
+// safety — not politics, elections, government affairs or diplomacy.
+// The headline is the strongest signal; the teaser only counts for words
+// that are political whatever the context (a senator opening a building
+// fair is still city news). Sport headlines are never treated as political
+// ("RDC-Ouganda" is a football match, not diplomacy).
+
+const POLITICAL_TITLE_RE = new RegExp(
+  [
+    'politi(?:que|ques|cien|ciens|cienne)', '[ée]lections?', '[ée]lectora(?:l|le|ux|les)', 'scrutin', 'la pr[ée]sidentielle',
+    'pr[ée]sidentielles?\\s+de\\s+20\\d\\d', 'candidature', 'd[ée]put[ée]s?', 's[ée]nat(?:eur|eurs|rice)?\\b', 'assembl[ée]e\\s+(?:nationale|provinciale)',
+    'parlement(?:aire|aires)?', 'pl[ée]ni[èe]re', 'motion', 'investiture', 'premier\\s+ministre', "chef\\s+de\\s+l['’][ée]tat",
+    'pr[ée]sident\\s+de\\s+la\\s+r[ée]publique', 'tshisekedi', 'kabila', 'katumbi', 'fayulu', 'kamerhe', 'suminwa', 'muzito', 'matata',
+    'udps', 'union\\s+sacr[ée]e', 'lamuka', '\\bfcc\\b', 'opposition', 'majorit[ée]\\s+(?:pr[ée]sidentielle|parlementaire)', 'dialogue\\s+national',
+    'constitution(?:nel|nelle)?', 'r[ée]f[ée]rendum', '\\bceni\\b', '\\bm23\\b', '\\bafc\\b', 'fdlr', 'kagame', 'kigali', 'monusco',
+    'conseil\\s+de\\s+s[ée]curit[ée]', 'diplomat', 'ambassad', 'sanctions?', 'accords?\\s+de\\s+(?:paix|washington|doha|luanda)',
+    'coop[ée]ration\\s+(?:judiciaire|militaire|bilat[ée]rale)', 'interpell?e', 'boycott', 'coup\\s+d[\'’][ée]tat', 'r[ée]vision\\s+constitutionnelle',
+    'kinshasa\\s+et\\s+(?:moscou|kigali|brazzaville|washington|paris|p[ée]kin|luanda|kampala|bruxelles)',
+    'rdc\\s*[-–]\\s*(?:russie|chine|rwanda|ouganda|burundi|angola|france|belgique|usa|[ée]tats-unis|ue|union\\s+europ[ée]enne)\\s*:',
+  ].join('|'),
+  'i'
+);
+const POLITICAL_TEASER_RE =
+  /[ée]lections?\b|[ée]lectora(?:l|le|ux)|la pr[ée]sidentielle|dialogue national|parti politique|union sacr[ée]e|\budps\b|lamuka|\bm23\b|r[ée]vision constitutionnelle/i;
+const POLITICAL_CATEGORY_RE = /politi|diplomat|[ée]lection|parlement|gouvernance/i;
+const SPORT_RE = /\b(?:foot|football|match|l[ée]opards|fecofa|linafoot|championnat|basket|handball|volley|boxe|athl[ée]tisme|coupe d['’]afrique|\bcan\b|tp mazembe|v\.?club|dcmp)\b/i;
+
+export function isPolitical(title: string, teaser = '', categories: string[] = []): boolean {
+  if (SPORT_RE.test(title)) return false;
+  return POLITICAL_TITLE_RE.test(title) || POLITICAL_TEASER_RE.test(teaser) || categories.some((c) => POLITICAL_CATEGORY_RE.test(c));
+}
+
+// ---------------------------------------------------------------------------
 // RSS parsing helpers
 
 const ENTITIES: Record<string, string> = {
@@ -273,7 +307,7 @@ export function filterKinshasa(items: NewsItem[]): NewsItem[] {
     .filter((i) => {
       const hay = (i as NewsItem & { _hay?: string })._hay;
       const [title, teaser] = hay ? (JSON.parse(hay) as [string, string]) : [i.title, i.teaser];
-      return isAboutKinshasa(title, teaser);
+      return isAboutKinshasa(title, teaser) && !isPolitical(i.title, teaser, i.categories || []);
     })
     .map((i) => {
       const { _hay, ...rest } = i as NewsItem & { _hay?: string };

@@ -20,6 +20,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '../lib/supabase';
 import { createPlacePin } from '../lib/mapPins';
 import communesData from '../data/communes.json';
+import { sameCommune } from '../lib/communes';
 import { COMMUNE_DETAILS } from '../data/communeDetails';
 import { CATEGORIES, categoryOf, getAverageRating } from '../lib/categories';
 import { MAP_STYLE, PIN_COLORS } from '../lib/mapStyle';
@@ -37,10 +38,11 @@ import { IconArrowRight, IconDice, IconPin, IconGlobe, IconStar, IconClose } fro
 
 const COMMUNES: { name: string; district: string; lat: number; lng: number }[] = (communesData as any).communes;
 
-function coordsFor(place: any): [number, number] {
+// Places without a position stay in the lists but get no pin (a pin in the
+// middle of the commune would send people to the wrong street).
+function coordsFor(place: any): [number, number] | null {
   if (place.lat && place.lng) return [parseFloat(place.lng), parseFloat(place.lat)];
-  const c = COMMUNES.find((x) => (place.commune || '').toLowerCase().includes(x.name.toLowerCase()));
-  return c ? [c.lng, c.lat] : [15.3, -4.312];
+  return null;
 }
 
 
@@ -92,7 +94,8 @@ export default function HomePage() {
   // Scheduled (start/end dates) and ordered in Backoffice → Vitrine.
   const liveBanners = useMemo(() => sortBanners(banners.filter((b) => isBannerLive(b))), [banners]);
 
-  const placeList = useMemo(() => places || [], [places]);
+  // published === false = hidden in the backoffice (the team's session can read them; visitors can't).
+  const placeList = useMemo(() => (places || []).filter((p) => p.published !== false), [places]);
 
   const topRated = useMemo(
     () =>
@@ -119,7 +122,7 @@ export default function HomePage() {
       placeList.filter(
         (p) =>
           (mapFilter === 'all' || mapFilter === 'kin_traffic' ? true : p.vertical === mapFilter) &&
-          (!selectedCommune || (p.commune || '').toLowerCase().includes(selectedCommune.toLowerCase()))
+          (!selectedCommune || sameCommune(p.commune, selectedCommune))
       ),
     [placeList, mapFilter, selectedCommune]
   );
@@ -230,7 +233,9 @@ export default function HomePage() {
 
     const bounds = new maplibregl.LngLatBounds();
     mapPlaces.forEach((place) => {
-      const [lng, lat] = coordsFor(place);
+      const at = coordsFor(place);
+      if (!at) return;
+      const [lng, lat] = at;
       bounds.extend([lng, lat]);
       const color = PIN_COLORS[place.vertical] || '#1A82F5';
       const avg = getAverageRating(place);
@@ -240,7 +245,7 @@ export default function HomePage() {
       markersRef.current.push(new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map.current!));
     });
 
-    if (mapPlaces.length > 0) map.current.fitBounds(bounds, { padding: 70, maxZoom: 14, duration: 600 });
+    if (markersRef.current.length > 0) map.current.fitBounds(bounds, { padding: 70, maxZoom: 14, duration: 600 });
   }, [mapPlaces, mapFilter]);
 
   // ---- render -------------------------------------------------------------
@@ -596,7 +601,7 @@ export default function HomePage() {
               'linear-gradient(160deg,#FFE36B,#F5B400)',
             ];
             const yellow = i % 3 === 2;
-            const count = placeList.filter((p) => (p.commune || '').toLowerCase().includes(c.name.toLowerCase())).length;
+            const count = placeList.filter((p) => sameCommune(p.commune, c.name)).length;
             return (
               <Link
                 key={c.name}
