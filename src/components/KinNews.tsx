@@ -269,7 +269,7 @@ export function NewsTicker({ items }: { items: NewsItem[] }) {
   return (
     <div className="bg-brand-ink text-white">
       <div className="max-w-[1400px] mx-auto flex items-stretch">
-        <Link href="/actualite" className="shrink-0 inline-flex items-center gap-2 bg-brand-red px-4 py-2.5 text-xs font-extrabold uppercase tracking-wider no-underline text-white">
+        <Link href="/actualite" className="shrink-0 inline-flex items-center gap-2 bg-brand-red px-3 md:px-4 py-2 md:py-2.5 text-xs font-extrabold uppercase tracking-wider no-underline text-white">
           <span className="relative inline-flex w-2 h-2"><span className="absolute inset-0 rounded-full bg-white animate-live-dot" /></span>
           Kin Actu
         </Link>
@@ -284,7 +284,7 @@ export function NewsTicker({ items }: { items: NewsItem[] }) {
                       target={/^https?:/.test(n.link) ? '_blank' : undefined}
                       rel="noopener noreferrer"
                       tabIndex={dup === 1 ? -1 : undefined}
-                      className="px-5 py-2.5 text-sm text-white/90 no-underline hover:text-brand-yellow whitespace-nowrap"
+                      className="px-5 py-2 md:py-2.5 text-[13px] md:text-sm text-white/90 no-underline hover:text-brand-yellow whitespace-nowrap"
                     >
                       <span className="text-brand-yellow font-bold mr-2">{n.pinned ? 'À la une' : n.sourceName}</span>
                       {n.title}

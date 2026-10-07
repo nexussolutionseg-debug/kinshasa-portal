@@ -10,7 +10,7 @@
 // for one-tap access to the main sections.
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -38,7 +38,7 @@ export function LiveDot({ className = '' }: { className?: string }) {
   );
 }
 
-export function SiteHeader() {
+export function SiteHeader({ below }: { below?: ReactNode } = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -121,6 +121,8 @@ export function SiteHeader() {
             <LiveDot /> Actu
           </Link>
         </div>
+        {/* e.g. the Kin Actu ticker: frozen with the header while scrolling */}
+        {below}
       </header>
 
       {/* MOBILE DRAWER (left) */}

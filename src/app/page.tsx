@@ -662,8 +662,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <SiteHeader />
-      {settings.ticker && <NewsTicker items={allNews} />}
+      <SiteHeader below={settings.ticker ? <NewsTicker items={allNews} /> : null} />
       {settings.newsletterPopup && <NewsletterPopup />}
 
       <div className="max-w-[1400px] w-full mx-auto px-4 md:px-6 pt-5 md:pt-8 flex flex-col gap-14 md:gap-20 pb-16">
