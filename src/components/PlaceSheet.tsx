@@ -16,6 +16,7 @@ import { supabase } from '../lib/supabase';
 import { categoryOf, getAverageRating } from '../lib/categories';
 import { PlaceImage, CategoryIcon, Stars } from './PlaceCard';
 import { Button } from './Button';
+import { communeHref } from '../lib/communes';
 import { IconClose, IconStar, IconPin, IconExternalLink, IconUser, IconArrowRight, IconPhone } from './icons';
 
 const RATED_KEY = 'kin_rated_places';
@@ -30,6 +31,14 @@ function readRated(): number[] {
 }
 
 const missingFn = (e: any) => /could not find the function|PGRST202|does not exist/i.test(`${e?.message} ${e?.code}`);
+
+// The database's anti-spam messages are written with "vous"; the site says "tu".
+function tuMessage(m?: string) {
+  if (!m) return m;
+  return m
+    .replace("Vous avez déjà donné votre avis sur ce lieu aujourd'hui. Merci !", 'Tu as déjà donné ton avis sur ce lieu aujourd’hui. Merci !')
+    .replace("Trop d'avis envoyés en peu de temps. Réessayez plus tard.", 'Trop d’avis envoyés en peu de temps. Réessaie plus tard.');
+}
 
 export function PlaceSheet({
   place,
@@ -106,7 +115,7 @@ export function PlaceSheet({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stars) {
-      setError('Choisissez une note de 1 à 5 étoiles.');
+      setError('Choisis une note de 1 à 5 étoiles.');
       return;
     }
     setSending(true);
@@ -122,7 +131,7 @@ export function PlaceSheet({
     }
     setSending(false);
     if (err) {
-      setError(err.message || 'Envoi impossible pour le moment. Réessayez plus tard.');
+      setError(tuMessage(err.message) || 'Envoi impossible pour le moment. Réessaie plus tard.');
       return;
     }
     const updated = { ...current, rating_sum: (current.rating_sum || 0) + stars, rating_count: (current.rating_count || 0) + 1 };
@@ -195,7 +204,7 @@ export function PlaceSheet({
                 <IconPhone size={14} /> {current.phone}
               </Button>
             )}
-            <Button href={`/commune/${encodeURIComponent(current.commune || 'Gombe')}`} variant="secondary">
+            <Button href={communeHref(current.commune || 'Gombe')} variant="secondary">
               Guide de {current.commune} <IconArrowRight size={14} />
             </Button>
           </div>
@@ -204,14 +213,14 @@ export function PlaceSheet({
           <div className="rounded-3xl bg-brand-yellow-soft border border-brand-yellow/60 p-4 md:p-5">
             {done || alreadyReviewed ? (
               <p className="m-0 text-base font-bold text-brand-ink">
-                {done ? 'Merci pour votre avis ! 🙌' : 'Vous avez déjà donné votre avis sur ce lieu. Merci !'}
+                {done ? 'Merci pour ton avis ! 🙌' : 'Tu as déjà donné ton avis sur ce lieu. Merci !'}
               </p>
             ) : (
               <form onSubmit={submit} className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="m-0 font-display text-lg font-extrabold text-brand-ink">Donnez votre avis</p>
+                  <p className="m-0 font-display text-lg font-extrabold text-brand-ink">Donne ton avis</p>
                   <div className="flex items-center gap-1.5">
-                    <div className="inline-flex" role="radiogroup" aria-label="Votre note" onMouseLeave={() => setHover(0)}>
+                    <div className="inline-flex" role="radiogroup" aria-label="Ta note" onMouseLeave={() => setHover(0)}>
                       {[1, 2, 3, 4, 5].map((v) => (
                         <button
                           key={v}
@@ -234,30 +243,30 @@ export function PlaceSheet({
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <label className="sr-only" htmlFor="rv-name">Votre prénom</label>
+                  <label className="sr-only" htmlFor="rv-name">Ton prénom</label>
                   <input
                     id="rv-name"
                     type="text"
                     maxLength={60}
-                    placeholder="Votre prénom (facultatif)"
+                    placeholder="Ton prénom (facultatif)"
                     value={author}
                     onChange={(e) => setAuthor(e.target.value)}
                     className="sm:w-48 h-11 bg-white border border-brand-line text-brand-ink px-3 rounded-xl text-[15px] placeholder:text-brand-muted focus:outline-none focus:border-brand-blue"
                   />
                 </div>
-                <label className="sr-only" htmlFor="rv-text">Votre avis</label>
+                <label className="sr-only" htmlFor="rv-text">Ton avis</label>
                 <textarea
                   id="rv-text"
                   rows={3}
                   maxLength={1000}
-                  placeholder="Votre expérience (facultatif) : accueil, ambiance, prix…"
+                  placeholder="Ton expérience (facultatif) : accueil, ambiance, prix…"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   className="w-full bg-white border border-brand-line text-brand-ink px-3 py-2.5 rounded-xl text-[15px] placeholder:text-brand-muted focus:outline-none focus:border-brand-blue resize-y"
                 />
                 {error && <p className="m-0 text-sm font-semibold text-brand-red-dark">{error}</p>}
                 <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <span className="text-[11px] text-brand-muted">Votre avis est public. Restez courtois : l’équipe peut retirer les messages inappropriés.</span>
+                  <span className="text-[11px] text-brand-muted">Ton avis est public. Reste courtois : l’équipe peut retirer les messages inappropriés.</span>
                   <Button type="submit" variant="primary" disabled={sending}>
                     {sending ? 'Envoi…' : 'Publier mon avis'}
                   </Button>

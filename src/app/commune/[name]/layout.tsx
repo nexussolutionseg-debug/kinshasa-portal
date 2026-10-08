@@ -3,7 +3,7 @@
 // Google on its own ("Hôtels à Limete", "Que faire à Gombe"…).
 import type { Metadata } from 'next';
 import { COMMUNE_DETAILS } from '../../../data/communeDetails';
-import { canonicalCommune } from '../../../lib/communes';
+import { canonicalCommune, communeHref } from '../../../lib/communes';
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
   return {
     title: `${commune} — le guide de la commune`,
     description,
-    alternates: { canonical: `/commune/${encodeURIComponent(commune)}` },
+    alternates: { canonical: communeHref(commune) },
     openGraph: { title: `${commune} — Kinshasa Label`, description },
   };
 }

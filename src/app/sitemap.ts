@@ -1,48 +1,31 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL } from '../lib/utm';
-import { COMMUNE_NAMES } from '../lib/communes';
+import { COMMUNE_NAMES, communeHref } from '../lib/communes';
+import { CATEGORY_PATH, PLACE_CATEGORY_IDS } from '../lib/categories';
 
-// Added in response to a security/SEO scan flagging a missing
-// sitemap.xml. Lists the homepage plus every commune page — the same
-// 24 communes rendered in communes.json — so search engines can find
-// them without depending on crawling internal links.
-//
-// NEXT_PUBLIC_SITE_URL isn't set yet in this project; once a final
-// domain is picked (custom domain or the vercel.app one), set it in
-// Vercel → Settings → Environment Variables so these URLs (and
-// robots.ts's Sitemap: line) point at the real address instead of this
-// fallback.
+// Every public page: home, Kin Actualité, the category pages, the 24
+// communes (clean lowercase addresses), Kin Weekend and the info pages.
+// NEXT_PUBLIC_SITE_URL can override the domain; it defaults to the live site.
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL;
-
-  const communeEntries = COMMUNE_NAMES.map((name) => ({
-    url: `${siteUrl}/commune/${encodeURIComponent(name)}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  }));
-
-  const staticEntries = [
-    { path: '/actualite', priority: 0.9 },
-    { path: '/qui-sommes-nous', priority: 0.6 },
-    { path: '/contact', priority: 0.5 },
-    { path: '/devenir-partenaire', priority: 0.5 },
-    { path: '/politique-de-confidentialite', priority: 0.3 },
-  ].map(({ path, priority }) => ({
-    url: `${siteUrl}${path}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
+  const now = new Date();
+  const page = (path: string, priority: number, changeFrequency: 'hourly' | 'daily' | 'weekly' | 'monthly' = 'weekly') => ({
+    url: `${siteUrl}${path === '/' ? '' : path}`,
+    lastModified: now,
+    changeFrequency,
     priority,
-  }));
-
+  });
   return [
-    {
-      url: siteUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 1,
-    },
-    ...communeEntries,
-    ...staticEntries,
+    page('/', 1, 'daily'),
+    page('/actualite', 0.9, 'hourly'),
+    ...PLACE_CATEGORY_IDS.map((id) => page(CATEGORY_PATH[id], 0.8, 'daily')),
+    page('/traffic', 0.6),
+    page('/communes', 0.8),
+    ...COMMUNE_NAMES.map((n) => page(communeHref(n), 0.7)),
+    page('/weekend', 0.6, 'daily'),
+    page('/qui-sommes-nous', 0.5, 'monthly'),
+    page('/contact', 0.4, 'monthly'),
+    page('/devenir-partenaire', 0.5, 'monthly'),
+    page('/politique-de-confidentialite', 0.2, 'monthly'),
   ];
 }

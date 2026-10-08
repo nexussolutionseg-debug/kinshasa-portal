@@ -89,7 +89,7 @@ export function NewsletterPopup() {
     if (error && error.code !== '23505') {
       // 23505 = already subscribed, which is a success from the visitor's side
       setStatus('error');
-      setErrorMsg('Une erreur est survenue, réessayez plus tard.');
+      setErrorMsg('Une erreur est survenue, réessaie plus tard.');
       return;
     }
     setStatus('success');
@@ -143,12 +143,12 @@ export function NewsletterPopup() {
             </h3>
           </div>
           <p className="text-[15px] text-brand-ink/70 mt-3 mb-5 leading-relaxed">
-            Nouvelles adresses, sorties du week-end et actualité de Kinshasa — directement dans votre boîte mail.
+            Nouvelles adresses, sorties du week-end et actualité de Kinshasa — directement dans ta boîte mail.
           </p>
 
           {status === 'success' ? (
             <p className="text-base text-brand-blue-deep font-bold m-0 bg-brand-blue-soft rounded-2xl px-4 py-3">
-              Merci ! Vous êtes bien inscrit(e) 🎉
+              Merci ! Tu es bien inscrit(e) 🎉
             </p>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -163,7 +163,7 @@ export function NewsletterPopup() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="votre@email.com"
+                placeholder="ton@email.com"
                 className="w-full h-12 px-4 bg-brand-bg border-2 border-brand-line text-brand-ink rounded-2xl text-base placeholder:text-brand-muted focus:outline-none focus:border-brand-blue"
               />
               <button

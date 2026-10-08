@@ -49,18 +49,18 @@ export default function BecomePartnerPage() {
 
       <div className="max-w-[640px] mx-auto px-4 md:px-6 py-14 md:py-20 flex-1 w-full">
         <h1 className="font-display text-3xl md:text-4xl font-semibold text-brand-ink mb-3 text-center">
-          Devenir partenaire
+          Deviens partenaire
         </h1>
         <p className="text-base text-brand-ink/70 leading-relaxed mb-10 text-center">
           Commerce, institution, média ou investisseur : parlons de comment Kinshasa Label peut
-          accompagner votre visibilité ou votre projet à Kinshasa.
+          accompagner ta visibilité ou ton projet à Kinshasa.
         </p>
 
         {status === 'success' ? (
           <div className="bg-brand-surface border border-brand-red/40 rounded-xl p-6 text-center">
-            <p className="text-brand-red-dark font-semibold m-0">Merci pour votre message !</p>
+            <p className="text-brand-red-dark font-semibold m-0">Merci pour ton message !</p>
             <p className="text-sm text-brand-ink/70 mt-2 mb-0">
-              Notre équipe vous recontactera très prochainement à l&apos;adresse indiquée.
+              Notre équipe te recontacte très vite à l&apos;adresse indiquée.
             </p>
           </div>
         ) : (
@@ -81,7 +81,7 @@ export default function BecomePartnerPage() {
             </div>
             <div>
               <label className={labelClass}>E-mail *</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="votre@email.com" />
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="ton@email.com" />
             </div>
             <div>
               <label className={labelClass}>Message</label>
@@ -90,7 +90,7 @@ export default function BecomePartnerPage() {
                 onChange={(e) => setMessage(e.target.value)}
                 rows={4}
                 className={inputClass}
-                placeholder="Parlez-nous de votre projet ou de votre besoin..."
+                placeholder="Parle-nous de ton projet ou de ton besoin..."
               />
             </div>
             {status === 'error' && <p className="text-sm text-brand-danger m-0">{errorMsg}</p>}

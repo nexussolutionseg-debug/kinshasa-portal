@@ -9,9 +9,8 @@
 /build
 
 # env files (never commit real secrets — see .env.example instead)
-.env
-.env.local
-.env.*.local
+.env*
+!.env.example
 
 # misc
 .DS_Store
@@ -30,3 +29,17 @@ next-env.d.ts
 
 # generated from node_modules at build time (scripts/copy-maplibre-worker.mjs)
 /public/maplibre/
+
+# Vercel CLI link + local build output
+/.vercel/
+/coverage/
+/dist/
+
+# uploads / archives that must never land in the repo
+*.zip
+*.bundle
+*.tar
+*.tar.gz
+*.rar
+*.sql.gz
+*.dump

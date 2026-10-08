@@ -61,11 +61,11 @@ export function CookieConsentBanner() {
           <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
             <p className="text-sm text-brand-ink/80 m-0 flex-1 leading-snug">
               <span className="md:hidden">
-                🍪 Nous mesurons l&apos;audience avec Google Analytics, si vous l&apos;acceptez.{' '}
+                🍪 Nous mesurons l&apos;audience avec Google Analytics, si tu l&apos;acceptes.{' '}
               </span>
               <span className="hidden md:inline">
                 Nous utilisons Google Analytics pour comprendre comment ce site est utilisé (pages visitées,
-                provenance des visiteurs). Vous pouvez accepter ou refuser ce suivi ; votre choix reste modifiable à
+                provenance des visiteurs). Tu peux accepter ou refuser ce suivi ; ton choix reste modifiable à
                 tout moment depuis le pied de page.{' '}
               </span>
               <Link href="/politique-de-confidentialite" className="text-brand-red-dark no-underline hover:text-brand-red font-semibold">

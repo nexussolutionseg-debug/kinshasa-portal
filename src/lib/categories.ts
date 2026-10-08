@@ -102,3 +102,23 @@ export function getAverageRating(place: { rating_sum?: number; rating_count?: nu
   if (count <= 0) return null;
   return (place.rating_sum || 0) / count;
 }
+
+// One page per category (client audit, 2026-10-08).
+export const CATEGORY_PATH: Record<CategoryId, string> = {
+  kin_actualite: '/actualite',
+  kin_food: '/food',
+  kin_places: '/places',
+  kin_culture: '/culture',
+  kin_style: '/style',
+  kin_securite: '/securite',
+  kin_traffic: '/traffic',
+  kin_weekend: '/weekend',
+};
+
+/** The place categories that get a /food, /places… listing page. */
+export const PLACE_CATEGORY_IDS: CategoryId[] = ['kin_food', 'kin_places', 'kin_culture', 'kin_style', 'kin_securite'];
+
+export function categoryFromSlug(slug: string): Category | null {
+  const id = (Object.keys(CATEGORY_PATH) as CategoryId[]).find((k) => CATEGORY_PATH[k] === `/${slug}`);
+  return id && PLACE_CATEGORY_IDS.includes(id) ? categoryOf(id) : null;
+}
