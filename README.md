@@ -24,7 +24,7 @@ The joyful guide to Kinshasa: places, culture, weekend outings and live city new
 | `src/app/sitemap.ts`, `robots.ts`, `opengraph-image.tsx`, `icon.svg` | SEO files, share image, favicon. |
 | `src/components/` | Shared UI (header, footer, cards, sheets, carousels…). `components/backoffice/` holds the back-office panels. |
 | `src/lib/` | Logic without UI: categories, communes and slugs, news aggregation and filters, server-side Supabase reads, structured data (schema.org), CSV/Excel import, plus-code decoding, UTM links. |
-| `src/data/` | Static data: commune outlines (`communes.json`) and commune descriptions (`communeDetails.ts`). |
+| `src/data/` | Static data: approximate commune outlines (`communes.json`) and commune descriptions (`communeDetails.ts`). |
 | `public/` | Static files (`logo.svg`). `public/maplibre/` is generated at build time; don't commit it. |
 | `scripts/copy-maplibre-worker.mjs` | Copies the MapLibre worker into `public/` before `dev`/`build`. |
 | `supabase/migrations/` | Database changes already applied to the live project, in order. |
@@ -75,6 +75,7 @@ Same method as the Nexus Hub. **Nothing goes straight to `main`.**
 
 - **Preview database:** previews have no Supabase key, so they're safe but empty. Decision (2026-10-08): keep it this way until the move to Supabase Pro, then add a staging database for previews.
 - **Legacy `dispatches` table:** open to anonymous inserts. The optional fix is in `supabase/pending/` (run only once the old journalism portal is retired).
-- **Commune boundaries:** `src/data/communes.json` contains simplified commune outlines. Replace them with official boundary polygons when available.
+- **Commune boundaries:** `src/data/communes.json` holds *approximate* commune areas (official city outline from geoBoundaries, shared between the 24 communes by approximate size). Good enough for the map and for placing addresses, but not official. Replace with an official commune boundaries file (GeoJSON or shapefile) when one is supplied.
+- **Database access:** run `supabase/pending/20261008190000_tighten_access.sql`, then `supabase/tools/check-access.sql`.
 - **`src/app/api/` review:** check caching, rate limits and error handling of `api/actualite` and `api/taux`.
 - **Google API keys:** two old keys from an unused Google Maps setup are visible in the git history. The Places API isn't activated, so the risk is low; deleting both keys in Google Cloud (Credentials) closes it completely. If Google Maps is activated later, create a new key restricted to kinshasalabel.com.

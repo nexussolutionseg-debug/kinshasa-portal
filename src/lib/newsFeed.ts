@@ -3,6 +3,7 @@
 // Fetches every source's RSS feed, keeps Kinshasa social news only,
 // de-duplicates, sorts newest first and adds each article's share image
 // when the feed has none. Plain public RSS: no key, no cost.
+import { unstable_cache } from 'next/cache';
 import { NEWS_SOURCES, parseFeed, filterKinshasa, type NewsItem } from './news';
 import { withUtm } from './utm';
 import { findShareImage, mapLimit } from './ogImage';
@@ -71,10 +72,18 @@ export async function getNewsFeed(): Promise<NewsFeed> {
   };
 }
 
-/** Same feed, but never throws and gives up after `ms` (pages must render fast). */
-export async function getNewsFeedSafe(ms = 12000): Promise<NewsFeed | null> {
+/**
+ * One shared copy of the feed for the whole site, rebuilt at most every
+ * 15 minutes (Next.js data cache). The homepage, the 24 commune pages,
+ * Kin Actualité and /api/actualite all read this copy instead of each
+ * re-downloading 9 feeds and article images.
+ */
+export const getCachedNewsFeed = unstable_cache(getNewsFeed, ['kin-news-feed-v1'], { revalidate: NEWS_REVALIDATE });
+
+/** The shared feed, but never throws and gives up after `ms` (pages must render fast). */
+export async function getNewsFeedSafe(ms = 8000): Promise<NewsFeed | null> {
   try {
-    return await Promise.race([getNewsFeed(), new Promise<null>((r) => setTimeout(() => r(null), ms))]);
+    return await Promise.race([getCachedNewsFeed(), new Promise<null>((r) => setTimeout(() => r(null), ms))]);
   } catch {
     return null;
   }

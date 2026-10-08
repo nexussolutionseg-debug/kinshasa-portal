@@ -27,6 +27,7 @@ export default function BackofficePage() {
   // ---------------------------------------------------------------------
   const router = useRouter();
   const [authChecked, setAuthChecked] = useState(false);
+  const [notTeam, setNotTeam] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -36,6 +37,11 @@ export default function BackofficePage() {
         router.replace('/login');
       } else {
         setAuthChecked(true);
+        // Logged in, but is this account on the team list (kl_admins)? Only
+        // team accounts can save anything (enforced by the database).
+        Promise.resolve(supabase.rpc('is_kl_admin'))
+          .then(({ data, error }) => { if (active && !error && data === false) setNotTeam(session.user?.email || 'ce compte'); })
+          .catch(() => {});
       }
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -281,6 +287,13 @@ export default function BackofficePage() {
 
       <div className="max-w-[1150px] mx-auto px-4 py-6 md:py-8">
 
+        {notTeam && (
+          <div className="p-3.5 rounded-xl mb-5 font-semibold text-sm border bg-brand-yellow-soft border-brand-yellow text-brand-ink">
+            {notTeam} n’est pas dans l’équipe Kinshasa Label : tu peux consulter le backoffice, mais aucune modification ne sera enregistrée.
+            Demande à un administrateur de t’ajouter (table <code>kl_admins</code> dans Supabase).
+          </div>
+        )}
+
         {/* Status Notification */}
         {statusMsg && (
           <div className={`p-3.5 rounded-xl mb-5 font-semibold text-sm border ${
@@ -412,8 +425,9 @@ export default function BackofficePage() {
                 <input type="text" value={evCategory} onChange={(e) => setEvCategory(e.target.value)} placeholder="ex: Concert, Marché, Expo" className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Date</label>
-                <input type="date" value={evDate} onChange={(e) => setEvDate(e.target.value)} className={inputClass} />
+                <label className={labelClass}>Date *</label>
+                {/* required: events.event_date is NOT NULL in the database */}
+                <input type="date" required value={evDate} onChange={(e) => setEvDate(e.target.value)} className={inputClass} />
               </div>
             </div>
 

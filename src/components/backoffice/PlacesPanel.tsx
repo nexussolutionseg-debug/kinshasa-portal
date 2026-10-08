@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { CATEGORIES, categoryOf } from '../../lib/categories';
-import { COMMUNE_NAMES, communeAt, sameCommune } from '../../lib/communes';
+import { COMMUNE_NAMES, communeAt, sameCommune, kmOutsideCommune, COMMUNE_TOLERANCE_KM } from '../../lib/communes';
 import { parsePosition } from '../../lib/geo';
 import { uploadImage } from '../../lib/upload';
 import {
@@ -285,6 +285,7 @@ function PlaceForm({ place, onDone, onCancel, say }: { place: Place | null; onDo
 
   const pos = parsePosition(f.position) || (!f.position ? parsePosition(f.google_maps_url) : null);
   const posCommune = pos ? communeAt(pos.lat, pos.lng, communesGeo as any) : null;
+  const posOffKm = pos ? kmOutsideCommune(pos.lat, pos.lng, f.commune, communesGeo as any) : null;
 
   // Google Places autocomplete, when a key is configured.
   useEffect(() => {
@@ -411,7 +412,9 @@ function PlaceForm({ place, onDone, onCancel, say }: { place: Place | null; onDo
           {pos ? (
             <>
               <IconPin size={12} className="mt-0.5 shrink-0" /> {pos.lat.toFixed(5)}, {pos.lng.toFixed(5)}
-              {posCommune && (sameCommune(posCommune, f.commune) ? ` · bien dans ${posCommune}` : <strong className="text-brand-red-dark"> · ce point est à {posCommune}, pas à {f.commune}</strong>)}
+              {posOffKm !== null && (posOffKm <= COMMUNE_TOLERANCE_KM
+                ? ` · ${posOffKm === 0 ? 'dans' : 'près de'} ${f.commune}`
+                : <strong className="text-brand-red-dark"> · ce point est {posCommune ? `vers ${posCommune}` : 'hors de Kinshasa'}, à ~{posOffKm.toFixed(1)} km de {f.commune}</strong>)}
               {' · '}<a href={`https://www.google.com/maps?q=${pos.lat},${pos.lng}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5">vérifier <IconExternalLink size={10} /></a>
             </>
           ) : f.position ? (

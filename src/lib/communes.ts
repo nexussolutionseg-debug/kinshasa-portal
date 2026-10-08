@@ -60,3 +60,32 @@ export function communeSlug(name: string): string {
 }
 
 export const communeHref = (name: string) => `/commune/${communeSlug(name)}`;
+
+/**
+ * Distance in km from a point to a commune's outline (0 when inside). The
+ * outlines are approximate (see src/data/communes.json), so callers use a
+ * tolerance instead of a strict inside/outside test.
+ */
+export function kmOutsideCommune(lat: number, lng: number, name: string, geo: { features: any[] }): number | null {
+  const f = geo.features.find((x) => sameCommune(x.properties?.name, name));
+  if (!f) return null;
+  const g = f.geometry;
+  const polys: number[][][][] = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : [];
+  if (polys.some((p) => inRing(lng, lat, p[0]) && !p.slice(1).some((h) => inRing(lng, lat, h)))) return 0;
+  const kx = 111.32 * Math.cos((lat * Math.PI) / 180);
+  const ky = 110.57;
+  let best = Infinity;
+  for (const p of polys) for (const ring of p) {
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const ax = (ring[j][0] - lng) * kx, ay = (ring[j][1] - lat) * ky;
+      const bx = (ring[i][0] - lng) * kx, by = (ring[i][1] - lat) * ky;
+      const dx = bx - ax, dy = by - ay;
+      const t = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / (dx * dx + dy * dy || 1)));
+      best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy));
+    }
+  }
+  return best;
+}
+
+/** Outlines are approximate: only flag points clearly outside (km). */
+export const COMMUNE_TOLERANCE_KM = 1.5;
