@@ -4,6 +4,12 @@ import { SiteFooter } from '../../components/SiteFooter';
 import { KinshasaSeal } from '../../components/BrandMark';
 import { IconGlobe, IconPin, IconChart, IconUser } from '../../components/icons';
 
+export const metadata = {
+  title: 'Qui sommes-nous',
+  description: 'Kinshasa Label, le guide joyeux de Kinshasa : observer, vérifier, cartographier et recommander le meilleur des 24 communes.',
+  alternates: { canonical: '/qui-sommes-nous' },
+};
+
 // PLACEHOLDER COPY — the client said final "Qui sommes-nous" text is
 // coming separately; this draft is generated from their own positioning
 // mind-map (vision, tagline, value chain, audience segments) so the page

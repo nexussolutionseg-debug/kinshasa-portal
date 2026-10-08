@@ -8,6 +8,8 @@ import { supabase } from '../../lib/supabase';
 import { isBannerLive } from '../../lib/siteSettings';
 import { buildTrackingLink, SITE_URL } from '../../lib/utm';
 import { ALL_KINSHASA_COMMUNES } from '../../data/communeDetails';
+import { communeHref } from '../../lib/communes';
+import { CATEGORY_PATH, PLACE_CATEGORY_IDS, categoryOf } from '../../lib/categories';
 import { IconPlus, IconSparkle, IconCalendar, IconNews, IconMail, IconPin, IconExternalLink, IconWarning } from '../icons';
 
 type Section = 'home' | 'places' | 'events' | 'news' | 'showcase' | 'reviews' | 'subscribers';
@@ -27,10 +29,12 @@ const SOURCES = [
 const PAGES = [
   { path: '/', label: 'Accueil' },
   { path: '/actualite', label: 'Kin Actualité' },
-  { path: '/#kin-weekend', label: 'Kin Weekend' },
+  ...PLACE_CATEGORY_IDS.concat('kin_traffic').map((id) => ({ path: CATEGORY_PATH[id], label: categoryOf(id).label })),
+  { path: '/weekend', label: 'Kin Weekend' },
   { path: '/#explorer', label: 'Carte' },
-  { path: '/devenir-partenaire', label: 'Devenir partenaire' },
-  ...ALL_KINSHASA_COMMUNES.map((c) => ({ path: `/commune/${encodeURIComponent(c)}`, label: `Commune : ${c}` })),
+  { path: '/communes', label: 'Les 24 communes' },
+  { path: '/devenir-partenaire', label: 'Deviens partenaire' },
+  ...ALL_KINSHASA_COMMUNES.map((c) => ({ path: communeHref(c), label: `Commune : ${c}` })),
 ];
 
 export function DashboardHome({

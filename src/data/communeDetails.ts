@@ -1,3 +1,4 @@
+import { canonicalCommune } from '../lib/communes';
 // Editorial brief for each of Kinshasa's 24 communes (tagline, history,
 // economy, key districts, map center). Shared by the commune pages and the
 // homepage's commune carousel. Moved out of src/app/commune/[name]/page.tsx.
@@ -269,3 +270,9 @@ export const DEFAULT_COMMUNE_BRIEF: CommuneBrief = {
   zoom: 12.5
 };
 
+
+/** Brief for a commune however its name is spelled ("Ndjili", "N'djili", "mont-ngafula"…). */
+export function communeBrief(name: string): CommuneBrief | undefined {
+  const c = canonicalCommune(name);
+  return c ? COMMUNE_DETAILS[c] : undefined;
+}

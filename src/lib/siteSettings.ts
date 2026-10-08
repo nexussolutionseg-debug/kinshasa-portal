@@ -4,29 +4,17 @@
 // the site never breaks before the SQL is applied.
 import { supabase } from './supabase';
 
-export type SectionId =
-  | 'categories'
-  | 'actualite'
-  | 'featured'
-  | 'topRated'
-  | 'newest'
-  | 'categoryRails'
-  | 'weekend'
-  | 'map'
-  | 'communes'
-  | 'surprise';
+// Homepage = 5 blocks (client audit, 2026-10-08): hero, clickable
+// categories, map, six communes + "Voir les 24", newsletter (footer).
+// "Coups de cœur" is optional and only shows when the team has picked
+// places. Kin Actualité, Kin Weekend and the 24 communes have their own pages.
+export type SectionId = 'categories' | 'featured' | 'map' | 'communes';
 
 export const SECTION_LABELS: Record<SectionId, { label: string; hint: string }> = {
-  categories: { label: 'Tuiles des catégories', hint: 'Les 8 grandes tuiles colorées sous la bannière' },
-  actualite: { label: 'Kin Actualité', hint: 'À la une + infos en direct + taux du jour' },
-  featured: { label: 'Coups de cœur de la rédaction', hint: 'Les lieux que vous choisissez ci-dessous' },
-  topRated: { label: 'Les mieux notés', hint: 'Automatique, selon les notes des visiteurs' },
-  newest: { label: 'Nouveaux lieux', hint: 'Automatique, les derniers ajoutés' },
-  categoryRails: { label: 'Carrousels par catégorie', hint: 'Kin Food, Kin Places… (3 lieux minimum chacun)' },
-  weekend: { label: 'Kin Weekend', hint: 'Les événements à venir' },
-  map: { label: 'Carte interactive', hint: 'Carte + filtres + liste' },
-  communes: { label: 'Les 24 communes', hint: 'Carrousel des communes' },
-  surprise: { label: 'Bandeau « Surprends-moi »', hint: 'Lieu au hasard' },
+  categories: { label: 'Tuiles des catégories', hint: 'Les grandes tuiles colorées — chacune ouvre sa page (Kin Food, Kin Places…)' },
+  featured: { label: 'Coups de cœur de la rédaction', hint: 'Les lieux choisis dans l’onglet « Coups de cœur » (masqué s’il est vide)' },
+  map: { label: 'Carte interactive', hint: 'Carte + filtres + liste des lieux' },
+  communes: { label: 'Communes en vedette', hint: 'Six communes + lien « Voir les 24 communes »' },
 };
 
 export type SiteSettings = {

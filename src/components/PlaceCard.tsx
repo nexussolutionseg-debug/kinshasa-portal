@@ -108,7 +108,7 @@ export function PlaceCard({ place, onOpen, badge }: { place: any; onOpen: (place
         <p className="text-sm text-brand-muted leading-relaxed m-0 line-clamp-2 min-h-[2.75rem]">{place.description}</p>
         <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-brand-muted">
           <Stars value={avg ?? 0} />
-          <span>{avg !== null ? `${place.rating_count} avis` : 'Soyez le premier à noter'}</span>
+          <span>{avg !== null ? `${place.rating_count} avis` : 'Sois le premier à noter'}</span>
         </div>
       </div>
     </button>

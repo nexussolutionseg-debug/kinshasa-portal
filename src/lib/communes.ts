@@ -47,3 +47,16 @@ export function canonicalCommune(input: string | null | undefined): string | nul
   if (!k) return null;
   return COMMUNE_NAMES.find((c) => communeKey(c) === k) || null;
 }
+
+/** Clean address part for a commune: "Mont-Ngafula" → "mont-ngafula", "N'djili" → "ndjili". */
+export function communeSlug(name: string): string {
+  return (canonicalCommune(name) || name)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/['’]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+export const communeHref = (name: string) => `/commune/${communeSlug(name)}`;

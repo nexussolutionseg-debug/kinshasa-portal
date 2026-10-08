@@ -3,19 +3,21 @@
 // editorial "Kin News" merges in here as "À la une", and Kin Actualité is
 // the name everywhere). Live items come from /api/actualite (Kinshasa-only
 // RSS aggregation, refreshed every 15 min); "À la une" from the backoffice.
+import { TimeAgo } from '../../components/TimeAgo';
 import { useMemo, useState } from 'react';
 import { SiteHeader } from '../../components/SiteHeader';
 import { SiteTicker } from '../../components/SiteTicker';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SpinningWheel } from '../../components/BrandMark';
-import { useKinNews, NewsCard, ExchangeRateCard, NewsEmpty, LiveDot } from '../../components/KinNews';
+import { useKinNews, NewsCard, ExchangeRateCard, NewsEmpty, LiveDot, type InitialNews } from '../../components/KinNews';
+import type { Rate } from '../../lib/rates';
 import { IconPin, IconExternalLink } from '../../components/icons';
-import { timeAgo } from '../../lib/news';
+
 
 const PAGE = 12;
 
-export function ActualiteClient() {
-  const news = useKinNews();
+export function ActualiteClient({ initialNews, initialRate }: { initialNews: InitialNews; initialRate: Rate | null }) {
+  const news = useKinNews(undefined, initialNews);
   const [commune, setCommune] = useState<string | null>(null);
   const [source, setSource] = useState<string | null>(null);
   const [shown, setShown] = useState(PAGE);
@@ -52,7 +54,7 @@ export function ActualiteClient() {
           <h1 className="font-display text-4xl md:text-6xl font-extrabold m-0 mt-3 tracking-tight">Kin Actualité</h1>
           <p className="text-base md:text-lg text-white/90 m-0 mt-2 max-w-2xl">
             L’info de Kinshasa réunie depuis les médias congolais, plus les sujets de la rédaction Kinshasa Label.
-            {news.updatedAt && <> Mis à jour {timeAgo(news.updatedAt)}.</>}
+            {news.updatedAt && <> Mis à jour <TimeAgo iso={news.updatedAt} />.</>}
           </p>
         </div>
       </section>
@@ -137,7 +139,7 @@ export function ActualiteClient() {
 
         {/* SIDEBAR */}
         <aside className="flex flex-col gap-5 lg:sticky lg:top-24 self-start w-full">
-          <ExchangeRateCard />
+          <ExchangeRateCard initial={initialRate} />
           <div className="bg-white rounded-2xl border border-brand-line shadow-card p-5">
             <h3 className="font-display text-lg font-extrabold text-brand-ink m-0">Nos sources</h3>
             <p className="text-xs text-brand-muted m-0 mt-1 leading-relaxed">

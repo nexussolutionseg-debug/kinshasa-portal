@@ -311,7 +311,7 @@ function BannersTab({ setMsg }: { setMsg: (m: Msg) => void }) {
           </div>
           <div>
             <label className={label} htmlFor="bn-url">Lien du bouton (optionnel)</label>
-            <input id="bn-url" className={input} value={edit.link_url || ''} onChange={(e) => setEdit({ ...edit, link_url: e.target.value })} placeholder="https://… ou /commune/Gombe" />
+            <input id="bn-url" className={input} value={edit.link_url || ''} onChange={(e) => setEdit({ ...edit, link_url: e.target.value })} placeholder="https://… ou /commune/gombe ou /food" />
           </div>
           <div>
             <label className={label} htmlFor="bn-lbl">Texte du bouton</label>

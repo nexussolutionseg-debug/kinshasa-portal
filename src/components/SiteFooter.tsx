@@ -7,8 +7,8 @@ import { NewsletterSignup } from './NewsletterSignup';
 import { SocialLinks } from './SocialLinks';
 import { ManageCookiesLink } from './ManageCookiesLink';
 import { IconMail } from './icons';
+import { CATEGORY_PATH, PLACE_CATEGORY_IDS, categoryOf } from '../lib/categories';
 
-const FOOTER_COMMUNES = ['Gombe', 'Limete', 'Ngaliema', 'Kalamu', 'Lemba', 'Masina'];
 const CONTACT_EMAIL = 'contact@kinshasalabel.com';
 
 export function SiteFooter() {
@@ -50,19 +50,21 @@ export function SiteFooter() {
 
         <div>
           <h3 className="text-xs uppercase tracking-wide text-brand-muted font-semibold mb-3.5">
-            Communes
+            Rubriques
           </h3>
           <ul className="flex flex-col gap-2.5 list-none p-0 m-0">
-            {FOOTER_COMMUNES.map((c) => (
-              <li key={c}>
-                <Link
-                  href={`/commune/${encodeURIComponent(c)}`}
-                  className="text-sm text-brand-ink/70 no-underline hover:text-brand-red transition-colors"
-                >
-                  {c}
+            {[...PLACE_CATEGORY_IDS, 'kin_traffic' as const].map((id) => (
+              <li key={id}>
+                <Link href={CATEGORY_PATH[id]} className="text-sm text-brand-ink/70 no-underline hover:text-brand-red transition-colors">
+                  {categoryOf(id).label}
                 </Link>
               </li>
             ))}
+            <li>
+              <Link href="/communes" className="text-sm text-brand-ink/70 no-underline hover:text-brand-red transition-colors">
+                Les 24 communes
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -93,7 +95,7 @@ export function SiteFooter() {
             </li>
             <li>
               <Link href="/devenir-partenaire" className="text-sm text-brand-ink/70 no-underline hover:text-brand-red transition-colors">
-                Devenir partenaire
+                Deviens partenaire
               </Link>
             </li>
             <li>

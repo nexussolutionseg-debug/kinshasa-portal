@@ -4,11 +4,13 @@
 // the news card, the scrolling headline ticker and the USD/CDF widget.
 'use client';
 
+import { TimeAgo } from './TimeAgo';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
-import { type NewsItem, timeAgo } from '../lib/news';
+import { type NewsItem } from '../lib/news';
 import { withUtm } from '../lib/utm';
+import { sameCommune } from '../lib/communes';
 import { loadSiteSettings } from '../lib/siteSettings';
 import { IconExternalLink, IconPin, IconMoney, IconNews, IconClose } from './icons';
 import { LiveDot } from './SiteHeader';
@@ -31,15 +33,19 @@ export function editorialToItem(row: any): NewsItem {
   };
 }
 
-export function useKinNews(commune?: string | null) {
-  const [live, setLive] = useState<NewsItem[] | null>(null);
+export type InitialNews = { items: NewsItem[]; sources: SourceStatus[]; updatedAt: string | null } | null;
+
+/** `initial` = the feed already rendered on the server (then no browser request is needed). */
+export function useKinNews(commune?: string | null, initial?: InitialNews) {
+  const [live, setLive] = useState<NewsItem[] | null>(initial ? initial.items : null);
   const [pinned, setPinned] = useState<NewsItem[]>([]);
-  const [sources, setSources] = useState<SourceStatus[]>([]);
-  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [sources, setSources] = useState<SourceStatus[]>(initial?.sources || []);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(initial?.updatedAt || null);
+  const hasInitial = !!initial;
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/actualite')
+    if (!hasInitial) fetch('/api/actualite')
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((d) => {
         if (cancelled) return;
@@ -64,10 +70,10 @@ export function useKinNews(commune?: string | null) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hasInitial]);
 
   const byCommune = (list: NewsItem[]) =>
-    commune ? list.filter((n) => (n.commune || '').toLowerCase() === commune.toLowerCase()) : list;
+    commune ? list.filter((n) => sameCommune(n.commune, commune)) : list;
 
   return {
     loading: live === null,
@@ -200,7 +206,7 @@ export function NewsCard({ item, variant = 'card' }: { item: NewsItem; variant?:
       ) : (
         <span style={{ color: tint }}>{item.sourceName}</span>
       )}
-      <span className="text-brand-muted font-semibold normal-case tracking-normal">{timeAgo(item.date)}</span>
+      <span className="text-brand-muted font-semibold normal-case tracking-normal"><TimeAgo iso={item.date} /></span>
       {item.commune && (
         <span className="inline-flex items-center gap-0.5 text-brand-blue-deep normal-case tracking-normal">
           <IconPin size={11} /> {item.commune}
@@ -301,14 +307,17 @@ export function NewsTicker({ items }: { items: NewsItem[] }) {
   );
 }
 
-export function ExchangeRateCard() {
-  const [rate, setRate] = useState<{ ok: boolean; usdCdf?: number; eurCdf?: number | null; updatedAt?: string } | null>(null);
+// Hidden entirely when no rate is available (client audit: never show an empty block).
+export function ExchangeRateCard({ initial }: { initial?: { ok: boolean; usdCdf?: number; eurCdf?: number | null } | null }) {
+  const [rate, setRate] = useState<{ ok: boolean; usdCdf?: number; eurCdf?: number | null; updatedAt?: string | null } | null>(initial ?? null);
   useEffect(() => {
+    if (initial?.ok) return;
     fetch('/api/taux')
       .then((r) => r.json())
       .then(setRate)
       .catch(() => setRate({ ok: false }));
-  }, []);
+  }, [initial]);
+  if (rate && !(rate.ok && rate.usdCdf)) return null;
   const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 
   return (
@@ -335,15 +344,7 @@ export function ExchangeRateCard() {
             </a>
           </p>
         </>
-      ) : (
-        <p className="text-sm m-0 mt-2">
-          Taux indisponible pour le moment —{' '}
-          <a href="https://www.mataf.net/fr/conversion/monnaie-USD-CDF" target="_blank" rel="noopener noreferrer" className="underline font-semibold">
-            voir sur Mataf
-          </a>
-          .
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -352,7 +353,7 @@ export function NewsEmpty({ loading }: { loading: boolean }) {
   return (
     <div className="rounded-2xl border-2 border-dashed border-brand-line p-8 text-center text-brand-muted">
       <IconNews size={28} className="mx-auto mb-2 text-brand-blue" />
-      {loading ? 'Chargement des dernières infos…' : 'Pas encore d’actualité sur Kinshasa pour le moment — revenez dans quelques minutes.'}
+      {loading ? 'Chargement des dernières infos…' : 'Pas encore d’actualité sur Kinshasa pour le moment — reviens dans quelques minutes.'}
     </div>
   );
 }

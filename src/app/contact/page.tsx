@@ -4,6 +4,12 @@ import { SiteFooter } from '../../components/SiteFooter';
 import { SocialLinks } from '../../components/SocialLinks';
 import { IconMail, IconGlobe } from '../../components/icons';
 
+export const metadata = {
+  title: 'Contact',
+  description: 'Une question, une suggestion, un lieu à signaler ? Écris à l’équipe Kinshasa Label.',
+  alternates: { canonical: '/contact' },
+};
+
 const CONTACT_EMAIL = 'contact@kinshasalabel.com';
 
 export default function ContactPage() {
@@ -13,11 +19,11 @@ export default function ContactPage() {
 
       <div className="max-w-[640px] mx-auto px-4 md:px-6 py-14 md:py-20 flex-1 w-full text-center">
         <h1 className="font-display text-3xl md:text-4xl font-semibold text-brand-ink mb-3">
-          Contactez-nous
+          Écris-nous
         </h1>
         <p className="text-base text-brand-ink/70 leading-relaxed mb-10">
-          Une question, une suggestion, un lieu à signaler ? Écrivez-nous directement — nous vous
-          répondons au plus vite.
+          Une question, une suggestion, un lieu à signaler ? Écris-nous directement — on te
+          répond au plus vite.
         </p>
 
         <a
@@ -33,7 +39,7 @@ export default function ContactPage() {
 
         <div className="mt-8 flex flex-col items-center gap-3">
           <p className="text-xs uppercase tracking-wide text-brand-muted font-semibold m-0">
-            Suivez-nous
+            Suis-nous
           </p>
           <SocialLinks />
         </div>

@@ -14,21 +14,27 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  IconClose, IconMenu, IconHome, IconNews, IconMap, IconCalendar, IconBuilding, IconUser, IconMail, IconSparkle, IconPin, IconChevronRight,
+  IconClose, IconMenu, IconHome, IconNews, IconMap, IconCalendar, IconBuilding, IconUser, IconMail, IconSparkle, IconChevronRight,
 } from './icons';
 import { KinshasaMark } from './BrandMark';
+import { CategoryIcon } from './PlaceCard';
+import { CATEGORY_PATH, PLACE_CATEGORY_IDS, categoryOf } from '../lib/categories';
+import { useWeekendOn } from '../lib/useWeekend';
 
+// Kin Weekend appears only once the programme has enough events (see
+// lib/events.ts). Category pages are listed in the drawer ("Rubriques"),
+// on the homepage tiles and in the footer.
 const NAV_LINKS = [
   { href: '/', label: 'Accueil', Icon: IconHome },
   { href: '/actualite', label: 'Kin Actualité', live: true, Icon: IconNews },
   { href: '/#explorer', label: 'Carte', Icon: IconMap },
-  { href: '/#kin-weekend', label: 'Kin Weekend', Icon: IconCalendar },
-  { href: '/#communes', label: 'Communes', Icon: IconBuilding },
+  { href: '/weekend', label: 'Kin Weekend', Icon: IconCalendar, weekend: true },
+  { href: '/communes', label: 'Communes', Icon: IconBuilding },
   { href: '/qui-sommes-nous', label: 'Qui sommes-nous', Icon: IconUser },
   { href: '/contact', label: 'Contact', Icon: IconMail },
 ];
 
-const QUICK_COMMUNES = ['Gombe', 'Limete', 'Ngaliema', 'Bandalungwa', 'Kintambo', 'Lemba'];
+const RUBRIQUES = PLACE_CATEGORY_IDS.concat('kin_traffic').map((id) => ({ id, href: CATEGORY_PATH[id], label: categoryOf(id).label }));
 
 export function LiveDot({ className = '' }: { className?: string }) {
   return (
@@ -41,6 +47,8 @@ export function LiveDot({ className = '' }: { className?: string }) {
 export function SiteHeader({ below }: { below?: ReactNode } = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const weekendOn = useWeekendOn();
+  const links = NAV_LINKS.filter((l) => !l.weekend || weekendOn);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +105,7 @@ export function SiteHeader({ below }: { below?: ReactNode } = {}) {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1 ml-auto" aria-label="Navigation principale">
-            {NAV_LINKS.map((link) => {
+            {links.map((link) => {
               const active = link.href === pathname;
               return (
                 <Link
@@ -140,7 +148,7 @@ export function SiteHeader({ below }: { below?: ReactNode } = {}) {
           role="dialog"
           aria-modal="true"
           aria-label="Menu"
-          {...(!menuOpen ? { inert: '' as unknown as boolean } : {})}
+          {...(!menuOpen ? { inert: true } : {})}
           className={`absolute top-0 bottom-0 left-0 w-[84%] max-w-[340px] bg-white shadow-lift flex flex-col transition-transform duration-300 ease-[cubic-bezier(.2,.8,.2,1)] ${
             menuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
@@ -169,7 +177,7 @@ export function SiteHeader({ below }: { below?: ReactNode } = {}) {
 
           <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label="Menu mobile">
             <ul className="list-none m-0 p-0 flex flex-col gap-1">
-              {NAV_LINKS.map(({ href, label, Icon, live }) => {
+              {links.map(({ href, label, Icon, live }) => {
                 const active = href === pathname;
                 return (
                   <li key={label}>
@@ -197,16 +205,18 @@ export function SiteHeader({ below }: { below?: ReactNode } = {}) {
               })}
             </ul>
 
-            <p className="text-[11px] font-extrabold uppercase tracking-wider text-brand-muted px-3 mt-5 mb-2">Communes populaires</p>
-            <div className="flex flex-wrap gap-2 px-3">
-              {QUICK_COMMUNES.map((c) => (
+            <p className="text-[11px] font-extrabold uppercase tracking-wider text-brand-muted px-3 mt-5 mb-2">Rubriques</p>
+            <div className="grid grid-cols-2 gap-2 px-3">
+              {RUBRIQUES.map((r) => (
                 <Link
-                  key={c}
-                  href={`/commune/${encodeURIComponent(c)}`}
+                  key={r.id}
+                  href={r.href}
                   onClick={() => setMenuOpen(false)}
-                  className="inline-flex items-center gap-1 h-9 px-3 rounded-full border border-brand-line text-sm font-semibold text-brand-ink no-underline hover:border-brand-blue"
+                  className={`inline-flex items-center gap-1.5 h-10 px-3 rounded-xl border text-sm font-semibold no-underline ${
+                    pathname === r.href ? 'border-brand-blue bg-brand-blue-soft text-brand-blue-deep' : 'border-brand-line text-brand-ink hover:border-brand-blue'
+                  }`}
                 >
-                  <IconPin size={13} /> {c}
+                  <CategoryIcon id={r.id} size={14} /> {r.label}
                 </Link>
               ))}
             </div>
@@ -218,7 +228,7 @@ export function SiteHeader({ below }: { below?: ReactNode } = {}) {
               style={{ background: 'linear-gradient(135deg,#FFF7D1,#FDE8EA)' }}
             >
               <IconSparkle size={22} className="text-brand-red shrink-0" />
-              <span className="text-sm font-bold leading-snug">Vous avez un lieu ou un événement ? Devenez partenaire</span>
+              <span className="text-sm font-bold leading-snug">Tu as un lieu ou un événement ? Deviens partenaire</span>
             </Link>
           </nav>
 

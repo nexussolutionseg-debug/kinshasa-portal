@@ -13,13 +13,15 @@
 // arrows + dots on desktop, all real buttons with labels.
 'use client';
 
+import { TimeAgo } from './TimeAgo';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { WEEKEND_MIN } from '../lib/events';
 import { IconChevronLeft, IconChevronRight, IconArrowRight, IconDice, IconMap, IconExternalLink } from './icons';
 import { SpinningWheel } from './BrandMark';
 import { LiveDot } from './SiteHeader';
 import type { NewsItem } from '../lib/news';
-import { timeAgo } from '../lib/news';
+
 import { withUtm } from '../lib/utm';
 
 export type Banner = {
@@ -59,7 +61,8 @@ export function HeroCarousel({
       ? [
           { key: 'explore', dark: true, render: () => <ExploreSlide onSurprise={onSurprise} /> },
           { key: 'actu', dark: true, render: () => <ActuSlide headlines={headlines} /> },
-          { key: 'weekend', dark: false, render: () => <WeekendSlide count={weekendCount} /> },
+          // Kin Weekend only once the programme is real (WEEKEND_MIN events).
+          ...(weekendCount >= WEEKEND_MIN ? [{ key: 'weekend', dark: false, render: () => <WeekendSlide count={weekendCount} /> }] : []),
         ]
       : []),
   ];
@@ -115,7 +118,7 @@ export function HeroCarousel({
               aria-label={`${i + 1} sur ${count}`}
               aria-hidden={i !== index}
               // keep off-screen slides out of the tab order
-              {...(i !== index ? { inert: '' as unknown as boolean } : {})}
+              {...(i !== index ? { inert: true } : {})}
             >
               {s.render()}
             </div>
@@ -289,7 +292,7 @@ function ActuSlide({ headlines }: { headlines: NewsItem[] }) {
                     className="block bg-white rounded-2xl px-4 py-3 no-underline shadow hover:-translate-y-0.5 transition-transform"
                   >
                     <span className="text-[11px] font-bold uppercase tracking-wide text-brand-red">
-                      {n.sourceName} · {timeAgo(n.date)}
+                      {n.sourceName} · <TimeAgo iso={n.date} />
                     </span>
                     <span className="block text-sm font-bold text-brand-ink leading-snug mt-0.5 line-clamp-2">{n.title}</span>
                   </a>
@@ -317,7 +320,7 @@ function WeekendSlide({ count }: { count: number }) {
         <p className="text-base md:text-lg text-brand-ink/80 m-0">
           {count > 0 ? `${count} sortie${count > 1 ? 's' : ''} au programme : concerts, expos, soirées et plus.` : 'Concerts, expos, soirées : le programme des sorties à Kinshasa.'}
         </p>
-        <Link href="/#kin-weekend" className="self-start inline-flex items-center gap-2 bg-brand-ink text-white font-extrabold px-6 py-3.5 rounded-full no-underline hover:bg-brand-red transition-colors">
+        <Link href="/weekend" className="self-start inline-flex items-center gap-2 bg-brand-ink text-white font-extrabold px-6 py-3.5 rounded-full no-underline hover:bg-brand-red transition-colors">
           Voir les sorties <IconArrowRight size={16} />
         </Link>
       </div>
