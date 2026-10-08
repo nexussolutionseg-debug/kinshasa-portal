@@ -17,11 +17,18 @@ The live project is in **Cherif's Supabase account**. Developers (and Claude) ha
 
 Code that depends on a pending change must keep working before it is applied (the site falls back gracefully), so the order "merge code → run SQL" is always safe.
 
-## Status (2026-10-08)
+## Status (verified 2026-10-08)
+
+A founder ran `tools/check-applied.sql` and `tools/schema-snapshot.sql` on the live project (the result is in `tools/snapshot-2026-10-08.json`). Replaying every file in `migrations/`, in order, on an empty Postgres rebuilds exactly the live tables and columns.
 
 | File | Status |
 |---|---|
-| `migrations/20261004120000_security_hardening.sql` | Applied 2026-10-04 (founder confirmed "query ran", sign-ups disabled). To re-verify with `tools/check-applied.sql`. |
-| `pending/20261004180000_reviews_moderation.sql` | Delivered 2026-10-04; not yet confirmed as run. Run `tools/check-applied.sql` to know. |
-| `pending/20261007090000_places_import.sql` | Delivered 2026-10-07; needed before the places import works. Not yet confirmed as run. |
-| `migrations/00000000000000_baseline.sql` | **Missing**: the original tables (places, events, news, comments, banners, subscribers, partner_inquiries) were created in the dashboard before migrations were tracked. Will be written from `tools/schema-snapshot.sql` once a founder runs it. |
+| `migrations/00000000000000_baseline.sql` | Structure before 2026-10-04 (tables created in the dashboard). Documentation and rebuild only — **never run on live**. |
+| `migrations/20261004120000_security_hardening.sql` | Applied ✔ |
+| `migrations/20261004180000_reviews_moderation.sql` | Applied ✔ |
+| `migrations/20261007090000_places_import.sql` | Applied ✔ |
+| `pending/20261008180000_lock_legacy_dispatches.sql` | **Optional, not applied.** The old `dispatches` table (earlier journalism portal, unused by this site) accepts inserts from anyone without login. Run only once that old portal is retired. |
+
+Legacy tables not used by kinshasalabel.com: `dispatches`, `security_alerts` (earlier Kinshasa Portal journalism app), and the public storage bucket `commune-videos`.
+
+Previews: Vercel previews have no Supabase key, so they can't reach this database. That's the agreed setup until a Supabase Pro / staging project exists.

@@ -47,5 +47,9 @@ select jsonb_pretty(jsonb_build_object(
     from information_schema.role_table_grants
     where table_schema = 'public' and grantee in ('anon', 'authenticated')
   ),
+  'enums', (
+    select jsonb_agg(jsonb_build_object('type', t.typname, 'values', (select jsonb_agg(e.enumlabel order by e.enumsortorder) from pg_enum e where e.enumtypid = t.oid)))
+    from pg_type t where t.typnamespace = 'public'::regnamespace and t.typtype = 'e'
+  ),
   'buckets', (select jsonb_agg(jsonb_build_object('id', id, 'public', public)) from storage.buckets)
 )) as snapshot;
