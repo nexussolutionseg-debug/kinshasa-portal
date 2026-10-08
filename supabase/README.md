@@ -7,7 +7,7 @@ The live project is in **Cherif's Supabase account**. Developers (and Claude) ha
 |---|---|
 | `migrations/` | Changes **already applied** to the live database, in order (`YYYYMMDDHHMMSS_name.sql`), exactly as they were run. Never edit an applied file — write a new one. |
 | `pending/` | Changes **written but not yet applied**. Each file starts with a plain-English note of what it changes. |
-| `tools/` | **Read-only** helper queries (they change nothing): `check-applied.sql` (which changes are live) and `schema-snapshot.sql` (structure snapshot used to verify migrations). |
+| `tools/` | **Read-only** helper queries (they change nothing): `check-applied.sql` (which changes are live), `schema-snapshot.sql` (structure snapshot used to verify migrations) and `check-access.sql` (who can read and write what: team list, row-level security, anonymous access). |
 
 ## How a database change goes live
 
@@ -27,6 +27,7 @@ A founder ran `tools/check-applied.sql` and `tools/schema-snapshot.sql` on the l
 | `migrations/20261004120000_security_hardening.sql` | Applied ✔ |
 | `migrations/20261004180000_reviews_moderation.sql` | Applied ✔ |
 | `migrations/20261007090000_places_import.sql` | Applied ✔ |
+| `pending/20261008190000_tighten_access.sql` | **To run (recommended).** Removes unused write rights from anonymous visitors on content tables, closes internal tables, caps partner-form field lengths, and limits banner uploads to images of 10 MB or less. Changes nothing the site uses. Run `tools/check-access.sql` afterwards. |
 | `pending/20261008180000_lock_legacy_dispatches.sql` | **Optional, not applied.** The old `dispatches` table (earlier journalism portal, unused by this site) accepts inserts from anyone without login. Run only once that old portal is retired. |
 
 Legacy tables not used by kinshasalabel.com: `dispatches`, `security_alerts` (earlier Kinshasa Portal journalism app), and the public storage bucket `commune-videos`.

@@ -7,6 +7,7 @@
 // results are memoised per server instance, so a refresh of the news feed
 // costs a handful of small requests at most.
 const cache = new Map<string, string | null>();
+const CACHE_MAX = 800; // bounded so a long-running server never grows without limit
 const MAX_BYTES = 300_000;
 
 function pickMeta(head: string, keys: string[]): string | null {
@@ -90,6 +91,7 @@ export async function findShareImage(articleUrl: string, headers: Record<string,
   } catch {
     result = null;
   }
+  if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value as string);
   cache.set(articleUrl, result);
   return result;
 }

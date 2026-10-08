@@ -3,7 +3,7 @@
 // an Excel sheet, recognises French / English column names, and turns every
 // row into a place ready to insert — with problems spelled out in plain
 // French so the team can fix the file before importing.
-import { canonicalCommune, communeKey, communeAt, sameCommune } from './communes';
+import { canonicalCommune, communeKey, communeAt, kmOutsideCommune, COMMUNE_TOLERANCE_KM } from './communes';
 import { parsePosition } from './geo';
 import type { CategoryId } from './categories';
 
@@ -242,8 +242,11 @@ export function mapRows(table: string[][], geo?: { features: any[] }): { rows: I
       parsePosition(address);
     if (!pos) warnings.push('Sans position : pas d’épingle sur la carte');
     else if (geo) {
-      const at = communeAt(pos.lat, pos.lng, geo);
-      if (at && !sameCommune(at, commune)) warnings.push(`La position tombe à ${at}, pas à ${commune} : à vérifier`);
+      const off = kmOutsideCommune(pos.lat, pos.lng, commune!, geo);
+      if (off !== null && off > COMMUNE_TOLERANCE_KM) {
+        const at = communeAt(pos.lat, pos.lng, geo);
+        warnings.push(`La position tombe ${at ? `vers ${at}` : 'hors de Kinshasa'}, à ~${off.toFixed(1)} km de ${commune} : à vérifier`);
+      }
     }
     const budgetRaw = get(r, 'budget').replace(/€/g, '$');
     const budget = /^\${1,3}$/.test(budgetRaw) ? budgetRaw : null;

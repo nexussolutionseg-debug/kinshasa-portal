@@ -179,7 +179,14 @@ export function HomeClient({ initial }: { initial: HomeInitial }) {
 
     map.current.on('load', () => {
       const m = map.current!;
-      m.addSource('communes-geojson', { type: 'geojson', data: communesData as any });
+      // Commune shapes are approximate (see src/data/communes.json "_note"):
+      // the official city outline (geoBoundaries, CC BY 4.0) shared between
+      // the 24 communes. Replace with official boundaries when available.
+      m.addSource('communes-geojson', {
+        type: 'geojson',
+        data: communesData as any,
+        attribution: 'Communes approx. · <a href="https://www.geoboundaries.org" target="_blank" rel="noopener">geoBoundaries</a> CC BY',
+      });
       m.addLayer({
         id: 'communes-layer',
         type: 'fill-extrusion',
