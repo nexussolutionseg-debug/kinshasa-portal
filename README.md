@@ -52,7 +52,7 @@ Same method as the Nexus Hub. **Nothing goes straight to `main`.**
 
 1. **Branch.** Every round of work gets its own branch (`fix/…`, `feature/…`, `cleanup/…`) and **one pull request**.
 2. **Preview.** Vercel builds a preview link for every branch push. The link appears in the pull request.
-   > ⚠️ Previews currently use the **same Supabase database as the live site** (see "Open items"). Browsing a preview is safe; **don't save anything in a preview's back office** until previews get their own database.
+   > Previews have **no database** (Vercel's *Preview* environment has no Supabase key), so they can never change live data, but their lists are empty. See "Open items" for the proposed preview database.
 3. **Review and merge.** A founder reviews the preview, then presses **Merge** in GitHub. Vercel deploys `main` to kinshasalabel.com within ~3 minutes.
 4. **Undo a release.** Vercel → project *kinshasa-portal* → **Deployments** → previous production deployment → **⋯ → Promote to Production**. This is instant; the code can be fixed afterwards in a new pull request.
 5. **Database changes are always a separate step:**
@@ -73,7 +73,7 @@ Same method as the Nexus Hub. **Nothing goes straight to `main`.**
 
 ## Open items (2026-10-08)
 
-- **Preview database:** previews share the live database. The proposed fix is in the latest cleanup pull request and waits for founder approval.
+- **Preview database:** previews have no Supabase key, so they're safe but empty. Proposal (awaiting founder approval): a free second Supabase project with sample data, whose keys are set for Vercel's *Preview* environment only.
 - **Database baseline:** `supabase/migrations/00000000000000_baseline.sql` will be written once `supabase/tools/schema-snapshot.sql` has been run on the live project.
 - **Commune boundaries:** `src/data/communes.json` contains simplified commune outlines. Replace them with official boundary polygons when available.
 - **`src/app/api/` review:** check caching, rate limits and error handling of `api/actualite` and `api/taux`.
