@@ -74,8 +74,7 @@ Same method as the Nexus Hub. **Nothing goes straight to `main`.**
 ## Open items (2026-10-08)
 
 - **Preview database:** previews have no Supabase key, so they're safe but empty. Decision (2026-10-08): keep it this way until the move to Supabase Pro, then add a staging database for previews.
-- **Legacy `dispatches` table:** open to anonymous inserts. The optional fix is in `supabase/pending/` (run only once the old journalism portal is retired).
+- **Legacy `dispatches` table:** open to anonymous inserts. Run `supabase/pending/20261008180000_lock_legacy_dispatches.sql`, then `supabase/tools/check-access.sql`.
 - **Commune boundaries:** `src/data/communes.json` holds *approximate* commune areas (official city outline from geoBoundaries, shared between the 24 communes by approximate size). Good enough for the map and for placing addresses, but not official. Replace with an official commune boundaries file (GeoJSON or shapefile) when one is supplied.
-- **Database access:** run `supabase/pending/20261008190000_tighten_access.sql`, then `supabase/tools/check-access.sql`.
 - **`src/app/api/` review:** check caching, rate limits and error handling of `api/actualite` and `api/taux`.
 - **Google API keys:** two old keys from an unused Google Maps setup are visible in the git history. The Places API isn't activated, so the risk is low; deleting both keys in Google Cloud (Credentials) closes it completely. If Google Maps is activated later, create a new key restricted to kinshasalabel.com.

@@ -7,6 +7,10 @@
 // republish article bodies — that keeps us on the right side of copyright
 // and sends the sources real traffic.
 //
+// Extra feeds (2026-10-08): a second page of each WordPress feed and the
+// publishers' own Kinshasa sections (provinces26, beto, zoom-eco, lepoint
+// tags/categories), so the city gets ~3 weeks of headlines, not 2 days.
+//
 // Feeds verified on 2026-10-04 (all valid RSS 2.0, updated the same day):
 //   lepoint.cd, provinces26rdc.com, mines.cd           (client's list)
 //   Radio Okapi, actualite.cd, mediacongo.net,
@@ -27,6 +31,12 @@ export type NewsSource = {
   feed: string;
   /** Backup feed addresses, tried in order if the main one fails. */
   altFeeds?: string[];
+  /**
+   * Extra feeds fetched IN ADDITION to the main one (older page, Kinshasa
+   * section). `kinshasa: true` = the publisher's own Kinshasa section, so
+   * the city test is skipped (the no-politics filter still applies).
+   */
+  extraFeeds?: { url: string; kinshasa?: boolean }[];
   color: string;
 };
 
@@ -34,12 +44,12 @@ export const NEWS_SOURCES: NewsSource[] = [
   { id: 'radiookapi', name: 'Radio Okapi', site: 'https://www.radiookapi.net', feed: 'https://feeds.feedburner.com/radiookapi/actu?format=xml', color: '#0E5FC9' },
   { id: 'actualite', name: 'Actualite.cd', site: 'https://actualite.cd', feed: 'https://actualite.cd/feed', color: '#D21C2E' },
   { id: 'mediacongo', name: 'Mediacongo', site: 'https://www.mediacongo.net', feed: 'https://www.mediacongo.net/flux_rss.html?type=actualite', color: '#1A82F5' },
-  { id: 'lepoint', name: 'Le Point.cd', site: 'https://lepoint.cd', feed: 'https://lepoint.cd/feed/', altFeeds: ['https://lepoint.cd/?feed=rss2', 'https://www.lepoint.cd/feed/'], color: '#A60E1D' },
-  { id: 'acp', name: 'ACP', site: 'https://acp.cd', feed: 'https://acp.cd/feed/', altFeeds: ['https://acp.cd/?feed=rss2', 'https://www.acp.cd/feed/'], color: '#0A2A66' },
-  { id: 'provinces26', name: 'Provinces26 RDC', site: 'https://provinces26rdc.com', feed: 'https://provinces26rdc.com/feed/', color: '#2E7D32' },
-  { id: 'zoomeco', name: 'Zoom Eco', site: 'https://zoom-eco.net', feed: 'https://zoom-eco.net/feed/', color: '#E8590C' },
-  { id: 'mines', name: 'Mines.cd', site: 'https://mines.cd', feed: 'https://mines.cd/feed/', altFeeds: ['https://mines.cd/?feed=rss2', 'https://www.mines.cd/feed/'], color: '#6D4C41' },
-  { id: 'beto', name: 'Beto.cd', site: 'https://beto.cd', feed: 'https://beto.cd/feed/', color: '#7B3FE4' },
+  { id: 'lepoint', name: 'Le Point.cd', site: 'https://lepoint.cd', feed: 'https://lepoint.cd/feed/', altFeeds: ['https://lepoint.cd/?feed=rss2', 'https://www.lepoint.cd/feed/'], extraFeeds: [{ url: 'https://lepoint.cd/feed/?paged=2' }, { url: 'https://lepoint.cd/tag/kinshasa/feed/', kinshasa: true }], color: '#A60E1D' },
+  { id: 'acp', name: 'ACP', site: 'https://acp.cd', feed: 'https://acp.cd/feed/', altFeeds: ['https://acp.cd/?feed=rss2', 'https://www.acp.cd/feed/'], extraFeeds: [{ url: 'https://acp.cd/feed/?paged=2' }, { url: 'https://acp.cd/category/kinshasa/feed/', kinshasa: true }], color: '#0A2A66' },
+  { id: 'provinces26', name: 'Provinces26 RDC', site: 'https://provinces26rdc.com', feed: 'https://provinces26rdc.com/feed/', extraFeeds: [{ url: 'https://provinces26rdc.com/feed/?paged=2' }, { url: 'https://provinces26rdc.com/category/kinshasa/feed/', kinshasa: true }, { url: 'https://provinces26rdc.com/category/kinshasa/feed/?paged=2', kinshasa: true }], color: '#2E7D32' },
+  { id: 'zoomeco', name: 'Zoom Eco', site: 'https://zoom-eco.net', feed: 'https://zoom-eco.net/feed/', extraFeeds: [{ url: 'https://zoom-eco.net/tag/kinshasa/feed/', kinshasa: true }], color: '#E8590C' },
+  { id: 'mines', name: 'Mines.cd', site: 'https://mines.cd', feed: 'https://mines.cd/feed/', altFeeds: ['https://mines.cd/?feed=rss2', 'https://www.mines.cd/feed/'], extraFeeds: [{ url: 'https://mines.cd/feed/?paged=2' }], color: '#6D4C41' },
+  { id: 'beto', name: 'Beto.cd', site: 'https://beto.cd', feed: 'https://beto.cd/feed/', extraFeeds: [{ url: 'https://beto.cd/feed/?paged=2' }, { url: 'https://beto.cd/tag/kinshasa/feed/', kinshasa: true }], color: '#7B3FE4' },
 ];
 
 export type NewsItem = {
@@ -103,6 +113,13 @@ const IN_CITY_TITLE_RE = /(?:^|\s)(?:à|a|dans|sur)\s+Kinshasa\b/i;
 const CITY_RE =
   /\b(?:de la ville de|ville de|ville-province de|province de|gouverneur de|gouvernorat de|habitants de|rues de|routes de|quartiers? de|communes? de|marchés? de|bourgmestres? de|embouteillages? (?:à|de)|inondations? (?:à|de)|planification de|urbanisme de|aménagement de|assainissement de|mobilité (?:à|de)|transports? (?:à|de)|circulation (?:à|de)|desserte (?:à|de))\s+Kinshasa\b|\bKinshasa\b[^.]{0,60}\burgences urbaines\b|\bKinshasa[\s-]ville\b|\bville[- ]province\b/i;
 
+// "Kinshasa replonge dans l'insalubrité", "Kinshasa : files d'attente pour
+// le carburant"… — the city named in the headline next to an everyday-life
+// subject. Government / diplomacy uses ("Kinshasa veut…", "Kinshasa et
+// Kigali") are removed afterwards by the no-politics filter.
+const CITY_LIFE_RE =
+  /insalubrit|assainissement|d[ée]chets|immondices|carburant|essence|embouteillage|bouchons?\b|circulation|inondation|[ée]rosion|pluie|[ée]lectricit[ée]|d[ée]lestage|coupures?|snel|regideso|eau potable|[ée]coles?|[ée]l[èe]ves|enseignants|universit|h[ôo]pital|sant[ée]|cholera|chol[ée]ra|mpox|march[ée]s?\b|prix|loyer|transport|bus\b|taxis?|wewa|routes?\b|voirie|travaux|chantier|fourri[èe]re|police|kuluna|ins[ée]curit|vols?\b|braquage|incendie|naufrage|concert|festival|musique|rumba|th[ée][âa]tre|exposition|stade|fête|bars?\b|bo[îi]tes de nuit|restaurants?|h[ôo]tels?|tourisme|barreau|escroquer|jeunes|enfants|femmes/i;
+
 export function detectCommune(text: string): string | null {
   for (const [re, name] of COMMUNE_PATTERNS) if (re.test(text)) return name;
   return null;
@@ -116,7 +133,8 @@ export function isAboutKinshasa(title: string, teaser = ''): boolean {
     DATELINE_RE.test(title) ||
     DATELINE_RE.test(teaser) ||
     IN_CITY_TITLE_RE.test(title) ||
-    CITY_RE.test(both)
+    CITY_RE.test(both) ||
+    (/\bKinshasa\b/i.test(title) && CITY_LIFE_RE.test(title))
   );
 }
 
@@ -317,12 +335,17 @@ export function parseFeed(xml: string, source: NewsSource): NewsItem[] {
   return out;
 }
 
-export function filterKinshasa(items: NewsItem[]): NewsItem[] {
+/** Headlines older than this are dropped (section feeds can hold years-old posts). */
+export const NEWS_MAX_AGE_DAYS = 21;
+
+export function filterKinshasa(items: NewsItem[], opts: { kinshasaSection?: boolean; now?: number } = {}): NewsItem[] {
+  const oldest = (opts.now ?? Date.now()) - NEWS_MAX_AGE_DAYS * 86400000;
   return items
     .filter((i) => {
+      if (i.date && Date.parse(i.date) < oldest) return false;
       const hay = (i as NewsItem & { _hay?: string })._hay;
       const [title, teaser] = hay ? (JSON.parse(hay) as [string, string]) : [i.title, i.teaser];
-      return isAboutKinshasa(title, teaser) && !isPolitical(i.title, teaser, i.categories || []);
+      return (opts.kinshasaSection || isAboutKinshasa(title, teaser)) && !isPolitical(i.title, teaser, i.categories || []);
     })
     .map((i) => {
       const { _hay, ...rest } = i as NewsItem & { _hay?: string };
