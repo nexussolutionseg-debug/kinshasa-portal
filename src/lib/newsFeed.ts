@@ -24,20 +24,35 @@ export const FEED_HEADERS = {
 export type SourceStatus = { id: string; name: string; site: string; color: string; ok: boolean; count: number };
 export type NewsFeed = { updatedAt: string; items: NewsItem[]; sources: SourceStatus[] };
 
-async function fetchSource(source: (typeof NEWS_SOURCES)[number]) {
+async function fetchXml(url: string) {
+  const res = await fetch(url, { headers: FEED_HEADERS, signal: AbortSignal.timeout(FEED_TIMEOUT_MS), next: { revalidate: NEWS_REVALIDATE } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const xml = await res.text();
+  if (!/<(rss|feed|rdf:RDF)[\s>]/i.test(xml)) throw new Error('not a feed');
+  return xml;
+}
+
+async function fetchMain(source: (typeof NEWS_SOURCES)[number]) {
   let lastError: unknown = null;
   for (const url of [source.feed, ...(source.altFeeds || [])]) {
     try {
-      const res = await fetch(url, { headers: FEED_HEADERS, signal: AbortSignal.timeout(FEED_TIMEOUT_MS), next: { revalidate: NEWS_REVALIDATE } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const xml = await res.text();
-      if (!/<(rss|feed|rdf:RDF)[\s>]/i.test(xml)) throw new Error('not a feed');
-      return filterKinshasa(parseFeed(xml, source));
+      return filterKinshasa(parseFeed(await fetchXml(url), source));
     } catch (e) {
       lastError = e;
     }
   }
   throw lastError;
+}
+
+/** Main feed (with backups) + extra feeds, each independent: one failing never hides the others. */
+async function fetchSource(source: (typeof NEWS_SOURCES)[number]) {
+  const results = await Promise.allSettled([
+    fetchMain(source),
+    ...(source.extraFeeds || []).map(async (x) => filterKinshasa(parseFeed(await fetchXml(x.url), source), { kinshasaSection: x.kinshasa })),
+  ]);
+  const ok = results.filter((r): r is PromiseFulfilledResult<NewsItem[]> => r.status === 'fulfilled');
+  if (!ok.length) throw (results[0] as PromiseRejectedResult).reason;
+  return ok.flatMap((r) => r.value);
 }
 
 export async function getNewsFeed(): Promise<NewsFeed> {
@@ -46,6 +61,7 @@ export async function getNewsFeed(): Promise<NewsFeed> {
   const items: NewsItem[] = [];
   const sources = NEWS_SOURCES.map((s, i) => {
     const r = results[i];
+    let count = 0;
     if (r.status === 'fulfilled') {
       for (const item of r.value) {
         const key = item.title.toLowerCase().replace(/\W+/g, ' ').trim();
@@ -53,8 +69,9 @@ export async function getNewsFeed(): Promise<NewsFeed> {
         seen.add(key);
         seen.add(item.link);
         items.push(item);
+        count++;
       }
-      return { id: s.id, name: s.name, site: s.site, color: s.color, ok: true, count: r.value.length };
+      return { id: s.id, name: s.name, site: s.site, color: s.color, ok: true, count };
     }
     return { id: s.id, name: s.name, site: s.site, color: s.color, ok: false, count: 0 };
   });

@@ -38,5 +38,11 @@ with checks as (
   union all
   select 'Banner uploads limited to images',
          coalesce((select allowed_mime_types is not null from storage.buckets where id = 'banners'), false), null
+  union all
+  select 'Old dispatches table: only the team can add rows',
+         not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'dispatches'
+                     and cmd in ('INSERT', 'ALL') and (with_check is null or with_check not ilike '%is_kl_admin%')),
+         (select string_agg(policyname || ' (' || array_to_string(roles, ',') || ')', ', ') from pg_policies
+           where schemaname = 'public' and tablename = 'dispatches' and cmd in ('INSERT', 'ALL'))
 )
 select * from checks;
