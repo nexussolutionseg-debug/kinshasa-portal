@@ -1,0 +1,2076 @@
+{
+    "grants": [
+        {
+            "table": "banners",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "banners",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "banners",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "banners",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "banners",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "banners",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "banners",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "banners",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "banners",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "banners",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "banners",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "banners",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "banners",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "banners",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "comments",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "comments",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "comments",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "comments",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "comments",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "comments",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "comments",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "comments",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "comments",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "comments",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "comments",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "comments",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "comments",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "dispatches",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "events",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "events",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "events",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "events",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "events",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "events",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "events",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "events",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "events",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "events",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "events",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "events",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "events",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "events",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "kl_admins",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "kl_secrets",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "news",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "news",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "news",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "news",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "news",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "news",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "news",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "news",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "news",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "news",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "news",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "news",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "news",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "news",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "partner_inquiries",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "places",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "places",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "places",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "places",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "places",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "places",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "places",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "places",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "places",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "places",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "places",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "places",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "places",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "places",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "security_alerts",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "site_settings",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "anon",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "anon",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "anon",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "anon",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "anon",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "anon",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "anon",
+            "privilege": "UPDATE"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "authenticated",
+            "privilege": "DELETE"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "authenticated",
+            "privilege": "INSERT"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "authenticated",
+            "privilege": "REFERENCES"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "authenticated",
+            "privilege": "SELECT"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "authenticated",
+            "privilege": "TRIGGER"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "authenticated",
+            "privilege": "TRUNCATE"
+        },
+        {
+            "table": "subscribers",
+            "grantee": "authenticated",
+            "privilege": "UPDATE"
+        }
+    ],
+    "tables": [
+        {
+            "rls": true,
+            "table": "banners",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "message",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "link_url",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "link_label",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "active",
+                    "type": "boolean",
+                    "default": "true",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "image_url",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "mobile_image_url",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "position",
+                    "type": "integer",
+                    "default": "0",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "starts_at",
+                    "type": "timestamp with time zone",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "ends_at",
+                    "type": "timestamp with time zone",
+                    "default": null,
+                    "nullable": "YES"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "comments",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "place_id",
+                    "type": "bigint",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "author_name",
+                    "type": "text",
+                    "default": "'Visiteur'::text",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "comment_text",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "rating",
+                    "type": "integer",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "hidden",
+                    "type": "boolean",
+                    "default": "false",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "ip_hash",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "dispatches",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "commune",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "category",
+                    "type": "text",
+                    "default": "'security'::text",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "title",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "details",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "author",
+                    "type": "text",
+                    "default": "'Press Desk'::text",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "content",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "url",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "events",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "title",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "commune",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "event_date",
+                    "type": "date",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "category",
+                    "type": "text",
+                    "default": "'Weekend Event'::text",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "description",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "image_url",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "url",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "is_weekend_featured",
+                    "type": "boolean",
+                    "default": "true",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "nullable": "YES"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "kl_admins",
+            "columns": [
+                {
+                    "name": "email",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "added_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "nullable": "NO"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "kl_secrets",
+            "columns": [
+                {
+                    "name": "name",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "value",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "news",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "title",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "body",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "commune",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "source_note",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "link_url",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "published_date",
+                    "type": "date",
+                    "default": "CURRENT_DATE",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "nullable": "NO"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "partner_inquiries",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "company_name",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "contact_name",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "email",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "phone",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "message",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "nullable": "NO"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "places",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "name",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "commune",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "vertical",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "description",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "address",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "budget",
+                    "type": "text",
+                    "default": "'$$'::text",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "lat",
+                    "type": "double precision",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "lng",
+                    "type": "double precision",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "image_url",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "is_label_recommended",
+                    "type": "boolean",
+                    "default": "true",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "google_maps_url",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "likes",
+                    "type": "integer",
+                    "default": "0",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "dislikes",
+                    "type": "integer",
+                    "default": "0",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "rating_sum",
+                    "type": "integer",
+                    "default": "0",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "rating_count",
+                    "type": "integer",
+                    "default": "0",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "featured",
+                    "type": "boolean",
+                    "default": "false",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "featured_rank",
+                    "type": "integer",
+                    "default": "0",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "phone",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "place_type",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "published",
+                    "type": "boolean",
+                    "default": "true",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "google_rating",
+                    "type": "numeric",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "google_reviews",
+                    "type": "integer",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "verification",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "YES"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "security_alerts",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "default": "nextval('security_alerts_id_seq'::regclass)",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "commune",
+                    "type": "USER-DEFINED",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "title",
+                    "type": "character varying",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "description",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "severity",
+                    "type": "character varying",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "CURRENT_TIMESTAMP",
+                    "nullable": "YES"
+                },
+                {
+                    "name": "expires_at",
+                    "type": "timestamp with time zone",
+                    "default": null,
+                    "nullable": "YES"
+                },
+                {
+                    "name": "journalist_id",
+                    "type": "uuid",
+                    "default": null,
+                    "nullable": "YES"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "site_settings",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "integer",
+                    "default": "1",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "data",
+                    "type": "jsonb",
+                    "default": "'{}'::jsonb",
+                    "nullable": "NO"
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "nullable": "NO"
+                }
+            ]
+        },
+        {
+            "rls": true,
+            "table": "subscribers",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "email",
+                    "type": "text",
+                    "default": null,
+                    "nullable": "NO"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "nullable": "NO"
+                }
+            ]
+        }
+    ],
+    "buckets": [
+        {
+            "id": "commune-videos",
+            "public": true
+        },
+        {
+            "id": "banners",
+            "public": true
+        }
+    ],
+    "indexes": [
+        {
+            "def": "CREATE UNIQUE INDEX banners_pkey ON public.banners USING btree (id)",
+            "table": "banners"
+        },
+        {
+            "def": "CREATE INDEX comments_ip_recent ON public.comments USING btree (ip_hash, created_at DESC)",
+            "table": "comments"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX comments_pkey ON public.comments USING btree (id)",
+            "table": "comments"
+        },
+        {
+            "def": "CREATE INDEX comments_place ON public.comments USING btree (place_id, created_at DESC)",
+            "table": "comments"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX dispatches_pkey ON public.dispatches USING btree (id)",
+            "table": "dispatches"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX events_pkey ON public.events USING btree (id)",
+            "table": "events"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX kl_admins_pkey ON public.kl_admins USING btree (email)",
+            "table": "kl_admins"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX kl_secrets_pkey ON public.kl_secrets USING btree (name)",
+            "table": "kl_secrets"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX news_pkey ON public.news USING btree (id)",
+            "table": "news"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX partner_inquiries_pkey ON public.partner_inquiries USING btree (id)",
+            "table": "partner_inquiries"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX places_pkey ON public.places USING btree (id)",
+            "table": "places"
+        },
+        {
+            "def": "CREATE INDEX places_published ON public.places USING btree (published)",
+            "table": "places"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX security_alerts_pkey ON public.security_alerts USING btree (id)",
+            "table": "security_alerts"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX site_settings_pkey ON public.site_settings USING btree (id)",
+            "table": "site_settings"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX subscribers_email_key ON public.subscribers USING btree (email)",
+            "table": "subscribers"
+        },
+        {
+            "def": "CREATE UNIQUE INDEX subscribers_pkey ON public.subscribers USING btree (id)",
+            "table": "subscribers"
+        }
+    ],
+    "policies": [
+        {
+            "cmd": "SELECT",
+            "name": "public read",
+            "check": null,
+            "roles": [
+                "anon",
+                "authenticated"
+            ],
+            "table": "banners",
+            "using": "true"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "team delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "banners",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "team insert",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "banners",
+            "using": null
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "team update",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "banners",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "public read visible",
+            "check": null,
+            "roles": [
+                "anon",
+                "authenticated"
+            ],
+            "table": "comments",
+            "using": "((hidden = false) OR is_kl_admin())"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "team delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "comments",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "team update",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "comments",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "Allow authenticated insert dispatches",
+            "check": "true",
+            "roles": [
+                "public"
+            ],
+            "table": "dispatches",
+            "using": null
+        },
+        {
+            "cmd": "SELECT",
+            "name": "Allow public read dispatches",
+            "check": null,
+            "roles": [
+                "public"
+            ],
+            "table": "dispatches",
+            "using": "true"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "Enable read access for all users",
+            "check": null,
+            "roles": [
+                "public"
+            ],
+            "table": "dispatches",
+            "using": "true"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "public read",
+            "check": null,
+            "roles": [
+                "anon",
+                "authenticated"
+            ],
+            "table": "events",
+            "using": "true"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "team delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "events",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "team insert",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "events",
+            "using": null
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "team update",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "events",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "public read",
+            "check": null,
+            "roles": [
+                "anon",
+                "authenticated"
+            ],
+            "table": "news",
+            "using": "true"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "team delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "news",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "team insert",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "news",
+            "using": null
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "team update",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "news",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "banners public read",
+            "check": null,
+            "roles": [
+                "anon",
+                "authenticated"
+            ],
+            "table": "objects",
+            "using": "(bucket_id = 'banners'::text)"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "banners team delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "objects",
+            "using": "((bucket_id = 'banners'::text) AND is_kl_admin())"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "banners team update",
+            "check": "((bucket_id = 'banners'::text) AND is_kl_admin())",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "objects",
+            "using": "((bucket_id = 'banners'::text) AND is_kl_admin())"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "banners team upload",
+            "check": "((bucket_id = 'banners'::text) AND is_kl_admin())",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "objects",
+            "using": null
+        },
+        {
+            "cmd": "INSERT",
+            "name": "public submit",
+            "check": "true",
+            "roles": [
+                "anon",
+                "authenticated"
+            ],
+            "table": "partner_inquiries",
+            "using": null
+        },
+        {
+            "cmd": "DELETE",
+            "name": "team delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "partner_inquiries",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "team read",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "partner_inquiries",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "public read",
+            "check": null,
+            "roles": [
+                "anon",
+                "authenticated"
+            ],
+            "table": "places",
+            "using": "(published OR is_kl_admin())"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "team delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "places",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "team insert",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "places",
+            "using": null
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "team update",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "places",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "Allow authenticated insert",
+            "check": "(auth.role() = 'authenticated'::text)",
+            "roles": [
+                "public"
+            ],
+            "table": "security_alerts",
+            "using": null
+        },
+        {
+            "cmd": "SELECT",
+            "name": "Allow public read access",
+            "check": null,
+            "roles": [
+                "public"
+            ],
+            "table": "security_alerts",
+            "using": "true"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "public read",
+            "check": null,
+            "roles": [
+                "anon",
+                "authenticated"
+            ],
+            "table": "site_settings",
+            "using": "true"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "team delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "site_settings",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "team insert",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "site_settings",
+            "using": null
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "team update",
+            "check": "is_kl_admin()",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "site_settings",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "public subscribe",
+            "check": "((char_length(email) <= 254) AND (email ~* '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$'::text))",
+            "roles": [
+                "anon",
+                "authenticated"
+            ],
+            "table": "subscribers",
+            "using": null
+        },
+        {
+            "cmd": "DELETE",
+            "name": "team delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "subscribers",
+            "using": "is_kl_admin()"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "team read",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "subscribers",
+            "using": "is_kl_admin()"
+        }
+    ],
+    "taken_at": "2026-10-08T16:18:39.940817+00:00",
+    "triggers": [
+        {
+            "name": "comments_after_delete",
+            "event": "DELETE",
+            "table": "comments",
+            "action": "EXECUTE FUNCTION comments_after_delete()",
+            "timing": "AFTER"
+        }
+    ],
+    "functions": [
+        {
+            "def": "CREATE OR REPLACE FUNCTION public.comments_after_delete()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nbegin\r\n  if old.rating is not null then\r\n    update public.places\r\n       set rating_sum = greatest(coalesce(rating_sum, 0) - old.rating, 0),\r\n           rating_count = greatest(coalesce(rating_count, 0) - 1, 0)\r\n     where id = old.place_id;\r\n  end if;\r\n  return old;\r\nend;\r\n$function$\n",
+            "name": "comments_after_delete"
+        },
+        {
+            "def": "CREATE OR REPLACE FUNCTION public.is_kl_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\n  select exists (\r\n    select 1 from public.kl_admins\r\n    where email = lower(coalesce(auth.jwt() ->> 'email', ''))\r\n  );\r\n$function$\n",
+            "name": "is_kl_admin"
+        },
+        {
+            "def": "CREATE OR REPLACE FUNCTION public.rate_place(p_place_id bigint, p_value integer)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nbegin\r\n  if p_value is null or p_value < 1 or p_value > 5 then\r\n    raise exception 'rating must be between 1 and 5';\r\n  end if;\r\n  update public.places\r\n     set rating_sum = coalesce(rating_sum, 0) + p_value,\r\n         rating_count = coalesce(rating_count, 0) + 1\r\n   where id = p_place_id;\r\nend;\r\n$function$\n",
+            "name": "rate_place"
+        },
+        {
+            "def": "CREATE OR REPLACE FUNCTION public.submit_review(p_place_id bigint, p_rating integer, p_author text DEFAULT NULL::text, p_text text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\ndeclare\r\n  hdrs json := coalesce(nullif(current_setting('request.headers', true), ''), '{}')::json;\r\n  ip text := coalesce(hdrs->>'cf-connecting-ip', split_part(coalesce(hdrs->>'x-forwarded-for', ''), ',', 1), 'unknown');\r\n  salt text := (select value from public.kl_secrets where name = 'ip_salt');\r\n  h text := md5(trim(ip) || coalesce(salt, ''));\r\n  txt text := nullif(trim(coalesce(p_text, '')), '');\r\n  who text := nullif(trim(coalesce(p_author, '')), '');\r\nbegin\r\n  if p_rating is null or p_rating < 1 or p_rating > 5 then\r\n    raise exception 'La note doit être entre 1 et 5.';\r\n  end if;\r\n  if char_length(coalesce(txt, '')) > 1000 then raise exception 'Avis trop long (1000 caractères max).'; end if;\r\n  if char_length(coalesce(who, '')) > 60 then raise exception 'Nom trop long.'; end if;\r\n  if not exists (select 1 from public.places where id = p_place_id) then raise exception 'Lieu introuvable.'; end if;\r\n\r\n  if (select count(*) from public.comments where ip_hash = h and place_id = p_place_id and created_at > now() - interval '24 hours') >= 2 then\r\n    raise exception 'Vous avez déjà donné votre avis sur ce lieu aujourd''hui. Merci !';\r\n  end if;\r\n  if (select count(*) from public.comments where ip_hash = h and created_at > now() - interval '1 hour') >= 10 then\r\n    raise exception 'Trop d''avis envoyés en peu de temps. Réessayez plus tard.';\r\n  end if;\r\n\r\n  insert into public.comments (place_id, author_name, comment_text, rating, ip_hash)\r\n  values (p_place_id, coalesce(who, 'Kinois'), txt, p_rating, h);\r\n\r\n  update public.places\r\n     set rating_sum = coalesce(rating_sum, 0) + p_rating,\r\n         rating_count = coalesce(rating_count, 0) + 1\r\n   where id = p_place_id;\r\nend;\r\n$function$\n",
+            "name": "submit_review"
+        }
+    ],
+    "constraints": [
+        {
+            "def": "PRIMARY KEY (id)",
+            "name": "banners_pkey",
+            "table": "banners"
+        },
+        {
+            "def": "PRIMARY KEY (id)",
+            "name": "comments_pkey",
+            "table": "comments"
+        },
+        {
+            "def": "FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE",
+            "name": "comments_place_id_fkey",
+            "table": "comments"
+        },
+        {
+            "def": "CHECK (((rating >= 1) AND (rating <= 5)))",
+            "name": "comments_rating_check",
+            "table": "comments"
+        },
+        {
+            "def": "PRIMARY KEY (id)",
+            "name": "dispatches_pkey",
+            "table": "dispatches"
+        },
+        {
+            "def": "PRIMARY KEY (id)",
+            "name": "events_pkey",
+            "table": "events"
+        },
+        {
+            "def": "PRIMARY KEY (email)",
+            "name": "kl_admins_pkey",
+            "table": "kl_admins"
+        },
+        {
+            "def": "PRIMARY KEY (name)",
+            "name": "kl_secrets_pkey",
+            "table": "kl_secrets"
+        },
+        {
+            "def": "PRIMARY KEY (id)",
+            "name": "news_pkey",
+            "table": "news"
+        },
+        {
+            "def": "PRIMARY KEY (id)",
+            "name": "partner_inquiries_pkey",
+            "table": "partner_inquiries"
+        },
+        {
+            "def": "PRIMARY KEY (id)",
+            "name": "places_pkey",
+            "table": "places"
+        },
+        {
+            "def": "FOREIGN KEY (journalist_id) REFERENCES auth.users(id)",
+            "name": "security_alerts_journalist_id_fkey",
+            "table": "security_alerts"
+        },
+        {
+            "def": "PRIMARY KEY (id)",
+            "name": "security_alerts_pkey",
+            "table": "security_alerts"
+        },
+        {
+            "def": "CHECK (((severity)::text = ANY ((ARRAY['low'::character varying, 'medium'::character varying, 'high'::character varying])::text[])))",
+            "name": "security_alerts_severity_check",
+            "table": "security_alerts"
+        },
+        {
+            "def": "CHECK ((id = 1))",
+            "name": "site_settings_id_check",
+            "table": "site_settings"
+        },
+        {
+            "def": "PRIMARY KEY (id)",
+            "name": "site_settings_pkey",
+            "table": "site_settings"
+        },
+        {
+            "def": "UNIQUE (email)",
+            "name": "subscribers_email_key",
+            "table": "subscribers"
+        },
+        {
+            "def": "PRIMARY KEY (id)",
+            "name": "subscribers_pkey",
+            "table": "subscribers"
+        }
+    ]
+}

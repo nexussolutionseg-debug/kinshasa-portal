@@ -73,8 +73,8 @@ Same method as the Nexus Hub. **Nothing goes straight to `main`.**
 
 ## Open items (2026-10-08)
 
-- **Preview database:** previews have no Supabase key, so they're safe but empty. Proposal (awaiting founder approval): a free second Supabase project with sample data, whose keys are set for Vercel's *Preview* environment only.
-- **Database baseline:** `supabase/migrations/00000000000000_baseline.sql` will be written once `supabase/tools/schema-snapshot.sql` has been run on the live project.
+- **Preview database:** previews have no Supabase key, so they're safe but empty. Decision (2026-10-08): keep it this way until the move to Supabase Pro, then add a staging database for previews.
+- **Legacy `dispatches` table:** open to anonymous inserts. The optional fix is in `supabase/pending/` (run only once the old journalism portal is retired).
 - **Commune boundaries:** `src/data/communes.json` contains simplified commune outlines. Replace them with official boundary polygons when available.
 - **`src/app/api/` review:** check caching, rate limits and error handling of `api/actualite` and `api/taux`.
-- **Google API keys:** two old Google Places keys are visible in the git history (public repo). Rotate them in Google Cloud and delete the old ones.
+- **Google API keys:** two old keys from an unused Google Maps setup are visible in the git history. The Places API isn't activated, so the risk is low; deleting both keys in Google Cloud (Credentials) closes it completely. If Google Maps is activated later, create a new key restricted to kinshasalabel.com.
