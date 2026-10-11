@@ -10,6 +10,9 @@
 // rather than resetting every session, and can be changed later via the
 // "Gérer les cookies" link in the footer, which fires a reset event this
 // component listens for.
+//
+// Not answered? The bar shows on the first visit and one more, then stops
+// asking (Google Analytics stays off). See src/lib/visitorPrompts.ts.
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -24,16 +27,26 @@ import {
   storeConsent,
   type ConsentValue,
 } from '../lib/consent';
+import { registerVisit, claimCookieBanner, allowCookieBannerAgain, noteArrivalFromEmail } from '../lib/visitorPrompts';
 
 export function CookieConsentBanner() {
   const [consent, setConsent] = useState<ConsentValue>('unknown');
   const [hydrated, setHydrated] = useState(false);
+  const [ask, setAsk] = useState(false);
 
   useEffect(() => {
-    setConsent(readStoredConsent());
+    registerVisit();
+    noteArrivalFromEmail();
+    const stored = readStoredConsent();
+    setConsent(stored);
+    setAsk(stored === 'unknown' && claimCookieBanner());
     setHydrated(true);
 
-    const onReset = () => setConsent('unknown');
+    const onReset = () => {
+      allowCookieBannerAgain();
+      setConsent('unknown');
+      setAsk(true);
+    };
     window.addEventListener(COOKIE_CONSENT_RESET_EVENT, onReset);
     return () => window.removeEventListener(COOKIE_CONSENT_RESET_EVENT, onReset);
   }, []);
@@ -52,7 +65,7 @@ export function CookieConsentBanner() {
     <>
       {consent === 'granted' && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
 
-      {hydrated && consent === 'unknown' && (
+      {hydrated && consent === 'unknown' && ask && (
         <div
           role="region"
           aria-label="Cookies"
