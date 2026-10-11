@@ -1,11 +1,10 @@
-// Compact email-capture form embedded in the site footer. Stores addresses
-// straight into Supabase (public.subscribers, insert-only for the anon
-// client) — no email-sending service is connected yet, so this is purely
-// a list to export later once one is chosen.
+// Compact email-capture form embedded in the site footer. Goes through
+// /api/subscribe, which saves the address (public.subscribers) and sends the
+// welcome email once an email service is configured (see that route).
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { subscribeEmail } from '../lib/visitorPrompts';
 import { Button } from './Button';
 import { IconMail } from './icons';
 
@@ -21,20 +20,12 @@ export function NewsletterSignup() {
 
     setStatus('loading');
     setErrorMsg('');
-    const { error } = await supabase.from('subscribers').insert([{ email: trimmed }]);
-
-    if (error) {
-      // Postgres unique_violation on the email column — already subscribed.
-      if (error.code === '23505') {
-        setStatus('success');
-        setEmail('');
-      } else {
-        setStatus('error');
-        setErrorMsg("Une erreur est survenue, réessaie plus tard.");
-      }
+    const result = await subscribeEmail(trimmed, 'footer');
+    if (result !== 'ok') {
+      setStatus('error');
+      setErrorMsg(result === 'invalid' ? 'Cette adresse e-mail ne semble pas valide.' : 'Une erreur est survenue, réessaie plus tard.');
       return;
     }
-
     setStatus('success');
     setEmail('');
   };

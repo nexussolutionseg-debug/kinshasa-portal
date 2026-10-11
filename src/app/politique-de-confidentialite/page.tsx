@@ -9,7 +9,7 @@ import { ManageCookiesLink } from '../../components/ManageCookiesLink';
 // Not legal advice: have a lawyer confirm it against the data-protection
 // law that applies to the operator and audience before relying on it.
 // Keep LAST_UPDATED in sync whenever the content changes.
-const LAST_UPDATED = '8 octobre 2026';
+const LAST_UPDATED = '11 octobre 2026';
 const CONTACT = 'contact@kinshasalabel.com';
 
 export const metadata = {
@@ -64,6 +64,7 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong>Newsletter.</strong> Ton adresse e-mail et la date d&apos;inscription, uniquement si tu t&apos;abonnes.
+                Tu reçois alors un e-mail de bienvenue, puis la newsletter.
               </li>
               <li>
                 <strong>Formulaire « Deviens partenaire ».</strong> Les coordonnées et le message que tu nous envoies
@@ -81,7 +82,8 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc pl-5 m-0 flex flex-col gap-1.5">
               <li>la liste des lieux que tu as déjà notés (pour éviter les doubles votes) ;</li>
               <li>ton choix concernant Google Analytics (accepté / refusé) ;</li>
-              <li>le fait que tu sois déjà abonné(e) à la newsletter, ou que l&apos;invitation ait déjà été affichée pendant ta visite.</li>
+              <li>le fait que tu sois déjà abonné(e) à la newsletter, et quand l&apos;invitation et le bandeau cookies t&apos;ont été montrés, pour ne pas te les reproposer sans cesse ;</li>
+              <li>le nombre de tes visites (un simple compteur, sans aucune donnée sur toi).</li>
             </ul>
             <p className="m-0 mt-2">Tu peux tout effacer à tout moment depuis les réglages de ton navigateur.</p>
           </section>
@@ -128,8 +130,8 @@ export default function PrivacyPolicyPage() {
             <H2 n={6}>Hébergement et partage</H2>
             <p className="m-0">
               Le site est hébergé par <strong>Vercel</strong> et les données (lieux, notes, avis, abonnés, demandes de
-              partenariat) par <strong>Supabase</strong>. Lorsque nous envoyons la newsletter, les adresses peuvent être
-              transmises à un service d&apos;envoi d&apos;e-mails (par exemple Brevo ou Mailchimp) agissant pour notre compte.
+              partenariat) par <strong>Supabase</strong>. Pour envoyer l&apos;e-mail de bienvenue et la newsletter, ton adresse est
+              transmise à <strong>Brevo</strong> (société française), service d&apos;envoi d&apos;e-mails agissant pour notre compte.
               Nous ne vendons ni ne louons aucune donnée.
             </p>
           </section>

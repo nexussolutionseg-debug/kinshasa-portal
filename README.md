@@ -71,6 +71,14 @@ Same method as the Nexus Hub. **Nothing goes straight to `main`.**
 - No empty blocks: a section with no data is hidden. Kin Weekend only appears in menus, tiles and the hero with at least 5 upcoming events (`src/lib/events.ts`).
 - Commune links always use `communeHref()` (`src/lib/communes.ts`) so addresses stay clean (`/commune/ndjili`).
 
+## Newsletter and welcome email (Brevo)
+
+Sign-ups (homepage popup and footer form) go through `src/app/api/subscribe/route.ts`. It saves the address in Supabase and, for a new subscriber, sends the welcome email (`src/lib/welcomeEmail.ts`) through Brevo and adds the contact to the Brevo newsletter list. Without the Brevo settings, sign-ups are saved only.
+
+Vercel → Settings → Environment Variables (Production): `BREVO_API_KEY` (required), `BREVO_LIST_ID` (the newsletter list's number), and optionally `BREVO_SENDER_EMAIL` (default `contact@kinshasalabel.com`, must be verified in Brevo) and `BREVO_SENDER_NAME`.
+
+When the cookie bar and the newsletter invitation may appear is set in `src/lib/visitorPrompts.ts`.
+
 ## Open items (2026-10-08)
 
 - **Preview database:** previews have no Supabase key, so they're safe but empty. Decision (2026-10-08): keep it this way until the move to Supabase Pro, then add a staging database for previews.

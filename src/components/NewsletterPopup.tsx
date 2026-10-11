@@ -11,19 +11,18 @@
 //    Inputs are now 16px (also enforced globally in globals.css).
 //  - Big 44px close button, Escape closes, body scroll locked while open.
 //
-// Still once per browser session (sessionStorage), and never again for a
-// browser that has subscribed (localStorage). The footer form remains the
-// permanent way to subscribe.
+// When it may appear (2026-10-11, "don't bore visitors"): never on a first
+// visit, never in a visit where the cookie bar showed, never to subscribers,
+// then rests 14 days, 45 days, and stops after 3 times. Rules and storage
+// in src/lib/visitorPrompts.ts. The footer form remains the permanent way
+// to subscribe.
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { readStoredConsent } from '../lib/consent';
+import { registerVisit, newsletterPopupAllowed, recordNewsletterPopupShown, subscribeEmail } from '../lib/visitorPrompts';
 import { IconClose } from './icons';
 
-const SESSION_KEY = 'kin_newsletter_popup_shown';
-const SUBSCRIBED_KEY = 'kin_newsletter_subscribed';
-const MIN_TIME_MS = 25_000;
+const MIN_TIME_MS = 30_000;
 const SCROLL_RATIO = 0.45;
 
 export function NewsletterPopup() {
@@ -33,26 +32,19 @@ export function NewsletterPopup() {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    try {
-      if (localStorage.getItem(SUBSCRIBED_KEY) === '1' || sessionStorage.getItem(SESSION_KEY) === '1') return;
-    } catch {
-      return;
-    }
+    const visit = registerVisit();
+    if (!newsletterPopupAllowed(visit)) return;
 
     let shown = false;
     const start = Date.now();
     const maybeShow = () => {
       if (shown) return;
-      if (readStoredConsent() === 'unknown') return; // cookie banner still up
       const doc = document.documentElement;
       const scrolled = (window.scrollY + window.innerHeight) / Math.max(doc.scrollHeight, 1);
       if (scrolled < SCROLL_RATIO && Date.now() - start < MIN_TIME_MS) return;
+      if (!newsletterPopupAllowed(visit)) return cleanup(); // e.g. the cookie bar showed meanwhile
       shown = true;
-      try {
-        sessionStorage.setItem(SESSION_KEY, '1');
-      } catch {
-        /* ignore */
-      }
+      recordNewsletterPopupShown();
       setVisible(true);
       cleanup();
     };
@@ -85,20 +77,14 @@ export function NewsletterPopup() {
     if (!trimmed) return;
     setStatus('loading');
     setErrorMsg('');
-    const { error } = await supabase.from('subscribers').insert([{ email: trimmed }]);
-    if (error && error.code !== '23505') {
-      // 23505 = already subscribed, which is a success from the visitor's side
+    const result = await subscribeEmail(trimmed, 'popup');
+    if (result !== 'ok') {
       setStatus('error');
-      setErrorMsg('Une erreur est survenue, réessaie plus tard.');
+      setErrorMsg(result === 'invalid' ? 'Cette adresse e-mail ne semble pas valide.' : 'Une erreur est survenue, réessaie plus tard.');
       return;
     }
     setStatus('success');
-    try {
-      localStorage.setItem(SUBSCRIBED_KEY, '1');
-    } catch {
-      /* ignore */
-    }
-    setTimeout(close, 2200);
+    setTimeout(close, 2600);
   };
 
   if (!visible) return null;
