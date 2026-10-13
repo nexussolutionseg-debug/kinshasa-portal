@@ -77,6 +77,8 @@ Sign-ups (homepage popup and footer form) go through `src/app/api/subscribe/rout
 
 Vercel → Settings → Environment Variables (Production): `BREVO_API_KEY` (required), `BREVO_LIST_ID` (the newsletter list's number), and optionally `BREVO_SENDER_EMAIL` (default `contact@kinshasalabel.com`, must be verified in Brevo) and `BREVO_SENDER_NAME`.
 
+**Weekly newsletter on autopilot.** Every Wednesday morning Vercel runs `src/app/api/cron/newsletter/route.ts` (schedule in `vercel.json`). It builds "Le meilleur de Kin" from the site's events, places and Kin Actualité (`src/lib/weeklyNewsletter.ts`), creates the campaign in Brevo for the newsletter list, and emails the team a report (this week's issue + last issue's opens, clicks, unsubscribes + list size). Weeks with nothing new are skipped. Extra settings: `CRON_SECRET` (any long random text, required), `NEWSLETTER_AUTOSEND=1` to schedule it for Thursday 10:00 Kinshasa automatically (otherwise it waits as a draft in Brevo), `NEWSLETTER_REPORT_TO` (default `contact@kinshasalabel.com`).
+
 When the cookie bar and the newsletter invitation may appear is set in `src/lib/visitorPrompts.ts`.
 
 ## Open items (2026-10-08)
