@@ -11,6 +11,26 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [mode, setMode] = useState<'login' | 'forgot' | 'sent'>('login');
+
+  // "Mot de passe oublié" (2026-10-13): Supabase emails a reset link (branded
+  // template + Kinshasa Label sender, see supabase/email-templates/README.md)
+  // that opens /login/nouveau-mot-de-passe. The message is the same whether
+  // or not the address has an account, so nobody can probe who is on the team.
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/login/nouveau-mot-de-passe`,
+    });
+    setLoading(false);
+    if (error && /rate|too many|seconds/i.test(error.message)) {
+      setErrorMsg('Trop de demandes. Réessaie dans quelques minutes.');
+      return;
+    }
+    setMode('sent');
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +103,42 @@ export default function LoginPage() {
             </div>
           )}
 
+          {mode === 'sent' && (
+            <div className="flex flex-col gap-4">
+              <p className="bg-brand-blue-soft text-brand-blue-deep rounded-xl p-4 text-sm font-semibold m-0 leading-relaxed">
+                Si cette adresse fait partie de l&apos;équipe, un e-mail avec un lien pour choisir un nouveau mot de passe vient
+                de partir. Pense à regarder dans les spams.
+              </p>
+              <Button type="button" variant="secondary" size="md" fullWidth onClick={() => setMode('login')}>
+                ← Retour à la connexion
+              </Button>
+            </div>
+          )}
+
+          {mode === 'forgot' && (
+            <form onSubmit={handleForgot} className="flex flex-col gap-4">
+              <p className="text-sm text-brand-muted m-0 leading-snug">
+                Indique ton e-mail : tu recevras un lien pour choisir un nouveau mot de passe.
+              </p>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ton@email.com"
+                className={inputClass}
+              />
+              <Button type="submit" disabled={loading} variant="primary" size="lg" fullWidth>
+                {loading ? 'Envoi…' : 'Recevoir le lien'}
+              </Button>
+              <button type="button" onClick={() => setMode('login')} className="text-sm font-semibold text-brand-muted hover:text-brand-ink cursor-pointer">
+                ← Retour à la connexion
+              </button>
+            </form>
+          )}
+
           {/* Login Form */}
+          {mode === 'login' && (
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div className="bg-brand-bg border border-brand-line rounded-xl p-4 flex flex-col gap-4">
 
@@ -97,7 +152,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="contact@kinshasa-label.cd"
+                  placeholder="ton@email.com"
                   className={inputClass}
                 />
               </div>
@@ -123,7 +178,18 @@ export default function LoginPage() {
             <Button type="submit" disabled={loading} variant="primary" size="lg" fullWidth className="mt-1">
               {loading ? 'Connexion en cours...' : 'Se connecter →'}
             </Button>
+            <button
+              type="button"
+              onClick={() => {
+                setErrorMsg('');
+                setMode('forgot');
+              }}
+              className="text-sm font-semibold text-brand-blue-deep hover:underline cursor-pointer"
+            >
+              Mot de passe oublié ?
+            </button>
           </form>
+          )}
 
         </div>
       </div>

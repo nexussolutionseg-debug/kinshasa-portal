@@ -66,6 +66,10 @@ export type HomeInitial = {
 // the best-known ones (so the block is never empty, even before places).
 const FEATURED_COMMUNES_FALLBACK = ['Gombe', 'Limete', 'Ngaliema', 'Bandalungwa', 'Kalamu', 'Lemba'];
 
+/** Places listed beside the map before "Voir tout", and max "Coups de cœur". */
+const HOME_LIST_MAX = 6;
+const HOME_FEATURED_MAX = 8;
+
 export function HomeClient({ initial }: { initial: HomeInitial }) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -79,6 +83,7 @@ export function HomeClient({ initial }: { initial: HomeInitial }) {
   const [selectedCommune, setSelectedCommune] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [openPlace, setOpenPlace] = useState<any | null>(null);
+  const [showAllPlaces, setShowAllPlaces] = useState(false);
 
   const news = useKinNews(undefined, initial.news);
   const allNews = useMemo(() => [...news.pinned, ...news.live], [news.pinned, news.live]);
@@ -112,7 +117,7 @@ export function HomeClient({ initial }: { initial: HomeInitial }) {
 
   // Hand-picked in Backoffice → Vitrine → Coups de cœur.
   const featuredPlaces = useMemo(
-    () => placeList.filter((p) => p.featured).sort((a, b) => (a.featured_rank ?? 0) - (b.featured_rank ?? 0)),
+    () => placeList.filter((p) => p.featured).sort((a, b) => (a.featured_rank ?? 0) - (b.featured_rank ?? 0)).slice(0, HOME_FEATURED_MAX),
     [placeList]
   );
   const byCategory = useMemo(() => {
@@ -130,6 +135,15 @@ export function HomeClient({ initial }: { initial: HomeInitial }) {
       ),
     [placeList, mapFilter, selectedCommune]
   );
+
+  // Homepage stays short (2026-10-13): the list beside the map shows the
+  // best few (photo + rating first); "Voir tout" opens the rest.
+  const listPlaces = useMemo(() => {
+    const score = (p: any) => (p.image_url ? 1 : 0) * 10 + (getAverageRating(p) ?? 0);
+    const sorted = [...mapPlaces].sort((a, b) => score(b) - score(a));
+    return showAllPlaces ? sorted : sorted.slice(0, HOME_LIST_MAX);
+  }, [mapPlaces, showAllPlaces]);
+  useEffect(() => setShowAllPlaces(false), [mapFilter, selectedCommune]);
 
   const upcomingEvents = useMemo(() => upcoming(events), [events]);
   const weekendOn = upcomingEvents.length >= WEEKEND_MIN;
@@ -423,7 +437,7 @@ export function HomeClient({ initial }: { initial: HomeInitial }) {
                 </div>
               ) : (
                 <ul className="list-none p-0 m-0 overflow-y-auto -mx-1 px-1">
-                  {mapPlaces.map((p) => {
+                  {listPlaces.map((p) => {
                     const avg = getAverageRating(p);
                     return (
                       <li key={p.id}>
@@ -449,6 +463,26 @@ export function HomeClient({ initial }: { initial: HomeInitial }) {
                     );
                   })}
                 </ul>
+              )}
+
+              {mapFilter !== 'kin_traffic' && mapPlaces.length > HOME_LIST_MAX && (
+                <div className="pt-3 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllPlaces((v) => !v)}
+                    className="inline-flex items-center justify-center gap-1.5 w-full border-2 border-brand-line text-brand-ink font-bold py-2.5 rounded-full cursor-pointer hover:border-brand-blue"
+                  >
+                    {showAllPlaces ? 'Voir moins' : <>Voir tout ({mapPlaces.length}) <IconArrowRight size={14} /></>}
+                  </button>
+                  {!selectedCommune && mapFilter !== 'all' && CATEGORY_PATH[mapFilter as keyof typeof CATEGORY_PATH] && (
+                    <Link
+                      href={CATEGORY_PATH[mapFilter as keyof typeof CATEGORY_PATH]}
+                      className="text-center text-sm font-bold text-brand-blue-deep no-underline hover:underline"
+                    >
+                      Ouvrir la page {categoryOf(mapFilter).label} →
+                    </Link>
+                  )}
+                </div>
               )}
 
               {/* Only once a commune is picked, so the link always has context. */}
