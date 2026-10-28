@@ -97,7 +97,7 @@ export default function BackofficePage() {
     if (!error && data) setEventsList(data);
   };
 
-  useEffect(() => { fetchEvents(); fetchNewsItems(); fetchEditorialSetting(); }, []);
+  useEffect(() => { fetchEvents(); fetchNewsItems(); }, []);
 
   const resetEventForm = () => {
     setEditingEventId(null);
@@ -179,28 +179,6 @@ export default function BackofficePage() {
   const [nwImage, setNwImage] = useState('');
   const [nwHadImage, setNwHadImage] = useState(false);
   const [nwUploading, setNwUploading] = useState(false);
-  // Team articles only appear on the site when Vitrine → Options →
-  // "Afficher nos articles « À la une »" is on (2026-10-28: the client
-  // published articles that stayed invisible because it was off).
-  const [editorialOn, setEditorialOn] = useState<boolean | null>(null);
-
-  const fetchEditorialSetting = async () => {
-    const { data } = await supabase.from('site_settings').select('data').eq('id', 1).maybeSingle();
-    setEditorialOn(!!(data?.data && (data.data as any).showEditorial === true));
-  };
-
-  const turnEditorialOn = async () => {
-    const { data } = await supabase.from('site_settings').select('data').eq('id', 1).maybeSingle();
-    const next = { ...((data?.data as object) || {}), showEditorial: true };
-    const { error } = await supabase.from('site_settings').upsert({ id: 1, data: next, updated_at: new Date().toISOString() });
-    if (error) {
-      setStatusMsg({ type: 'error', text: `Impossible d’activer l’affichage : ${error.message}` });
-      return;
-    }
-    setEditorialOn(true);
-    setStatusMsg({ type: 'success', text: 'Vos articles « À la une » sont maintenant visibles sur le site (Kin Actualité et accueil).' });
-  };
-
   const fetchNewsItems = async () => {
     const { data, error } = await supabase.from('news').select('*').order('published_date', { ascending: false });
     if (!error && data) setNewsList(data);
@@ -251,11 +229,11 @@ export default function BackofficePage() {
       if (editingNewsId) {
         const { error } = await supabase.from('news').update(payload).eq('id', editingNewsId);
         if (error) throw error;
-        setStatusMsg({ type: 'success', text: editorialOn === false ? `Actualité "${nwTitle}" mise à jour, mais pas encore visible : activez l’affichage ci-dessous.` : `Actualité "${nwTitle}" mise à jour : visible sur le site.` });
+        setStatusMsg({ type: 'success', text: `Actualité "${nwTitle}" mise à jour : visible sur le site (Kin Actualité et accueil).` });
       } else {
         const { error } = await supabase.from('news').insert([payload]);
         if (error) throw error;
-        setStatusMsg({ type: 'success', text: editorialOn === false ? `Actualité "${nwTitle}" enregistrée, mais pas encore visible : activez l’affichage ci-dessous.` : `Actualité "${nwTitle}" publiée : visible dans Kin Actualité et sur l’accueil.` });
+        setStatusMsg({ type: 'success', text: `Actualité "${nwTitle}" publiée : visible dans Kin Actualité et sur l’accueil.` });
       }
       resetNewsForm();
       fetchNewsItems();
@@ -489,14 +467,6 @@ export default function BackofficePage() {
         {/* ACTUALITÉS SECTION */}
         {section === 'news' && (
         <>
-        {editorialOn === false && (
-          <div className="mb-5 rounded-2xl border-2 border-brand-yellow bg-brand-yellow-soft p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <p className="m-0 flex-1 text-sm text-brand-ink leading-relaxed">
-              <strong>Vos articles ne sont pas affichés sur le site.</strong> L’option « Afficher nos articles À la une » est désactivée : seules les infos des médias apparaissent.
-            </p>
-            <Button type="button" variant="primary" onClick={turnEditorialOn}>Afficher sur le site</Button>
-          </div>
-        )}
         <div className="flex gap-2.5 mb-6">
           <Button variant={newsTab === 'manage' ? 'primary' : 'secondary'} onClick={() => setNewsTab('manage')} fullWidth>
             Liste ({newsList.length})
@@ -531,7 +501,10 @@ export default function BackofficePage() {
                       <p className="text-sm text-brand-ink/70 m-0 line-clamp-3 break-words">{item.body}</p>
                       {item.source_note && <p className="text-[11px] text-brand-muted/70 m-0 mt-1">{item.source_note}</p>}
                     </div>
-                    <div className="grid grid-cols-2 sm:flex gap-2 shrink-0">
+                    <div className="grid grid-cols-3 sm:flex gap-2 shrink-0">
+                      <Button href={`/actualite/article/${item.id}`} target="_blank" rel="noopener noreferrer" variant="secondary">
+                        <IconExternalLink size={13} /> Voir
+                      </Button>
                       <Button variant="primary" onClick={() => startEditingNews(item)}>
                         <IconEdit size={13} /> Éditer
                       </Button>
@@ -553,9 +526,14 @@ export default function BackofficePage() {
                 {editingNewsId ? `Éditer : "${nwTitle}"` : 'Nouvelle Actualité'}
               </h2>
               {editingNewsId && (
-                <Button type="button" variant="ghost" onClick={() => { resetNewsForm(); setNewsTab('manage'); }}>
-                  Annuler
-                </Button>
+                <div className="flex gap-2 shrink-0">
+                  <Button href={`/actualite/article/${editingNewsId}`} target="_blank" rel="noopener noreferrer" variant="secondary">
+                    <IconExternalLink size={13} /> Voir sur le site
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={() => { resetNewsForm(); setNewsTab('manage'); }}>
+                    Annuler
+                  </Button>
+                </div>
               )}
             </div>
 

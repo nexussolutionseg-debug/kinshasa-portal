@@ -52,3 +52,16 @@ export async function serverSettingsRaw(): Promise<unknown> {
   const row = await safe<any>(() => sb.from('site_settings').select('data').eq('id', 1).maybeSingle(), null);
   return row?.data ?? null;
 }
+
+/** The team's « À la une » articles, newest first. */
+export async function serverNews(limit = 50): Promise<any[]> {
+  const sb = client();
+  if (!sb) return [];
+  return safe<any[]>(() => sb.from('news').select('*').order('published_date', { ascending: false }).order('id', { ascending: false }).limit(limit), []);
+}
+
+export async function serverNewsItem(id: number): Promise<any | null> {
+  const sb = client();
+  if (!sb || !Number.isFinite(id)) return null;
+  return safe<any>(() => sb.from('news').select('*').eq('id', id).maybeSingle(), null);
+}
