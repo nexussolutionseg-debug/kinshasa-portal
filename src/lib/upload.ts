@@ -1,4 +1,4 @@
-// Image upload for the backoffice (banners, place photos).
+// Image upload for the backoffice (banners, place photos, article photos).
 // Big phone/camera photos are resized in the browser before upload (max
 // 2400 px wide for desktop banners, 1400 px for mobile banners and place
 // photos) and re-encoded as WebP — usually 5-20x smaller, so the site stays
@@ -18,7 +18,7 @@ async function shrink(file: File, maxWidth: number): Promise<Blob> {
   return blob && blob.size < file.size ? blob : file;
 }
 
-export async function uploadImage(file: File, folder: 'banners' | 'banners-mobile' | 'places', maxWidth = 2400): Promise<string> {
+export async function uploadImage(file: File, folder: 'banners' | 'banners-mobile' | 'places' | 'news', maxWidth = 2400): Promise<string> {
   if (file.size > 15 * 1024 * 1024) throw new Error('Image trop lourde (max 15 Mo).');
   const body = await shrink(file, maxWidth);
   const ext = body.type === 'image/webp' ? 'webp' : (file.name.split('.').pop() || 'jpg').toLowerCase();
