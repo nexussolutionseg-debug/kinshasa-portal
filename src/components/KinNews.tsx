@@ -9,9 +9,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import { type NewsItem } from '../lib/news';
-import { withUtm } from '../lib/utm';
 import { sameCommune } from '../lib/communes';
-import { loadSiteSettings } from '../lib/siteSettings';
 import { IconExternalLink, IconPin, IconMoney, IconNews, IconClose } from './icons';
 import { LiveDot } from './SiteHeader';
 
@@ -21,7 +19,8 @@ export function editorialToItem(row: any): NewsItem {
   return {
     id: `editorial:${row.id}`,
     title: row.title,
-    link: withUtm(row.link_url, 'a_la_une'),
+    // Our own page for the article (its source link is shown there).
+    link: `/actualite/article/${row.id}`,
     teaser: (row.body || '').slice(0, 180),
     body: row.body || null,
     date: row.published_date ? new Date(row.published_date).toISOString() : null,
@@ -55,17 +54,15 @@ export function useKinNews(commune?: string | null, initial?: InitialNews) {
       })
       .catch(() => !cancelled && setLive([]));
 
-    // The team's own articles only show when switched on in Backoffice →
-    // Vitrine → Sections de l'accueil → "Afficher nos articles À la une".
-    loadSiteSettings().then((settings) => {
-      if (cancelled || !settings.showEditorial) return;
-      supabase
-        .from('news')
-        .select('*')
-        .order('published_date', { ascending: false })
-        .limit(12)
-        .then(({ data }) => !cancelled && setPinned((data || []).map(editorialToItem)));
-    });
+    // The team's own « À la une » articles always show (2026-10-28: the old
+    // on/off switch in Vitrine left published articles invisible).
+    supabase
+      .from('news')
+      .select('*')
+      .order('published_date', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(12)
+      .then(({ data }) => !cancelled && setPinned((data || []).map(editorialToItem)));
 
     return () => {
       cancelled = true;

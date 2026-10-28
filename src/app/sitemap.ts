@@ -2,11 +2,15 @@ import type { MetadataRoute } from 'next';
 import { SITE_URL } from '../lib/utm';
 import { COMMUNE_NAMES, communeHref } from '../lib/communes';
 import { CATEGORY_PATH, PLACE_CATEGORY_IDS } from '../lib/categories';
+import { serverNews } from '../lib/supabaseServer';
+
+export const revalidate = 3600;
 
 // Every public page: home, Kin Actualité, the category pages, the 24
-// communes (clean lowercase addresses), Kin Weekend and the info pages.
+// communes (clean lowercase addresses), Kin Weekend, the info pages and
+// the team's « À la une » articles.
 // NEXT_PUBLIC_SITE_URL can override the domain; it defaults to the live site.
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL;
   const now = new Date();
   const page = (path: string, priority: number, changeFrequency: 'hourly' | 'daily' | 'weekly' | 'monthly' = 'weekly') => ({
@@ -15,6 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency,
     priority,
   });
+  const articles = await serverNews(200);
   return [
     page('/', 1, 'daily'),
     page('/actualite', 0.9, 'hourly'),
@@ -27,5 +32,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page('/contact', 0.4, 'monthly'),
     page('/devenir-partenaire', 0.5, 'monthly'),
     page('/politique-de-confidentialite', 0.2, 'monthly'),
+    ...articles.map((a) => ({ ...page(`/actualite/article/${a.id}`, 0.6, 'monthly'), lastModified: new Date(a.created_at || a.published_date || now) })),
   ];
 }

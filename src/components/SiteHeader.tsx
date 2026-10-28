@@ -14,7 +14,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  IconClose, IconMenu, IconHome, IconNews, IconMap, IconCalendar, IconBuilding, IconUser, IconMail, IconSparkle, IconChevronRight,
+  IconClose, IconMenu, IconSearch, IconHome, IconNews, IconMap, IconCalendar, IconBuilding, IconUser, IconMail, IconSparkle, IconChevronRight,
 } from './icons';
 import { KinshasaMark } from './BrandMark';
 import { CategoryIcon } from './PlaceCard';
@@ -123,8 +123,16 @@ export function SiteHeader({ below }: { below?: ReactNode } = {}) {
           </nav>
 
           <Link
+            href="/recherche"
+            aria-label="Rechercher"
+            className="ml-auto lg:ml-1 inline-flex items-center justify-center w-10 h-10 rounded-full text-brand-ink hover:bg-brand-bg no-underline shrink-0"
+          >
+            <IconSearch size={20} />
+          </Link>
+
+          <Link
             href="/actualite"
-            className="lg:hidden ml-auto inline-flex items-center gap-1.5 h-9 px-3 rounded-full bg-brand-red-soft text-brand-red text-xs font-extrabold no-underline shrink-0"
+            className="hidden min-[400px]:inline-flex lg:hidden items-center gap-1.5 h-9 px-3 rounded-full bg-brand-red-soft text-brand-red text-xs font-extrabold no-underline shrink-0"
           >
             <LiveDot /> Actu
           </Link>
