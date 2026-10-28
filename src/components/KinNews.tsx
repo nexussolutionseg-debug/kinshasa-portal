@@ -25,7 +25,7 @@ export function editorialToItem(row: any): NewsItem {
     teaser: (row.body || '').slice(0, 180),
     body: row.body || null,
     date: row.published_date ? new Date(row.published_date).toISOString() : null,
-    image: null,
+    image: typeof row.image_url === 'string' && /^https:\/\//.test(row.image_url) ? row.image_url : null,
     sourceId: 'kinshasa-label',
     sourceName: 'Kinshasa Label',
     commune: row.commune || null,

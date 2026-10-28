@@ -12,6 +12,7 @@ import { COMMUNE_NAMES } from '../../lib/communes';
 import { Button } from '../../components/Button';
 import { SubscribersPanel } from '../../components/backoffice/SubscribersPanel';
 import { KinshasaMark } from '../../components/BrandMark';
+import { uploadImage } from '../../lib/upload';
 
 const COMMUNES = COMMUNE_NAMES;
 
@@ -96,7 +97,7 @@ export default function BackofficePage() {
     if (!error && data) setEventsList(data);
   };
 
-  useEffect(() => { fetchEvents(); fetchNewsItems(); }, []);
+  useEffect(() => { fetchEvents(); fetchNewsItems(); fetchEditorialSetting(); }, []);
 
   const resetEventForm = () => {
     setEditingEventId(null);
@@ -175,6 +176,30 @@ export default function BackofficePage() {
   const [nwSourceNote, setNwSourceNote] = useState('');
   const [nwLinkUrl, setNwLinkUrl] = useState('');
   const [nwDate, setNwDate] = useState('');
+  const [nwImage, setNwImage] = useState('');
+  const [nwHadImage, setNwHadImage] = useState(false);
+  const [nwUploading, setNwUploading] = useState(false);
+  // Team articles only appear on the site when Vitrine → Options →
+  // "Afficher nos articles « À la une »" is on (2026-10-28: the client
+  // published articles that stayed invisible because it was off).
+  const [editorialOn, setEditorialOn] = useState<boolean | null>(null);
+
+  const fetchEditorialSetting = async () => {
+    const { data } = await supabase.from('site_settings').select('data').eq('id', 1).maybeSingle();
+    setEditorialOn(!!(data?.data && (data.data as any).showEditorial === true));
+  };
+
+  const turnEditorialOn = async () => {
+    const { data } = await supabase.from('site_settings').select('data').eq('id', 1).maybeSingle();
+    const next = { ...((data?.data as object) || {}), showEditorial: true };
+    const { error } = await supabase.from('site_settings').upsert({ id: 1, data: next, updated_at: new Date().toISOString() });
+    if (error) {
+      setStatusMsg({ type: 'error', text: `Impossible d’activer l’affichage : ${error.message}` });
+      return;
+    }
+    setEditorialOn(true);
+    setStatusMsg({ type: 'success', text: 'Vos articles « À la une » sont maintenant visibles sur le site (Kin Actualité et accueil).' });
+  };
 
   const fetchNewsItems = async () => {
     const { data, error } = await supabase.from('news').select('*').order('published_date', { ascending: false });
@@ -189,6 +214,8 @@ export default function BackofficePage() {
     setNwSourceNote('');
     setNwLinkUrl('');
     setNwDate('');
+    setNwImage('');
+    setNwHadImage(false);
   };
 
   const startEditingNews = (item: any) => {
@@ -199,6 +226,8 @@ export default function BackofficePage() {
     setNwSourceNote(item.source_note || '');
     setNwLinkUrl(item.link_url || '');
     setNwDate(item.published_date || '');
+    setNwImage(item.image_url || '');
+    setNwHadImage(!!item.image_url);
     setNewsTab('add');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -214,22 +243,31 @@ export default function BackofficePage() {
       source_note: nwSourceNote.trim() || null,
       link_url: nwLinkUrl.trim() || null,
       published_date: nwDate || new Date().toISOString().slice(0, 10),
+      // Only sent when a photo is involved, so articles still save before the
+      // image_url column exists (supabase/pending/20261028090000_news_image.sql).
+      ...(nwImage || nwHadImage ? { image_url: nwImage || null } : {}),
     };
     try {
       if (editingNewsId) {
         const { error } = await supabase.from('news').update(payload).eq('id', editingNewsId);
         if (error) throw error;
-        setStatusMsg({ type: 'success', text: `Actualité "${nwTitle}" mise à jour !` });
+        setStatusMsg({ type: 'success', text: editorialOn === false ? `Actualité "${nwTitle}" mise à jour, mais pas encore visible : activez l’affichage ci-dessous.` : `Actualité "${nwTitle}" mise à jour : visible sur le site.` });
       } else {
         const { error } = await supabase.from('news').insert([payload]);
         if (error) throw error;
-        setStatusMsg({ type: 'success', text: `Actualité "${nwTitle}" publiée !` });
+        setStatusMsg({ type: 'success', text: editorialOn === false ? `Actualité "${nwTitle}" enregistrée, mais pas encore visible : activez l’affichage ci-dessous.` : `Actualité "${nwTitle}" publiée : visible dans Kin Actualité et sur l’accueil.` });
       }
       resetNewsForm();
       fetchNewsItems();
       setNewsTab('manage');
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.message });
+      const msg = String(err?.message || err);
+      setStatusMsg({
+        type: 'error',
+        text: /image_url/.test(msg)
+          ? 'La photo ne peut pas encore être enregistrée : la mise à jour de la base (news_image) doit d’abord être lancée. Retirez la photo pour publier sans.'
+          : msg,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -369,6 +407,10 @@ export default function BackofficePage() {
               <div className="flex flex-col gap-3">
                 {eventsList.map((item) => (
                   <div key={item.id} className="bg-brand-bg border border-brand-line rounded-2xl p-3.5 md:p-4 flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+                    {item.image_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.image_url} alt="" className="w-full sm:w-24 h-32 sm:h-20 object-cover rounded-xl shrink-0" />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex gap-2 items-center mb-1.5 flex-wrap">
                         {item.category && <span className="text-[10px] bg-brand-red text-white px-1.5 py-0.5 rounded font-bold uppercase">{item.category}</span>}
@@ -447,6 +489,14 @@ export default function BackofficePage() {
         {/* ACTUALITÉS SECTION */}
         {section === 'news' && (
         <>
+        {editorialOn === false && (
+          <div className="mb-5 rounded-2xl border-2 border-brand-yellow bg-brand-yellow-soft p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <p className="m-0 flex-1 text-sm text-brand-ink leading-relaxed">
+              <strong>Vos articles ne sont pas affichés sur le site.</strong> L’option « Afficher nos articles À la une » est désactivée : seules les infos des médias apparaissent.
+            </p>
+            <Button type="button" variant="primary" onClick={turnEditorialOn}>Afficher sur le site</Button>
+          </div>
+        )}
         <div className="flex gap-2.5 mb-6">
           <Button variant={newsTab === 'manage' ? 'primary' : 'secondary'} onClick={() => setNewsTab('manage')} fullWidth>
             Liste ({newsList.length})
@@ -534,6 +584,41 @@ export default function BackofficePage() {
             </div>
 
             <div className="mb-4">
+              <label className={labelClass}>Photo (optionnel)</label>
+              {nwImage ? (
+                <div className="flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={nwImage} alt="Photo de l’article" className="w-28 h-20 object-cover rounded-xl border border-brand-line" />
+                  <Button type="button" variant="secondary" onClick={() => setNwImage('')}>Retirer</Button>
+                </div>
+              ) : (
+                <label className={`${inputClass} flex items-center justify-center gap-2 cursor-pointer text-brand-blue-deep font-semibold`}>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    disabled={nwUploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = '';
+                      if (!file) return;
+                      setNwUploading(true);
+                      try {
+                        setNwImage(await uploadImage(file, 'news', 1400));
+                      } catch (err: any) {
+                        setStatusMsg({ type: 'error', text: `Échec de l’envoi de la photo : ${err?.message || err}` });
+                      } finally {
+                        setNwUploading(false);
+                      }
+                    }}
+                  />
+                  {nwUploading ? 'Envoi de la photo…' : '+ Ajouter une photo (JPG, PNG, WebP)'}
+                </label>
+              )}
+              <p className="text-[11px] text-brand-muted mt-1.5 mb-0">Format paysage conseillé. Les photos sont réduites automatiquement pour charger vite.</p>
+            </div>
+
+            <div className="mb-4">
               <label className={labelClass}>Lien source (optionnel)</label>
               <input type="url" value={nwLinkUrl} onChange={(e) => setNwLinkUrl(e.target.value)} placeholder="https://..." className={inputClass} />
             </div>
@@ -543,8 +628,8 @@ export default function BackofficePage() {
               <input type="text" value={nwSourceNote} onChange={(e) => setNwSourceNote(e.target.value)} placeholder="ex: Radio Okapi, communiqué du client..." className={inputClass} />
             </div>
 
-            <Button type="submit" disabled={submitting} variant="primary" size="lg" fullWidth>
-              {submitting ? 'Enregistrement...' : editingNewsId ? 'Enregistrer les Modifications →' : 'Publier →'}
+            <Button type="submit" disabled={submitting || nwUploading} variant="primary" size="lg" fullWidth>
+              {submitting ? 'Enregistrement...' : nwUploading ? 'Photo en cours d’envoi…' : editingNewsId ? 'Enregistrer les Modifications →' : 'Publier →'}
             </Button>
           </form>
         )}
