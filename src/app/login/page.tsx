@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/Button';
@@ -12,6 +12,43 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [mode, setMode] = useState<'login' | 'forgot' | 'sent'>('login');
+
+  // "Continuer avec Google" (2026-11-01). Google sends the person back here:
+  // on success Supabase puts the session in the address and we go on to the
+  // backoffice; on refusal (Google account not on the team: public sign-ups
+  // are off in Supabase) we show why. Only accounts that already exist in
+  // Supabase Auth with the same e-mail can get in, and only team accounts
+  // (kl_admins) can change anything.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search + '&' + window.location.hash.replace(/^#/, ''));
+    const err = params.get('error_description') || params.get('error');
+    if (err) {
+      setErrorMsg(
+        /signup|sign up|not allowed|user not found|database error saving new user/i.test(err)
+          ? 'Ce compte Google ne fait pas partie de l’équipe Kinshasa Label. Utilise le compte Google de ton adresse équipe, ou demande à un administrateur de t’ajouter.'
+          : `Connexion Google impossible : ${err.replace(/\+/g, ' ')}`,
+      );
+      window.history.replaceState(null, '', '/login');
+    }
+    supabase.auth.getSession().then(({ data }) => { if (data.session) router.replace('/backoffice'); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => { if (session) router.replace('/backoffice'); });
+    return () => sub.subscription.unsubscribe();
+  }, [router]);
+
+  const handleGoogle = async () => {
+    setLoading(true);
+    setErrorMsg('');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/login`, queryParams: { prompt: 'select_account' } },
+    });
+    if (error) {
+      setLoading(false);
+      setErrorMsg(/provider is not enabled|unsupported provider/i.test(error.message)
+        ? 'La connexion Google n’est pas encore activée dans Supabase (Authentication → Providers → Google).'
+        : error.message);
+    }
+  };
 
   // "Mot de passe oublié" (2026-10-13): Supabase emails a reset link (branded
   // template + Kinshasa Label sender, see supabase/email-templates/README.md)
@@ -139,6 +176,18 @@ export default function LoginPage() {
 
           {/* Login Form */}
           {mode === 'login' && (
+          <>
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={loading}
+            className="w-full min-h-12 rounded-xl border-2 border-brand-line bg-white text-brand-ink font-bold text-sm cursor-pointer hover:border-brand-blue disabled:opacity-60"
+          >
+            Continuer avec Google
+          </button>
+          <div className="flex items-center gap-3 my-4 text-[11px] font-bold uppercase tracking-wide text-brand-muted">
+            <span className="h-px flex-1 bg-brand-line" /> ou avec ton e-mail <span className="h-px flex-1 bg-brand-line" />
+          </div>
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div className="bg-brand-bg border border-brand-line rounded-xl p-4 flex flex-col gap-4">
 
@@ -189,6 +238,7 @@ export default function LoginPage() {
               Mot de passe oublié ?
             </button>
           </form>
+          </>
           )}
 
         </div>
