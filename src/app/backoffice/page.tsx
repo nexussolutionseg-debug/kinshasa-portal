@@ -13,7 +13,7 @@ import { COMMUNE_NAMES } from '../../lib/communes';
 import { Button } from '../../components/Button';
 import { SubscribersPanel } from '../../components/backoffice/SubscribersPanel';
 import { KinshasaMark } from '../../components/BrandMark';
-import { uploadImage } from '../../lib/upload';
+import { NewsPhotos } from '../../components/backoffice/NewsPhotos';
 
 const COMMUNES = COMMUNE_NAMES;
 
@@ -177,9 +177,13 @@ export default function BackofficePage() {
   const [nwSourceNote, setNwSourceNote] = useState('');
   const [nwLinkUrl, setNwLinkUrl] = useState('');
   const [nwDate, setNwDate] = useState('');
-  const [nwImage, setNwImage] = useState('');
+  // Photos of the article: the first one is the cover (news.image_url), the
+  // full ordered list goes in news.images (several photos, 2026-11-01).
+  const [nwImages, setNwImages] = useState<string[]>([]);
   const [nwHadImage, setNwHadImage] = useState(false);
   const [nwUploading, setNwUploading] = useState(false);
+  // True once the database has the news.images column (pending SQL applied).
+  const newsHasGallery = newsList.some((r) => Array.isArray(r.images));
   const fetchNewsItems = async () => {
     const { data, error } = await supabase.from('news').select('*').order('published_date', { ascending: false });
     if (!error && data) setNewsList(data);
@@ -193,7 +197,7 @@ export default function BackofficePage() {
     setNwSourceNote('');
     setNwLinkUrl('');
     setNwDate('');
-    setNwImage('');
+    setNwImages([]);
     setNwHadImage(false);
   };
 
@@ -205,8 +209,9 @@ export default function BackofficePage() {
     setNwSourceNote(item.source_note || '');
     setNwLinkUrl(item.link_url || '');
     setNwDate(item.published_date || '');
-    setNwImage(item.image_url || '');
-    setNwHadImage(!!item.image_url);
+    const imgs: string[] = Array.isArray(item.images) && item.images.length ? item.images : item.image_url ? [item.image_url] : [];
+    setNwImages(imgs);
+    setNwHadImage(imgs.length > 0);
     setNewsTab('add');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -222,9 +227,10 @@ export default function BackofficePage() {
       source_note: nwSourceNote.trim() || null,
       link_url: nwLinkUrl.trim() || null,
       published_date: nwDate || new Date().toISOString().slice(0, 10),
-      // Only sent when a photo is involved, so articles still save before the
-      // image_url column exists (supabase/pending/20261028090000_news_image.sql).
-      ...(nwImage || nwHadImage ? { image_url: nwImage || null } : {}),
+      // Photo fields are only sent when needed, so articles still save before
+      // the columns exist (supabase/pending/20261101120000_stats_links_news_gallery.sql).
+      ...(nwImages.length || nwHadImage ? { image_url: nwImages[0] || null } : {}),
+      ...(newsHasGallery || nwImages.length > 1 ? { images: nwImages } : {}),
     };
     try {
       if (editingNewsId) {
@@ -243,8 +249,8 @@ export default function BackofficePage() {
       const msg = String(err?.message || err);
       setStatusMsg({
         type: 'error',
-        text: /image_url/.test(msg)
-          ? 'La photo ne peut pas encore être enregistrée : la mise à jour de la base (news_image) doit d’abord être lancée. Retirez la photo pour publier sans.'
+        text: /image_url|images/.test(msg)
+          ? 'Les photos ne peuvent pas encore être enregistrées : la mise à jour de la base (20261101120000_stats_links_news_gallery.sql) doit d’abord être lancée dans Supabase. En attendant, garde une seule photo ou publie sans.'
           : msg,
       });
     } finally {
@@ -500,6 +506,11 @@ export default function BackofficePage() {
                         <span className="inline-flex items-center gap-1 text-[11px] text-brand-muted">
                           <IconClock size={11} /> {item.published_date}
                         </span>
+                        {(Array.isArray(item.images) && item.images.length > 0 ? item.images.length : item.image_url ? 1 : 0) > 0 && (
+                          <span className="text-[11px] font-bold text-brand-ink bg-white border border-brand-line px-2 py-0.5 rounded-full">
+                            {Array.isArray(item.images) && item.images.length > 1 ? `${item.images.length} photos` : '1 photo'}
+                          </span>
+                        )}
                       </div>
                       <h3 className="text-base text-brand-ink m-0 mb-1 font-semibold break-words">{item.title}</h3>
                       <p className="text-sm text-brand-ink/70 m-0 line-clamp-3 break-words">{item.body}</p>
@@ -566,38 +577,13 @@ export default function BackofficePage() {
             </div>
 
             <div className="mb-4">
-              <label className={labelClass}>Photo (optionnel)</label>
-              {nwImage ? (
-                <div className="flex items-center gap-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={nwImage} alt="Photo de l’article" className="w-28 h-20 object-cover rounded-xl border border-brand-line" />
-                  <Button type="button" variant="secondary" onClick={() => setNwImage('')}>Retirer</Button>
-                </div>
-              ) : (
-                <label className={`${inputClass} flex items-center justify-center gap-2 cursor-pointer text-brand-blue-deep font-semibold`}>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="sr-only"
-                    disabled={nwUploading}
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      e.target.value = '';
-                      if (!file) return;
-                      setNwUploading(true);
-                      try {
-                        setNwImage(await uploadImage(file, 'news', 1400));
-                      } catch (err: any) {
-                        setStatusMsg({ type: 'error', text: `Échec de l’envoi de la photo : ${err?.message || err}` });
-                      } finally {
-                        setNwUploading(false);
-                      }
-                    }}
-                  />
-                  {nwUploading ? 'Envoi de la photo…' : '+ Ajouter une photo (JPG, PNG, WebP)'}
-                </label>
-              )}
-              <p className="text-[11px] text-brand-muted mt-1.5 mb-0">Format paysage conseillé. Les photos sont réduites automatiquement pour charger vite.</p>
+              <label className={labelClass}>Photos (optionnel)</label>
+              <NewsPhotos
+                value={nwImages}
+                onChange={setNwImages}
+                onBusy={setNwUploading}
+                onError={(text) => setStatusMsg({ type: 'error', text })}
+              />
             </div>
 
             <div className="mb-4">
