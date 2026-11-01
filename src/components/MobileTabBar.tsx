@@ -19,7 +19,7 @@ const TABS = [
 export function MobileTabBar() {
   const pathname = usePathname();
   const weekendOn = useWeekendOn(); // Weekend tab only with enough events (lib/events.ts)
-  if (pathname?.startsWith('/backoffice') || pathname?.startsWith('/login')) return null;
+  if (pathname?.startsWith('/backoffice') || pathname?.startsWith('/login') || pathname?.startsWith('/stats')) return null;
   const tabs = TABS.filter((t) => !t.weekend || weekendOn);
 
   return (
