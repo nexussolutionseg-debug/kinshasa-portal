@@ -31,7 +31,7 @@ You need an account that is **Administrator** on the Google Analytics property.
 3. Choose the **Viewer** role and untick "Notify new users".
 4. Still in Admin, open **Property details** and copy the **Property ID**. It is a number like `412345678`, not the `G-…` code.
 
-### 3. Add three values in Vercel
+### 3. Add two values in Vercel
 
 Vercel → project **kinshasa-portal** → Settings → Environment Variables. Tick **Production** only for each one:
 
@@ -39,7 +39,6 @@ Vercel → project **kinshasa-portal** → Settings → Environment Variables. T
 |---|---|
 | `GA4_PROPERTY_ID` | the Property ID number |
 | `GA4_SERVICE_ACCOUNT_JSON` | the **whole content** of the downloaded JSON file (open it in Notepad, select all, paste) |
-| `STATS_SHARE_SECRET` | any long random text (e.g. from https://www.random.org/strings/), used to sign partner links |
 
 Then go to Deployments → the latest production deployment → **⋯ → Redeploy**.
 
@@ -47,17 +46,42 @@ Open the backoffice → **Statistiques**. If it still says Google Analytics isn'
 
 ## Partner links
 
-Backoffice → Statistiques → **Partager avec un partenaire**: enter a name, the view and the validity period (1–12 months), then copy the link or send it on WhatsApp.
+Partner links are managed in Backoffice → Statistiques → **Liens partenaires**. Each link is a row in the `stats_links` table, which only team accounts can read or change.
 
-- **Vue partenaire** shows audience, pages, communes, rubriques, sources and countries. It hides campaign names and subscriber numbers.
-- **Tout (associés)** shows everything the team sees.
-- Links can't be revoked one by one. They expire on their own. To cut off **every** link at once, change `STATS_SHARE_SECRET` in Vercel and redeploy.
-- Partner pages are not indexed by search engines and have no cookie banner or Google Analytics on them.
+**Create a link.** Fill in:
+- the partner's name;
+- an optional internal note;
+- what the link shows;
+- how long it stays valid: 1, 3, 6, 12 or 24 months.
+
+Then copy the link, send it on WhatsApp or open it.
+
+**What a link shows:**
+- **Vue partenaire**: audience, pages, communes, rubriques, sources, clicks and searches. Campaign names and subscriber numbers are hidden.
+- **Tout (associés)**: everything the team sees.
+
+**Manage each link** from the list:
+- rename it, change what it shows, edit its note;
+- set a new end date, or add 1/3/6/12 months (the URL stays the same);
+- **deactivate** it, which cuts access immediately, then **reactivate** it if needed;
+- **delete** it for good.
+
+The list shows each link's status (active, expiring soon, expired, deactivated), how many times it was opened and when it was last opened. You can search it and filter by status.
+
+**Partner pages** are not indexed by search engines and have no cookie banner or Google Analytics.
+
+**One-time database step:** run `supabase/pending/20261101120000_stats_links_news_gallery.sql` before creating links.
 
 ## Good to know
 
 - **The numbers are lower than real traffic.** Google Analytics only counts visitors who click "Accepter" on the cookie banner. The dashboard says so in its footnote. Vercel Analytics (cookieless) shows the full count in the Vercel dashboard.
 - Data refreshes every 10 minutes. "En ce moment" is visitors in the last 30 minutes.
+- **Periods:**
+  - 7 days, 28 days, 3 months, 12 months, or any dates you choose (up to 2 years at a time);
+  - always compared with the period of the same length just before;
+  - the visitors chart shows that earlier period as a dotted line.
+- **Search and export:** every long table (pages, entry pages, sources, outbound clicks, site searches) can be searched, sorted by column and exported as CSV. Communes, countries, cities and articles have a search box too.
+- **Outbound clicks** and **site searches** come from Google Analytics "Enhanced measurement". It is on by default; check it under Admin → Data streams → the web stream.
 - "Exporter en PDF" uses the browser's print dialog. Choose "Save as PDF".
 - **Demo mode:** while Google Analytics isn't connected, the team can click "Voir avec des données d'exemple" to preview the layout. Those figures are invented and labelled as such.
 
@@ -67,8 +91,10 @@ Backoffice → Statistiques → **Partager avec un partenaire**: enter a name, t
 |---|---|
 | `src/lib/ga4.ts` | Google sign-in (service account) and the GA4 reports |
 | `src/lib/kinStats.ts` | Combines GA with site data; communes/rubriques mapping; demo data |
-| `src/lib/statsShare.ts` | Signs and checks partner links |
+| `src/lib/statsLinks.ts` | Checks a partner link through `stats_link_open()` |
+| `src/components/stats/CommuneMap.tsx` | Commune map shaded by page views |
 | `src/lib/statsAuth.ts` | Team check (`is_kl_admin`) for the API |
-| `src/app/api/stats/route.ts`, `api/stats/share/route.ts` | Data API and partner-link creation |
-| `src/components/stats/StatsDashboard.tsx`, `ShareLinks.tsx` | The dashboard UI |
+| `src/app/api/stats/route.ts` | Data API (team session or partner link) |
+| `src/components/stats/StatsDashboard.tsx` | The dashboard UI |
+| `src/components/stats/ShareLinks.tsx` | Partner-link manager |
 | `src/app/stats/[token]/page.tsx` | Partner page |

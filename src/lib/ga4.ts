@@ -105,21 +105,29 @@ export type Totals = {
   avgSessionSec: number;
 };
 
-export type Row = { label: string; value: number; extra?: number };
+export type Row = { label: string; value: number };
+export type Point = { date: string; users: number; views: number };
 
 export type GaReport = {
-  days: number;
+  range: Range;
   current: Totals;
   previous: Totals;
-  series: { date: string; users: number; views: number }[];
+  series: Point[];
+  previousSeries: Point[]; // same length as series, aligned day by day
   seriesGrain: 'day' | 'month';
   pages: { path: string; title: string; views: number; users: number }[];
+  landings: { path: string; sessions: number; engaged: number }[];
   channels: Row[];
   sources: { source: string; medium: string; campaign: string; sessions: number }[];
   countries: Row[];
   cities: Row[];
   devices: Row[];
-  hours: number[]; // 24 buckets of users, Kinshasa time as configured in GA
+  newVsReturning: Row[];
+  weekdays: number[]; // 7 buckets, Monday first
+  hours: number[]; // 24 buckets, property time zone
+  events: Row[];
+  outbound: Row[]; // outbound link clicks by URL
+  searches: Row[]; // site-search terms (/recherche?q=…)
   realtime: number | null;
 };
 
@@ -133,140 +141,218 @@ const met = (r: GaRow, i: number) => num(r.metricValues?.[i]);
 const TOTAL_METRICS = ['activeUsers', 'newUsers', 'sessions', 'screenPageViews', 'engagementRate', 'averageSessionDuration'].map((name) => ({ name }));
 
 function totalsOf(resp: GaResp): Totals {
-  const r = resp.rows?.[0];
+  const r = resp?.rows?.[0];
   if (!r) return { users: 0, newUsers: 0, sessions: 0, views: 0, engagementRate: 0, avgSessionSec: 0 };
   return { users: met(r, 0), newUsers: met(r, 1), sessions: met(r, 2), views: met(r, 3), engagementRate: met(r, 4), avgSessionSec: met(r, 5) };
 }
 
 const NOT_SET = new Set(['(not set)', '(none)', '(direct)', '']);
 const clean = (s: string, fallback: string) => (NOT_SET.has(s) ? fallback : s);
+const rows = (resp: GaResp | undefined, fallback = 'Autre'): Row[] =>
+  (resp?.rows || []).map((r) => ({ label: clean(dim(r, 0), fallback), value: met(r, 0) }));
 
-export const RANGES = [7, 28, 90, 365] as const;
-export type RangeDays = (typeof RANGES)[number];
+// ---------------------------------------------------------------------------
+// Date ranges. Presets (7/28/90/365 days ending today) or any custom
+// start → end; always compared with the period of the same length just before.
+// Dates are Kinshasa dates (UTC+1).
+// ---------------------------------------------------------------------------
+export type Range = { start: string; end: string; days: number; prevStart: string; prevEnd: string };
 
-/** One full report: 2 batched calls (≤5 reports each) + realtime. */
-export async function fetchGaReport(days: RangeDays): Promise<GaReport> {
+const DAY = 86400000;
+const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
+const parse = (d: string) => Date.parse(`${d}T00:00:00Z`);
+export const kinshasaToday = () => iso(Date.now() + 3600000);
+export const GA_EARLIEST = '2015-08-14';
+
+export function makeRange(input: { days?: number; start?: string | null; end?: string | null }): Range {
+  const today = kinshasaToday();
+  let start: string;
+  let end: string;
+  const ok = (d?: string | null) => !!d && /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(parse(d));
+  if (ok(input.start) && ok(input.end)) {
+    start = input.start!;
+    end = input.end!;
+    if (end > today) end = today;
+    if (start > end) [start, end] = [end, start];
+    if (start < GA_EARLIEST) start = GA_EARLIEST;
+    // At most 2 years per view (keeps the report fast and within quota).
+    if (parse(end) - parse(start) > 730 * DAY) start = iso(parse(end) - 730 * DAY);
+  } else {
+    const n = [7, 28, 90, 365].includes(Number(input.days)) ? Number(input.days) : 28;
+    end = today;
+    start = iso(parse(today) - (n - 1) * DAY);
+  }
+  const days = Math.round((parse(end) - parse(start)) / DAY) + 1;
+  const prevEnd = iso(parse(start) - DAY);
+  const prevStart = iso(parse(prevEnd) - (days - 1) * DAY);
+  return { start, end, days, prevStart, prevEnd };
+}
+
+const filterEvent = (name: string) => ({ filter: { fieldName: 'eventName', stringFilter: { value: name } } });
+
+/** One full report: 4 batched calls (≤5 reports each) + realtime. */
+export async function fetchGaReport(range: Range): Promise<GaReport> {
   const c = readCreds();
   if (!c) throw new Error('not-configured');
 
-  const current = { startDate: `${days - 1}daysAgo`, endDate: 'today' };
-  const previous = { startDate: `${days * 2 - 1}daysAgo`, endDate: `${days}daysAgo` };
-  const grain: 'day' | 'month' = days > 90 ? 'month' : 'day';
+  const current = { startDate: range.start, endDate: range.end };
+  const previous = { startDate: range.prevStart, endDate: range.prevEnd };
+  const grain: 'day' | 'month' = range.days > 92 ? 'month' : 'day';
   const timeDim = grain === 'day' ? 'date' : 'yearMonth';
+  const top = (dimension: string, metric: string, limit: number, extra: Record<string, unknown> = {}) => ({
+    dateRanges: [current],
+    dimensions: [{ name: dimension }],
+    metrics: [{ name: metric }],
+    orderBys: [{ metric: { metricName: metric }, desc: true }],
+    limit,
+    ...extra,
+  });
+  const seriesReq = (dr: { startDate: string; endDate: string }) => ({
+    dateRanges: [dr],
+    dimensions: [{ name: timeDim }],
+    metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }],
+    orderBys: [{ dimension: { dimensionName: timeDim } }],
+    limit: 800,
+  });
 
-  const batchA = {
-    requests: [
+  const batches = [
+    [
       { dateRanges: [current], metrics: TOTAL_METRICS },
       { dateRanges: [previous], metrics: TOTAL_METRICS },
-      {
-        dateRanges: [current],
-        dimensions: [{ name: timeDim }],
-        metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }],
-        orderBys: [{ dimension: { dimensionName: timeDim } }],
-        keepEmptyRows: true,
-        limit: 400,
-      },
+      seriesReq(current),
+      seriesReq(previous),
       {
         dateRanges: [current],
         dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
         metrics: [{ name: 'screenPageViews' }, { name: 'activeUsers' }],
         orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
-        limit: 250,
-      },
-      {
-        dateRanges: [current],
-        dimensions: [{ name: 'sessionDefaultChannelGroup' }],
-        metrics: [{ name: 'sessions' }],
-        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        limit: 12,
+        limit: 500,
       },
     ],
-  };
-  const batchB = {
-    requests: [
+    [
+      top('sessionDefaultChannelGroup', 'sessions', 20),
       {
         dateRanges: [current],
         dimensions: [{ name: 'sessionSource' }, { name: 'sessionMedium' }, { name: 'sessionCampaignName' }],
         metrics: [{ name: 'sessions' }],
         orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        limit: 25,
+        limit: 200,
       },
+      top('country', 'activeUsers', 60),
+      top('city', 'activeUsers', 100),
+      top('deviceCategory', 'activeUsers', 10),
+    ],
+    [
+      { dateRanges: [current], dimensions: [{ name: 'hour' }], metrics: [{ name: 'activeUsers' }], limit: 24 },
+      { dateRanges: [current], dimensions: [{ name: 'dayOfWeek' }], metrics: [{ name: 'activeUsers' }], limit: 7 },
+      top('newVsReturning', 'activeUsers', 5),
+      top('eventName', 'eventCount', 40),
       {
         dateRanges: [current],
-        dimensions: [{ name: 'country' }],
-        metrics: [{ name: 'activeUsers' }],
-        orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
-        limit: 10,
-      },
-      {
-        dateRanges: [current],
-        dimensions: [{ name: 'city' }],
-        metrics: [{ name: 'activeUsers' }],
-        orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
-        limit: 10,
-      },
-      {
-        dateRanges: [current],
-        dimensions: [{ name: 'deviceCategory' }],
-        metrics: [{ name: 'activeUsers' }],
-        orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
-      },
-      {
-        dateRanges: [current],
-        dimensions: [{ name: 'hour' }],
-        metrics: [{ name: 'activeUsers' }],
-        limit: 24,
+        dimensions: [{ name: 'landingPage' }],
+        metrics: [{ name: 'sessions' }, { name: 'engagedSessions' }],
+        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+        limit: 300,
       },
     ],
-  };
+    [
+      top('linkUrl', 'eventCount', 200, { dimensionFilter: filterEvent('click') }),
+      top('searchTerm', 'eventCount', 200, { dimensionFilter: filterEvent('view_search_results') }),
+    ],
+  ];
 
-  const [a, b, rt] = await Promise.all([
-    call<{ reports: GaResp[] }>(c, ':batchRunReports', batchA),
-    call<{ reports: GaResp[] }>(c, ':batchRunReports', batchB),
+  const [r1, r2, r3, r4, rt] = await Promise.all([
+    ...batches.map((requests) => call<{ reports: GaResp[] }>(c, ':batchRunReports', { requests })),
     call<GaResp>(c, ':runRealtimeReport', { metrics: [{ name: 'activeUsers' }] }).catch(() => null),
-  ]);
-  const [tCur, tPrev, tSeries, tPages, tChannels] = a.reports;
-  const [tSources, tCountries, tCities, tDevices, tHours] = b.reports;
+  ]) as [{ reports: GaResp[] }, { reports: GaResp[] }, { reports: GaResp[] }, { reports: GaResp[] }, GaResp | null];
+
+  const [tCur, tPrev, tSeries, tPrevSeries, tPages] = r1.reports;
+  const [tChannels, tSources, tCountries, tCities, tDevices] = r2.reports;
+  const [tHours, tWeek, tNvr, tEvents, tLandings] = r3.reports;
+  const [tOutbound, tSearch] = r4.reports;
 
   const hours = Array.from({ length: 24 }, () => 0);
-  for (const r of tHours.rows || []) {
+  for (const r of tHours?.rows || []) {
     const h = Number(dim(r, 0));
     if (h >= 0 && h < 24) hours[h] += met(r, 0);
   }
+  const weekdays = Array.from({ length: 7 }, () => 0); // GA: 0 = Sunday → we put Monday first
+  for (const r of tWeek?.rows || []) {
+    const d = Number(dim(r, 0));
+    if (d >= 0 && d < 7) weekdays[(d + 6) % 7] += met(r, 0);
+  }
 
-  const series = (tSeries.rows || []).map((r) => {
-    const d = dim(r, 0);
-    const date = grain === 'day' ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : `${d.slice(0, 4)}-${d.slice(4, 6)}`;
-    return { date, users: met(r, 0), views: met(r, 1) };
-  }).sort((x, y) => x.date.localeCompare(y.date));
+  const toSeries = (resp: GaResp | undefined, start: string, len: number): Point[] => {
+    const byKey = new Map<string, Point>();
+    for (const r of resp?.rows || []) {
+      const d = dim(r, 0);
+      const key = grain === 'day' ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : `${d.slice(0, 4)}-${d.slice(4, 6)}`;
+      byKey.set(key, { date: key, users: met(r, 0), views: met(r, 1) });
+    }
+    // Fill the gaps so every day/month of the period has a point.
+    const out: Point[] = [];
+    if (grain === 'day') {
+      for (let i = 0; i < len; i++) {
+        const key = iso(parse(start) + i * DAY);
+        out.push(byKey.get(key) || { date: key, users: 0, views: 0 });
+      }
+    } else {
+      const [y, m] = start.split('-').map(Number);
+      const months = Math.max(1, Math.round(len / 30.44));
+      for (let i = 0; i < months + 1; i++) {
+        const dt = new Date(Date.UTC(y, m - 1 + i, 1));
+        const key = dt.toISOString().slice(0, 7);
+        if (i === months && !byKey.has(key)) break;
+        out.push(byKey.get(key) || { date: key, users: 0, views: 0 });
+      }
+    }
+    return out;
+  };
+
+  const series = toSeries(tSeries, range.start, range.days);
+  const previousSeries = toSeries(tPrevSeries, range.prevStart, range.days).slice(0, series.length);
 
   // Same path with several titles (title changed during the period) → merge.
   const pageMap = new Map<string, { path: string; title: string; views: number; users: number }>();
-  for (const r of tPages.rows || []) {
+  for (const r of tPages?.rows || []) {
     const path = dim(r, 0).split('?')[0] || '/';
     const cur = pageMap.get(path);
     if (cur) { cur.views += met(r, 0); cur.users += met(r, 1); }
     else pageMap.set(path, { path, title: clean(dim(r, 1), path), views: met(r, 0), users: met(r, 1) });
   }
+  const landMap = new Map<string, { path: string; sessions: number; engaged: number }>();
+  for (const r of tLandings?.rows || []) {
+    const path = clean(dim(r, 0).split('?')[0], '(inconnue)');
+    const cur = landMap.get(path);
+    if (cur) { cur.sessions += met(r, 0); cur.engaged += met(r, 1); }
+    else landMap.set(path, { path, sessions: met(r, 0), engaged: met(r, 1) });
+  }
 
   return {
-    days,
+    range,
     current: totalsOf(tCur),
     previous: totalsOf(tPrev),
     series,
+    previousSeries,
     seriesGrain: grain,
     pages: Array.from(pageMap.values()).sort((x, y) => y.views - x.views),
-    channels: (tChannels.rows || []).map((r) => ({ label: clean(dim(r, 0), 'Autre'), value: met(r, 0) })),
-    sources: (tSources.rows || []).map((r) => ({
+    landings: Array.from(landMap.values()).sort((x, y) => y.sessions - x.sessions),
+    channels: rows(tChannels),
+    sources: (tSources?.rows || []).map((r) => ({
       source: clean(dim(r, 0), 'direct'),
       medium: clean(dim(r, 1), '—'),
       campaign: clean(dim(r, 2), ''),
       sessions: met(r, 0),
     })),
-    countries: (tCountries.rows || []).map((r) => ({ label: clean(dim(r, 0), 'Inconnu'), value: met(r, 0) })),
-    cities: (tCities.rows || []).map((r) => ({ label: clean(dim(r, 0), 'Inconnue'), value: met(r, 0) })),
-    devices: (tDevices.rows || []).map((r) => ({ label: dim(r, 0), value: met(r, 0) })),
+    countries: rows(tCountries, 'Inconnu'),
+    cities: rows(tCities, 'Inconnue'),
+    devices: rows(tDevices),
+    newVsReturning: rows(tNvr),
+    weekdays,
     hours,
+    events: rows(tEvents),
+    outbound: rows(tOutbound).filter((r) => /^https?:\/\//.test(r.label) && !/kinshasalabel\.com/.test(r.label)),
+    searches: rows(tSearch).filter((r) => r.label !== 'Autre'),
     realtime: rt ? met(rt.rows?.[0] || {}, 0) : null,
   };
 }

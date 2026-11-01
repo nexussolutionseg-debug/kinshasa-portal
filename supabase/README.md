@@ -29,7 +29,8 @@ A founder ran `tools/check-applied.sql` and `tools/schema-snapshot.sql` on the l
 | `migrations/20261007090000_places_import.sql` | Applied ✔ |
 | `migrations/20261008190000_tighten_access.sql` | Applied ✔ (2026-10-08, confirmed by `tools/check-access.sql`: all checks true). |
 | `pending/20261008180000_lock_legacy_dispatches.sql` | **To run (founders' decision, 2026-10-08).** The old `dispatches` table (earlier journalism portal, unused by this site) accepts inserts from anyone without login; afterwards only team accounts can add rows. Then run `tools/check-access.sql` (the last line checks it). |
-| `pending/20261028090000_news_image.sql` | **To run.** Adds an optional photo to « À la une » articles (`news.image_url`). Articles without a photo work before and after. |
+| `pending/20261028090000_news_image.sql` | Included in the file below. You don't need to run it separately; running it as well does no harm. |
+| `pending/20261101120000_stats_links_news_gallery.sql` | **To run.** Partner links for Kin Stats (`stats_links`, readable and changeable by the team only; visitors can only check a link through `stats_link_open`). Several photos per « À la une » article (`news.images`, with `news.image_url` as the cover). Until it is run, the dashboard works, but partner links can't be created and articles keep one photo. |
 
 Legacy tables not used by kinshasalabel.com: `dispatches`, `security_alerts` (earlier Kinshasa Portal journalism app), and the public storage bucket `commune-videos`.
 
