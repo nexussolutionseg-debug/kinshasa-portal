@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock, IconSparkle, IconPin, IconCalendar, IconNews, IconMail, IconChat } from '../../components/icons';
+import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock, IconSparkle, IconPin, IconCalendar, IconNews, IconMail, IconChat, IconChart } from '../../components/icons';
+import { StatsDashboard } from '../../components/stats/StatsDashboard';
 import { ReviewsPanel } from '../../components/backoffice/ReviewsPanel';
 import { ShowcasePanel } from '../../components/backoffice/ShowcasePanel';
 import { DashboardHome } from '../../components/backoffice/DashboardHome';
@@ -60,7 +61,7 @@ export default function BackofficePage() {
   };
 
   // Which content type the backoffice is managing right now.
-  const [section, setSection] = useState<'home' | 'places' | 'events' | 'news' | 'showcase' | 'reviews' | 'subscribers'>('home');
+  const [section, setSection] = useState<'home' | 'stats' | 'places' | 'events' | 'news' | 'showcase' | 'reviews' | 'subscribers'>('home');
 
   const [submitting, setSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -325,6 +326,7 @@ export default function BackofficePage() {
         <nav aria-label="Sections du backoffice" className="rail flex gap-2 overflow-x-auto pb-2 mb-6 -mx-4 px-4 md:mx-0 md:px-0">
           {([
             ['home', 'Tableau de bord', IconHome],
+            ['stats', 'Statistiques', IconChart],
             ['showcase', 'Vitrine (accueil)', IconSparkle],
             ['places', 'Lieux', IconPin],
             ['events', 'Kin Weekend', IconCalendar],
@@ -355,6 +357,8 @@ export default function BackofficePage() {
             newsCount={newsList.length}
           />
         )}
+
+        {section === 'stats' && <StatsDashboard />}
 
         {section === 'subscribers' && <SubscribersPanel />}
 
