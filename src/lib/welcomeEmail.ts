@@ -25,7 +25,7 @@ export function welcomeEmailText(): string {
     `Kin Actualité : ${link('/actualite', 'actu')}`,
     `Les 24 communes : ${link('/communes', 'communes')}`,
     '',
-    'Suis-nous sur Instagram : https://www.instagram.com/kinshasalabel',
+    'Suis-nous : Instagram https://www.instagram.com/kinshasalabel · TikTok https://www.tiktok.com/@kinshasalabel · Facebook https://www.facebook.com/share/19txsmAqiz/',
     '',
     'Vis Kin autrement,',
     "L'équipe Kinshasa Label",
@@ -85,7 +85,7 @@ export function welcomeEmailHtml(): string {
       <p style="margin:14px 0 0 0;font-family:${font};font-size:16px;font-weight:700;color:#0B2545">Vis Kin autrement,<br><span style="color:#D21C2E">L'équipe Kinshasa Label</span></p>
     </td></tr>
     <tr><td style="padding:18px 32px 24px 32px;background:#F5F8FE;border-top:1px solid #DCE5F3">
-      <p style="margin:0 0 8px 0;font-family:${body};font-size:14px;line-height:20px;color:#0B2545"><a href="https://www.instagram.com/kinshasalabel" style="color:#0E5FC9;font-weight:700;text-decoration:none">Instagram @kinshasalabel</a> · <a href="${link('/', 'footer')}" style="color:#0E5FC9;font-weight:700;text-decoration:none">kinshasalabel.com</a></p>
+      <p style="margin:0 0 8px 0;font-family:${body};font-size:14px;line-height:20px;color:#0B2545"><a href="https://www.instagram.com/kinshasalabel" style="color:#0E5FC9;font-weight:700;text-decoration:none">Instagram</a> · <a href="https://www.tiktok.com/@kinshasalabel" style="color:#0E5FC9;font-weight:700;text-decoration:none">TikTok</a> · <a href="https://www.facebook.com/share/19txsmAqiz/" style="color:#0E5FC9;font-weight:700;text-decoration:none">Facebook</a> · <a href="${link('/', 'footer')}" style="color:#0E5FC9;font-weight:700;text-decoration:none">kinshasalabel.com</a></p>
       <p style="margin:0;font-family:${body};font-size:12px;line-height:18px;color:#5E6E86">Tu reçois cet e-mail parce que tu t'es inscrit(e) sur kinshasalabel.com. Pour te désinscrire, réponds « STOP » à cet e-mail. <a href="${SITE}/politique-de-confidentialite" style="color:#5E6E86">Confidentialité</a></p>
     </td></tr>
   </table>

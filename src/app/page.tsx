@@ -3,6 +3,7 @@
 // Google and link previews), then hands it to the interactive client part.
 // Rebuilt every 5 minutes (ISR); the browser refreshes the data on load.
 import { HomeClient } from './HomeClient';
+import { SOCIAL_SAME_AS } from '../lib/social';
 import { serverBanners, serverEvents, serverPlaces, serverSettingsRaw } from '../lib/supabaseServer';
 import { normalizeSettings } from '../lib/siteSettings';
 import { getNewsFeedSafe } from '../lib/newsFeed';
@@ -26,7 +27,7 @@ export default async function HomePage() {
     alternateName: 'Vis Kin autrement',
     url: SITE_URL,
     inLanguage: 'fr-CD',
-    publisher: { '@type': 'Organization', name: 'Kinshasa Label', url: SITE_URL, logo: `${SITE_URL}/logo.svg`, sameAs: ['https://www.instagram.com/kinshasalabel'] },
+    publisher: { '@type': 'Organization', name: 'Kinshasa Label', url: SITE_URL, logo: `${SITE_URL}/logo.svg`, sameAs: SOCIAL_SAME_AS },
   };
   return (
     <>
