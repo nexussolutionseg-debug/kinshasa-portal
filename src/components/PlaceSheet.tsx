@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { categoryOf, getAverageRating } from '../lib/categories';
 import { PlaceImage, CategoryIcon, Stars } from './PlaceCard';
 import { PlaceReviews } from './PlaceReviews';
+import { PlaceTracker } from './PlaceTracker';
 import { Button } from './Button';
 import { communeHref } from '../lib/communes';
 import { placeHref, directionsHref, telHref, whatsappHref } from '../lib/places';
@@ -102,17 +103,17 @@ export function PlaceSheet({
               Voir la page <IconArrowRight size={14} />
             </Link>
             {wa && (
-              <Button href={wa} target="_blank" rel="noopener noreferrer" variant="secondary">
+              <Button href={wa} target="_blank" rel="noopener noreferrer" variant="secondary" data-track="whatsapp" data-place={current.id}>
                 WhatsApp
               </Button>
             )}
             {phoneHref && (
-              <Button href={phoneHref} variant="secondary">
+              <Button href={phoneHref} variant="secondary" data-track="call" data-place={current.id}>
                 <IconPhone size={14} /> {current.phone}
               </Button>
             )}
             {directions && (
-              <Button href={directions} target="_blank" rel="noopener noreferrer" variant="secondary">
+              <Button href={directions} target="_blank" rel="noopener noreferrer" variant="secondary" data-track="directions" data-place={current.id}>
                 <IconExternalLink size={14} /> Itinéraire
               </Button>
             )}
@@ -121,6 +122,7 @@ export function PlaceSheet({
             </Button>
           </div>
 
+          <PlaceTracker placeId={current.id} />
           <PlaceReviews place={current} onUpdated={(u) => { setCurrent(u); onUpdated?.(u); }} />
         </div>
       </div>

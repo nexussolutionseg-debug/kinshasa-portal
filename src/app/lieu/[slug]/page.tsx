@@ -12,6 +12,7 @@ import { SiteTicker } from '../../../components/SiteTicker';
 import { SiteFooter } from '../../../components/SiteFooter';
 import { PlaceImage, CategoryIcon, Stars } from '../../../components/PlaceCard';
 import { PlaceReviews } from '../../../components/PlaceReviews';
+import { PlaceTracker } from '../../../components/PlaceTracker';
 import { EventCard } from '../../../components/EventCard';
 import { serverPlace, serverPlaceEvents, serverPlaces } from '../../../lib/supabaseServer';
 import { categoryOf, getAverageRating, CATEGORY_PATH } from '../../../lib/categories';
@@ -101,6 +102,7 @@ export default async function PlacePage({ params }: { params: Promise<{ slug: st
     <main className="min-h-screen flex flex-col">
       <SiteHeader below={<SiteTicker />} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(jsonLd) }} />
+      <PlaceTracker placeId={p.id} />
 
       <div className="max-w-[1100px] w-full mx-auto px-4 md:px-6 py-6 md:py-10 flex-1">
         <nav className="text-sm text-brand-muted mb-4 flex flex-wrap gap-1" aria-label="Fil d’Ariane">
@@ -146,16 +148,16 @@ export default async function PlacePage({ params }: { params: Promise<{ slug: st
             )}
 
             <div className="flex flex-wrap gap-2 mt-1">
-              {wa && <a href={wa} target="_blank" rel="noopener noreferrer" className={`${pill} bg-[#25D366] text-white`}>WhatsApp</a>}
-              {tel && <a href={tel} className={`${pill} bg-brand-ink text-white`}><IconPhone size={14} /> Appeler</a>}
-              {dir && <a href={dir} target="_blank" rel="noopener noreferrer" className={`${pill} bg-brand-blue text-white`}><IconExternalLink size={14} /> Itinéraire</a>}
+              {wa && <a href={wa} data-track="whatsapp" data-place={p.id} target="_blank" rel="noopener noreferrer" className={`${pill} bg-[#25D366] text-white`}>WhatsApp</a>}
+              {tel && <a href={tel} data-track="call" data-place={p.id} className={`${pill} bg-brand-ink text-white`}><IconPhone size={14} /> Appeler</a>}
+              {dir && <a href={dir} data-track="directions" data-place={p.id} target="_blank" rel="noopener noreferrer" className={`${pill} bg-brand-blue text-white`}><IconExternalLink size={14} /> Itinéraire</a>}
             </div>
             {(web || ig || fb || osm) && (
               <div className="flex flex-wrap gap-2">
-                {web && <a href={withUtm(web, 'fiche_lieu')} target="_blank" rel="noopener noreferrer" className={`${pill} border-2 border-brand-line text-brand-ink h-10 text-sm`}>Site web ↗</a>}
-                {ig && <a href={ig} target="_blank" rel="noopener noreferrer" className={`${pill} border-2 border-brand-line text-brand-ink h-10 text-sm`}>Instagram ↗</a>}
-                {fb && <a href={fb} target="_blank" rel="noopener noreferrer" className={`${pill} border-2 border-brand-line text-brand-ink h-10 text-sm`}>Facebook ↗</a>}
-                {osm && <a href={osm} target="_blank" rel="noopener noreferrer" className={`${pill} border-2 border-brand-line text-brand-ink h-10 text-sm`}>Voir sur la carte ↗</a>}
+                {web && <a href={withUtm(web, 'fiche_lieu')} data-track="website" data-place={p.id} target="_blank" rel="noopener noreferrer" className={`${pill} border-2 border-brand-line text-brand-ink h-10 text-sm`}>Site web ↗</a>}
+                {ig && <a href={ig} data-track="instagram" data-place={p.id} target="_blank" rel="noopener noreferrer" className={`${pill} border-2 border-brand-line text-brand-ink h-10 text-sm`}>Instagram ↗</a>}
+                {fb && <a href={fb} data-track="facebook" data-place={p.id} target="_blank" rel="noopener noreferrer" className={`${pill} border-2 border-brand-line text-brand-ink h-10 text-sm`}>Facebook ↗</a>}
+                {osm && <a href={osm} data-track="directions" data-place={p.id} target="_blank" rel="noopener noreferrer" className={`${pill} border-2 border-brand-line text-brand-ink h-10 text-sm`}>Voir sur la carte ↗</a>}
               </div>
             )}
           </div>
@@ -184,7 +186,7 @@ export default async function PlacePage({ params }: { params: Promise<{ slug: st
         </section>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <a href={share} target="_blank" rel="noopener noreferrer" className={`${pill} bg-[#25D366] text-white`}>Partager sur WhatsApp</a>
+          <a href={share} data-track="share" data-place={p.id} target="_blank" rel="noopener noreferrer" className={`${pill} bg-[#25D366] text-white`}>Partager sur WhatsApp</a>
           <Link href={communeHref(commune)} className={`${pill} border-2 border-brand-line text-brand-ink`}>Guide de {commune} <IconArrowRight size={14} /></Link>
         </div>
 

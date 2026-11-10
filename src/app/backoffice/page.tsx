@@ -18,6 +18,7 @@ import { NewsPhotos } from '../../components/backoffice/NewsPhotos';
 import { uploadImage } from '../../lib/upload';
 import { WEEKEND_MIN, upcoming } from '../../lib/events';
 import { isNewsActive, newsExpiryDate, NEWS_MAX_AGE_DAYS } from '../../lib/news';
+import { activePack } from '../../lib/partners';
 
 const COMMUNES = COMMUNE_NAMES;
 
@@ -516,6 +517,18 @@ export default function BackofficePage() {
                     .map((x: any) => <option key={x.id} value={x.id}>{x.name} ({x.commune})</option>)}
                 </select>
                 <p className="text-[11px] text-brand-muted mt-1">L’événement s’affiche aussi sur la page du lieu.</p>
+                {(() => {
+                  // Pack Page = 1 event per month (partner packs, 2026-11-10): a warning, the team decides.
+                  const pl = placesList.find((x: any) => String(x.id) === evPlaceId);
+                  const pk = activePack(pl);
+                  if (!pk || pk.eventsPerMonth == null || !evDate) return null;
+                  const n = eventsList.filter((x: any) => String(x.place_id) === evPlaceId && x.id !== editingEventId && String(x.event_date).slice(0, 7) === evDate.slice(0, 7)).length;
+                  return n >= pk.eventsPerMonth ? (
+                    <p className="text-[11px] font-semibold text-yellow-900 bg-yellow-50 rounded-lg px-2 py-1 mt-1">
+                      {pk.label} : {pk.eventsPerMonth} événement par mois inclus, ce lieu en a déjà {n} ce mois-là.
+                    </p>
+                  ) : null;
+                })()}
               </div>
               <div>
                 <label className={labelClass}>Catégorie</label>

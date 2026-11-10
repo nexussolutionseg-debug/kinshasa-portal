@@ -22,6 +22,7 @@ import { createPlacePin } from '../lib/mapPins';
 import communesData from '../data/communes.json';
 import { sameCommune, communeHref, canonicalCommune } from '../lib/communes';
 import { WEEKEND_MIN, upcoming } from '../lib/events';
+import { featuredWithPartners, partnersFirst } from '../lib/partners';
 import { CATEGORIES, CATEGORY_PATH, categoryOf, getAverageRating } from '../lib/categories';
 import { MAP_STYLE, PIN_COLORS } from '../lib/mapStyle';
 import { TRAFFIC_LEVELS, TRAFFIC_COLORS, TRAFFIC_LABELS, DEFAULT_COMMUNE_COLOR, TRAFFIC_FILL_EXPRESSION } from '../lib/traffic';
@@ -116,13 +117,11 @@ export function HomeClient({ initial }: { initial: HomeInitial }) {
   const placeList = useMemo(() => (places || []).filter((p) => p.published !== false), [places]);
 
   // Hand-picked in Backoffice → Vitrine → Coups de cœur.
-  const featuredPlaces = useMemo(
-    () => placeList.filter((p) => p.featured).sort((a, b) => (a.featured_rank ?? 0) - (b.featured_rank ?? 0)).slice(0, HOME_FEATURED_MAX),
-    [placeList]
-  );
+  // + active Site / Site + Réseaux partners after them (partner packs, 2026-11-10).
+  const featuredPlaces = useMemo(() => featuredWithPartners(placeList, HOME_FEATURED_MAX), [placeList]);
   const byCategory = useMemo(() => {
     const m: Record<string, any[]> = {};
-    for (const p of placeList) (m[p.vertical] ||= []).push(p);
+    for (const p of partnersFirst(placeList)) (m[p.vertical] ||= []).push(p);
     return m;
   }, [placeList]);
 
