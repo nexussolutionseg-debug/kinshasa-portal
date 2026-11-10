@@ -22,6 +22,7 @@ import {
 import communesGeo from '../../data/communes.json';
 import { Button } from '../Button';
 import { placeHref, whatsappHref } from '../../lib/places';
+import { useUrlState, readParam, writeParams } from '../../lib/urlState';
 import { PACKS, activePack, packOf } from '../../lib/partners';
 import { newReportToken } from '../../lib/placeReport';
 import { IconEdit, IconExternalLink, IconPin, IconPlus, IconSearch, IconTrash, IconWarning } from '../icons';
@@ -55,10 +56,25 @@ function download(blob: Blob, name: string) {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
-export function PlacesPanel({ places, reload, startWith = 'list' }: { places: Place[]; reload: () => Promise<void> | void; startWith?: Tab }) {
-  const [tab, setTab] = useState<Tab>(startWith);
+const TABS = ['list', 'form', 'import'] as const;
+
+export function PlacesPanel({ places, reload }: { places: Place[]; reload: () => Promise<void> | void }) {
+  // Tab and place being edited are kept in the URL (?tab=form&edit=42), so a refresh reopens them.
+  const [tab, setTabUrl] = useUrlState<Tab>('tab', 'list', TABS, { clear: ['edit'] });
+  const setTab = (t: Tab) => setTabUrl(t);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [editing, setEditing] = useState<Place | null>(null);
+  const [editing, setEditingState] = useState<Place | null>(null);
+  const setEditing = (p: Place | null) => {
+    setEditingState(p);
+    writeParams({ edit: p ? String(p.id) : null });
+  };
+  // After a refresh: reopen the place named in ?edit= once the list is loaded.
+  useEffect(() => {
+    const id = readParam('edit');
+    if (tab !== 'form' || !id || editing) return;
+    const p = places.find((x) => String(x.id) === id);
+    if (p) setEditingState(p);
+  }, [tab, places, editing]);
 
   const say = (ok: boolean, text: string) => {
     setMsg({ ok, text });
@@ -66,8 +82,8 @@ export function PlacesPanel({ places, reload, startWith = 'list' }: { places: Pl
   };
 
   const openForm = (p: Place | null) => {
-    setEditing(p);
     setTab('form');
+    setEditing(p);
     setMsg(null);
     window.scrollTo({ top: 0 });
   };

@@ -19,6 +19,9 @@ import { uploadImage } from '../../lib/upload';
 import { WEEKEND_MIN, upcoming } from '../../lib/events';
 import { isNewsActive, newsExpiryDate, NEWS_MAX_AGE_DAYS } from '../../lib/news';
 import { activePack } from '../../lib/partners';
+import { useUrlState, readParam, writeParams } from '../../lib/urlState';
+
+const SECTIONS = ['home', 'stats', 'places', 'leads', 'events', 'news', 'showcase', 'reviews', 'subscribers'] as const;
 
 const COMMUNES = COMMUNE_NAMES;
 
@@ -66,14 +69,15 @@ export default function BackofficePage() {
   };
 
   // Which content type the backoffice is managing right now.
-  const [section, setSection] = useState<'home' | 'stats' | 'places' | 'leads' | 'events' | 'news' | 'showcase' | 'reviews' | 'subscribers'>('home');
+  // Kept in the URL (?s=leads), with each section's tab and edited item (2026-11-10):
+  // a refresh reopens the same page and Back returns to the previous section.
+  const [section, setSection] = useUrlState('s', 'home', SECTIONS, { push: true, clear: ['tab', 'edit'] });
 
   const [submitting, setSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Places live in <PlacesPanel>; the list is kept here for the dashboard counts.
   const [placesList, setPlacesList] = useState<any[]>([]);
-  const [placesStart, setPlacesStart] = useState<{ tab: 'list' | 'form' | 'import'; n: number }>({ tab: 'list', n: 0 });
 
   const fetchPlaces = async () => {
     const { data, error } = await supabase.from('places').select('*').order('created_at', { ascending: false });
@@ -89,7 +93,7 @@ export default function BackofficePage() {
   // instead of only via direct database access. Mirrors the places CRUD
   // pattern above.
   // ---------------------------------------------------------------------
-  const [eventTab, setEventTab] = useState<'manage' | 'add'>('manage');
+  const [eventTab, setEventTab] = useUrlState('tab', 'manage', ['manage', 'add'] as const, { clear: ['edit'] });
   const [eventsList, setEventsList] = useState<any[]>([]);
   const [editingEventId, setEditingEventId] = useState<number | null>(null);
   const [evTitle, setEvTitle] = useState('');
@@ -114,6 +118,7 @@ export default function BackofficePage() {
 
   const resetEventForm = () => {
     setEditingEventId(null);
+    writeParams({ edit: null });
     setEvTitle('');
     setEvCommune('Gombe');
     setEvCategory('');
@@ -135,6 +140,7 @@ export default function BackofficePage() {
     setEvUrl(evt.url || '');
     setEvPlaceId(evt.place_id ? String(evt.place_id) : '');
     setEventTab('add');
+    writeParams({ edit: String(evt.id) });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -189,7 +195,7 @@ export default function BackofficePage() {
   // no-billing news API to pull from automatically, so this is a real
   // editorial feed the team enters by hand, dated like events.
   // ---------------------------------------------------------------------
-  const [newsTab, setNewsTab] = useState<'manage' | 'add'>('manage');
+  const [newsTab, setNewsTab] = useUrlState('tab', 'manage', ['manage', 'add'] as const, { clear: ['edit'] });
   const [newsList, setNewsList] = useState<any[]>([]);
   const [editingNewsId, setEditingNewsId] = useState<number | null>(null);
   const [nwTitle, setNwTitle] = useState('');
@@ -215,6 +221,7 @@ export default function BackofficePage() {
 
   const resetNewsForm = () => {
     setEditingNewsId(null);
+    writeParams({ edit: null });
     setNwTitle('');
     setNwBody('');
     setNwCommune('');
@@ -239,8 +246,24 @@ export default function BackofficePage() {
     setNwImages(imgs);
     setNwHadImage(imgs.length > 0);
     setNewsTab('add');
+    writeParams({ edit: String(item.id) });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // After a refresh: reopen the event / article named in ?edit= once the lists are loaded.
+  useEffect(() => {
+    const id = readParam('edit');
+    if (!id) return;
+    if (section === 'events' && eventTab === 'add' && editingEventId === null) {
+      const evt = eventsList.find((x: any) => String(x.id) === id);
+      if (evt) startEditingEvent(evt);
+    }
+    if (section === 'news' && newsTab === 'add' && editingNewsId === null) {
+      const item = newsList.find((x: any) => String(x.id) === id);
+      if (item) startEditingNews(item);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section, eventTab, newsTab, eventsList, newsList]);
 
   const handleSaveNews = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -389,7 +412,7 @@ export default function BackofficePage() {
         {section === 'home' && (
           <DashboardHome
             go={(id) => { setSection(id); window.scrollTo({ top: 0 }); }}
-            addPlace={() => { setSection('places'); setPlacesStart((x) => ({ tab: 'form', n: x.n + 1 })); }}
+            addPlace={() => { setSection('places'); writeParams({ tab: 'form' }); }}
             placesCount={placesList.length}
             placesNoPhoto={placesList.filter((p) => !p.image_url).length}
             eventsCount={eventsList.filter((e: any) => !e.event_date || new Date(e.event_date) >= new Date(new Date().toDateString())).length}
@@ -402,7 +425,7 @@ export default function BackofficePage() {
         {section === 'subscribers' && <SubscribersPanel />}
 
         {section === 'places' && (
-          <PlacesPanel key={placesStart.n} places={placesList} reload={fetchPlaces} startWith={placesStart.tab} />
+          <PlacesPanel places={placesList} reload={fetchPlaces} />
         )}
 
         {section === 'leads' && <LeadsPanel places={placesList} reloadPlaces={fetchPlaces} />}
