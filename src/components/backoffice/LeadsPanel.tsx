@@ -73,6 +73,10 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
   }, []);
 
   const placesHavePageFields = places.some((p) => 'website' in p);
+  const placesHavePacks = places.some((p) => 'partner_pack' in p);
+  // A signed partner's pack goes onto the place (partner packs, 2026-11-10).
+  const packFields = (lead: Lead) =>
+    placesHavePacks && lead.status === 'partenaire' && lead.pack ? { partner_pack: lead.pack, partner_since: kinshasaToday() } : {};
 
   /** Create the place from the lead (or link the existing one) and remember it on the lead. */
   const putOnMap = async (lead: Lead, quiet = false): Promise<boolean> => {
@@ -81,12 +85,14 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
     const existing = places.find((p) => leadKey(p.name, p.commune) === key);
     let placeId: number | null = existing?.id ?? null;
     if (existing) {
-      if ((existing.lat == null || existing.lng == null) && lead.lat != null && lead.lng != null) {
-        await supabase.from('places').update({ lat: lead.lat, lng: lead.lng }).eq('id', existing.id);
-      }
+      const upd = {
+        ...((existing.lat == null || existing.lng == null) && lead.lat != null && lead.lng != null ? { lat: lead.lat, lng: lead.lng } : {}),
+        ...(!existing.partner_pack ? packFields(lead) : {}),
+      };
+      if (Object.keys(upd).length) await supabase.from('places').update(upd).eq('id', existing.id);
     } else {
       if ((lead.lat == null || lead.lng == null) && !quiet && !confirm(`« ${lead.name} » n’a pas de position : il apparaîtra sur sa commune, sans épingle sur la carte. Continuer ?`)) return false;
-      const { data, error } = await supabase.from('places').insert([leadToPlace(lead, placesHavePageFields)]).select('id').single();
+      const { data, error } = await supabase.from('places').insert([{ ...leadToPlace(lead, placesHavePageFields), ...packFields(lead) }]).select('id').single();
       if (error) {
         say(false, `Impossible de créer le lieu : ${error.message}`);
         return false;
@@ -104,6 +110,13 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
     if (error) return say(false, error.message);
     setLeads((ls) => (ls || []).map((l) => (l.id === lead.id ? { ...l, status } : l)));
     if (status === 'partenaire' && !lead.place_id) await putOnMap({ ...lead, status }, true);
+    else if (status === 'partenaire' && lead.place_id && lead.pack) {
+      const pl = places.find((p) => p.id === lead.place_id);
+      if (pl && !pl.partner_pack && placesHavePacks) {
+        await supabase.from('places').update(packFields({ ...lead, status })).eq('id', lead.place_id);
+        await reloadPlaces();
+      }
+    }
   };
 
   const remove = async (lead: Lead) => {

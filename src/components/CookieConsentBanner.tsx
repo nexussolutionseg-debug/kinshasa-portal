@@ -59,7 +59,7 @@ export function CookieConsentBanner() {
   // Team pages: no banner covering the backoffice buttons, and no Google
   // Analytics there either (staff visits would skew the audience numbers).
   const pathname = usePathname();
-  if (pathname?.startsWith('/backoffice') || pathname?.startsWith('/login') || pathname?.startsWith('/stats')) return null;
+  if (pathname?.startsWith('/backoffice') || pathname?.startsWith('/login') || pathname?.startsWith('/stats') || pathname?.startsWith('/rapport')) return null;
 
   return (
     <>

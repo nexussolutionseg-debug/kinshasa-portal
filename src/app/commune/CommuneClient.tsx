@@ -21,6 +21,7 @@ import { SpinningWheel } from '../../components/BrandMark';
 import { Carousel } from '../../components/Carousel';
 import { PlaceCard, CategoryIcon } from '../../components/PlaceCard';
 import { PlaceSheet } from '../../components/PlaceSheet';
+import { partnersFirst } from '../../lib/partners';
 import { useKinNews, NewsCard, LiveDot, type InitialNews } from '../../components/KinNews';
 import { getTrafficLevel, TRAFFIC_COLORS, TRAFFIC_LABELS } from '../../lib/traffic';
 import { CATEGORIES, getAverageRating } from '../../lib/categories';
@@ -92,7 +93,7 @@ export function CommuneClient({ communeName, initialPlaces, initialEvents, initi
 
   const byCategory = useMemo(() => {
     const m: Record<string, any[]> = {};
-    for (const p of placeList) (m[p.vertical] ||= []).push(p);
+    for (const p of partnersFirst(placeList)) (m[p.vertical] ||= []).push(p);
     return m;
   }, [placeList]);
 

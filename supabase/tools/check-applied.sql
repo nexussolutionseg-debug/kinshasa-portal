@@ -35,4 +35,12 @@ select 'place_pages_leads (2026-11-10)',
         and exists (select 1 from information_schema.columns
                     where table_schema = 'public' and table_name = 'places' and column_name = 'hours')
         and exists (select 1 from information_schema.columns
-                    where table_schema = 'public' and table_name = 'events' and column_name = 'place_id'));
+                    where table_schema = 'public' and table_name = 'events' and column_name = 'place_id'))
+union all
+select 'partner_packs_report (2026-11-10)',
+       (to_regclass('public.place_stats') is not null
+        and to_regclass('public.place_report_links') is not null
+        and exists (select 1 from information_schema.columns
+                    where table_schema = 'public' and table_name = 'places' and column_name = 'partner_pack')
+        and exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                    where n.nspname = 'public' and p.proname = 'place_report'));

@@ -9,6 +9,7 @@ import { canonicalCommune, sameCommune } from '../lib/communes';
 import { CATEGORIES, CATEGORY_PATH, PLACE_CATEGORY_IDS, type Category } from '../lib/categories';
 import { PlaceCard, CategoryIcon } from './PlaceCard';
 import { PlaceSheet } from './PlaceSheet';
+import { partnersFirst } from '../lib/partners';
 import { SpinningWheel } from './BrandMark';
 import { IconPin, IconArrowRight } from './icons';
 
@@ -37,7 +38,8 @@ export function CategoryClient({ category, initialPlaces }: { category: Category
     return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'fr'));
   }, [places]);
 
-  const list = useMemo(() => (commune ? places.filter((p) => sameCommune(p.commune, commune)) : places), [places, commune]);
+  // Paid partners first (partner packs, 2026-11-10).
+  const list = useMemo(() => partnersFirst(commune ? places.filter((p) => sameCommune(p.commune, commune)) : places), [places, commune]);
   const close = useCallback(() => setOpen(null), []);
   const update = useCallback((u: any) => setPlaces((prev) => prev.map((p) => (p.id === u.id ? u : p))), []);
   const chip = (on: boolean) =>

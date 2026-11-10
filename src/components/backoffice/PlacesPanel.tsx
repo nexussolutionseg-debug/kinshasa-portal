@@ -21,12 +21,14 @@ import {
 } from '../../lib/placeImport';
 import communesGeo from '../../data/communes.json';
 import { Button } from '../Button';
-import { placeHref } from '../../lib/places';
+import { placeHref, whatsappHref } from '../../lib/places';
+import { PACKS, activePack, packOf } from '../../lib/partners';
+import { newReportToken } from '../../lib/placeReport';
 import { IconEdit, IconExternalLink, IconPin, IconPlus, IconSearch, IconTrash, IconWarning } from '../icons';
 
 type Place = Record<string, any>;
 type Tab = 'list' | 'form' | 'import';
-type Filter = 'all' | 'live' | 'hidden' | 'nopos' | 'nophoto';
+type Filter = 'all' | 'live' | 'hidden' | 'nopos' | 'nophoto' | 'partners';
 
 const PLACE_CATEGORIES = CATEGORIES.filter((c) => ['kin_places', 'kin_food', 'kin_culture', 'kin_style', 'kin_securite'].includes(c.id));
 const SQL_HINT = 'Exécutez d’abord le fichier SQL « places-import » dans Supabase (SQL Editor), puis réessayez.';
@@ -39,7 +41,7 @@ const chip = (on: boolean) =>
 
 const EMPTY = {
   name: '', commune: 'Gombe', vertical: 'kin_places', place_type: '', address: '', position: '', description: '',
-  budget: '', phone: '', whatsapp: '', website: '', instagram: '', facebook: '', hours: '', google_rating: '', google_reviews: '', google_maps_url: '', image_url: '', published: true, verification: '',
+  budget: '', partner_pack: '', partner_since: '', partner_until: '', phone: '', whatsapp: '', website: '', instagram: '', facebook: '', hours: '', google_rating: '', google_reviews: '', google_maps_url: '', image_url: '', published: true, verification: '',
 };
 type Form = typeof EMPTY;
 
@@ -131,6 +133,7 @@ function PlaceList({ places, reload, onEdit, say }: { places: Place[]; reload: (
     hidden: places.filter((p) => !isLive(p)).length,
     nopos: places.filter((p) => !(p.lat && p.lng)).length,
     nophoto: places.filter((p) => !p.image_url).length,
+    partners: places.filter((p) => p.partner_pack).length,
   };
 
   const list = useMemo(() => {
@@ -139,6 +142,7 @@ function PlaceList({ places, reload, onEdit, say }: { places: Place[]; reload: (
     if (filter === 'hidden') r = r.filter((p) => !isLive(p));
     if (filter === 'nopos') r = r.filter((p) => !(p.lat && p.lng));
     if (filter === 'nophoto') r = r.filter((p) => !p.image_url);
+    if (filter === 'partners') r = r.filter((p) => p.partner_pack);
     if (cat !== 'all') r = r.filter((p) => p.vertical === cat);
     if (q.trim()) {
       const s = q.toLowerCase();
@@ -180,7 +184,7 @@ function PlaceList({ places, reload, onEdit, say }: { places: Place[]; reload: (
       </div>
       <div className="rail flex gap-2 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-1 mb-2">
         {([
-          ['all', 'Tous'], ['live', 'Visibles'], ['hidden', 'Masqués'], ['nopos', 'Sans position'], ['nophoto', 'Sans photo'],
+          ['all', 'Tous'], ['live', 'Visibles'], ['hidden', 'Masqués'], ['nopos', 'Sans position'], ['nophoto', 'Sans photo'], ['partners', 'Partenaires'],
         ] as const).map(([id, l]) => (
           <button key={id} type="button" onClick={() => setFilter(id)} className={chip(filter === id)}>
             {l} <span className="opacity-60 font-semibold">{counts[id]}</span>
@@ -224,6 +228,11 @@ function PlaceList({ places, reload, onEdit, say }: { places: Place[]; reload: (
                     </p>
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full ${live ? 'bg-brand-blue-soft text-brand-blue-deep' : 'bg-brand-line text-brand-muted'}`}>{live ? 'Visible' : 'Masqué'}</span>
+                      {p.partner_pack && (
+                        <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full ${activePack(p) ? 'bg-brand-ink text-white' : 'bg-brand-line text-brand-muted'}`}>
+                          {packOf(p.partner_pack)?.label || p.partner_pack}{activePack(p) ? '' : ' · expiré'}
+                        </span>
+                      )}
                       {!(p.lat && p.lng) && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-yellow-soft text-brand-ink">Sans position</span>}
                       {p.verification && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-brand-bg text-brand-muted border border-brand-line truncate max-w-[200px]">{p.verification}</span>}
                     </div>
@@ -275,6 +284,7 @@ function PlaceForm({ place, onDone, onCancel, say }: { place: Place | null; onDo
           vertical: place.vertical || 'kin_places', place_type: place.place_type || '', address: place.address || '',
           position: place.lat && place.lng ? `${Number(place.lat).toFixed(6)}, ${Number(place.lng).toFixed(6)}` : '',
           description: place.description || '', budget: place.budget || '', phone: place.phone || '',
+          partner_pack: (place as any).partner_pack || '', partner_since: (place as any).partner_since || '', partner_until: (place as any).partner_until || '',
           whatsapp: (place as any).whatsapp || '', website: (place as any).website || '', instagram: (place as any).instagram || '',
           facebook: (place as any).facebook || '', hours: (place as any).hours || '',
           google_rating: place.google_rating != null ? String(place.google_rating).replace('.', ',') : '',
@@ -345,6 +355,10 @@ function PlaceForm({ place, onDone, onCancel, say }: { place: Place | null; onDo
       published: f.published,
       verification: f.verification.trim() || null,
       ...(place ? {} : { is_label_recommended: true }),
+      // Partner pack (2026-11-10): only sent once the columns exist or when set.
+      ...((place && 'partner_pack' in (place as any)) || f.partner_pack
+        ? { partner_pack: f.partner_pack || null, partner_since: f.partner_pack ? f.partner_since || null : null, partner_until: f.partner_pack ? f.partner_until || null : null }
+        : {}),
       // Page fields (2026-11-10): only sent once the columns exist or when filled,
       // so places still save before supabase/pending/20261110140000_place_pages_leads.sql.
       ...((place && 'website' in (place as any)) || [f.whatsapp, f.website, f.instagram, f.facebook, f.hours].some((v) => v.trim())
@@ -508,6 +522,29 @@ function PlaceForm({ place, onDone, onCancel, say }: { place: Place | null; onDo
         <label className={label} htmlFor="pl-ver">Note interne / statut de vérification</label>
         <input id="pl-ver" value={f.verification} onChange={(e) => set('verification', e.target.value)} className={input} placeholder="ex : Identifié, À vérifier, Commune à confirmer…" />
         <p className="text-[11px] text-brand-muted mt-1 mb-0">Pour l’équipe : non affiché sur le site.</p>
+      </div>
+
+      <div className="border-t border-brand-line pt-4 grid gap-4 sm:grid-cols-3">
+        <div className="sm:col-span-3">
+          <p className="font-display text-lg font-extrabold m-0">Partenaire</p>
+          <p className="text-[11px] text-brand-muted m-0">Pack Site et Site + Réseaux : dans les Coups de cœur. Tout pack payé : en tête de sa catégorie et de sa commune. Sans date de fin, le pack reste actif.</p>
+        </div>
+        <div>
+          <label className={label} htmlFor="pl-pack">Pack</label>
+          <select id="pl-pack" value={f.partner_pack} onChange={(e) => set('partner_pack', e.target.value)} className={input}>
+            <option value="">Pas partenaire</option>
+            {PACKS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={label} htmlFor="pl-since">Depuis le</label>
+          <input id="pl-since" type="date" value={f.partner_since} disabled={!f.partner_pack} onChange={(e) => set('partner_since', e.target.value)} className={input} />
+        </div>
+        <div>
+          <label className={label} htmlFor="pl-until">Jusqu’au</label>
+          <input id="pl-until" type="date" value={f.partner_until} disabled={!f.partner_pack} onChange={(e) => set('partner_until', e.target.value)} className={input} />
+        </div>
+        {place && <div className="sm:col-span-3"><ReportLink place={place} say={say} /></div>}
       </div>
 
       <Button type="submit" variant="primary" size="lg" fullWidth disabled={saving}>
@@ -722,6 +759,73 @@ function PlaceImport({ places, reload, say }: { places: Place[]; reload: () => P
             </Button>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Partner report link (2026-11-10): one private link per place, /rapport/<link>.
+function ReportLink({ place, say }: { place: Place; say: (ok: boolean, t: string) => void }) {
+  const [token, setToken] = useState<string | null | undefined>(undefined);
+  const [month, setMonth] = useState<Record<string, number> | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const r = await supabase.from('place_report_links').select('token').eq('place_id', place.id).maybeSingle();
+      if (r.error) { setMissing(true); setToken(null); return; }
+      setToken(r.data?.token || null);
+      const first = new Date(Date.now() + 3600000).toISOString().slice(0, 8) + '01';
+      const st = await supabase.from('place_stats').select('kind, n').eq('place_id', place.id).gte('day', first);
+      if (!st.error) {
+        const m: Record<string, number> = {};
+        for (const x of st.data || []) m[x.kind] = (m[x.kind] || 0) + x.n;
+        setMonth(m);
+      }
+    })();
+  }, [place.id]);
+
+  const url = token ? `${window.location.origin}/rapport/${token}` : '';
+  const create = async (replace: boolean) => {
+    if (replace && !confirm('Créer un nouveau lien ? L’ancien ne marchera plus.')) return;
+    setBusy(true);
+    const t = newReportToken();
+    const r = await supabase.from('place_report_links').upsert({ place_id: place.id, token: t, created_at: new Date().toISOString(), view_count: 0 }, { onConflict: 'place_id' });
+    setBusy(false);
+    if (r.error) return say(false, r.error.message);
+    setToken(t);
+  };
+  const wa = whatsappHref({ phone: place.phone, whatsapp: place.whatsapp, name: null });
+  const sendWa = wa && token
+    ? `${wa.split('?')[0]}?text=${encodeURIComponent(`Bonjour, voici votre rapport KINSHASA LABEL du mois (vues, WhatsApp, appels, itinéraires) : ${url}`)}`
+    : null;
+
+  if (missing) return <p className="text-xs text-yellow-900 bg-yellow-50 rounded-xl px-3 py-2 m-0">Rapport partenaire : lancez d’abord supabase/pending/20261110170000_partner_packs_report.sql dans Supabase.</p>;
+  if (token === undefined) return null;
+  return (
+    <div className="rounded-2xl bg-brand-bg p-4 flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="font-bold m-0">Rapport partenaire</p>
+        {month && (
+          <p className="text-xs text-brand-muted m-0">
+            Ce mois : {month.view || 0} vues · {month.whatsapp || 0} WhatsApp · {month.call || 0} appels · {month.directions || 0} itinéraires
+          </p>
+        )}
+      </div>
+      {token ? (
+        <>
+          <input readOnly value={url} onFocus={(e) => e.target.select()} className={input} aria-label="Lien du rapport" />
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" onClick={() => navigator.clipboard.writeText(url).then(() => say(true, 'Lien du rapport copié.'))}>Copier</Button>
+            <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center h-11 px-4 rounded-full border-2 border-brand-line font-bold text-brand-ink no-underline">Ouvrir</a>
+            {sendWa && <a href={sendWa} target="_blank" rel="noopener noreferrer" className="inline-flex items-center h-11 px-4 rounded-full bg-[#25D366] text-white font-bold no-underline">Envoyer sur WhatsApp</a>}
+            <Button type="button" variant="ghost" disabled={busy} onClick={() => create(true)}>Nouveau lien</Button>
+          </div>
+        </>
+      ) : (
+        <Button type="button" variant="secondary" disabled={busy} onClick={() => create(false)}>Créer le lien du rapport</Button>
       )}
     </div>
   );

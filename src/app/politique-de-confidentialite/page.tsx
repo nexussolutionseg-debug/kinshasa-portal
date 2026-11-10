@@ -9,7 +9,7 @@ import { ManageCookiesLink } from '../../components/ManageCookiesLink';
 // Not legal advice: have a lawyer confirm it against the data-protection
 // law that applies to the operator and audience before relying on it.
 // Keep LAST_UPDATED in sync whenever the content changes.
-const LAST_UPDATED = '11 octobre 2026';
+const LAST_UPDATED = '10 novembre 2026';
 const CONTACT = 'contact@kinshasalabel.com';
 
 export const metadata = {
@@ -94,6 +94,13 @@ export default function PrivacyPolicyPage() {
               <strong>Vercel Web Analytics</strong> (toujours actif) compte les visites de façon agrégée — pages vues, pays,
               type d&apos;appareil — <strong>sans cookie</strong> et sans permettre de t&apos;identifier ou de te suivre sur
               d&apos;autres sites.
+            </p>
+            <p className="m-0 mt-3">
+              <strong>Compteurs des lieux</strong> (toujours actifs) : quand tu ouvres la fiche d&apos;un lieu ou que tu
+              touches ses boutons WhatsApp, Appeler, Itinéraire, site web ou réseaux, nous ajoutons 1 à un compteur du
+              jour pour ce lieu (par exemple « 3 clics WhatsApp le 10 novembre »). Ces chiffres servent aux rapports
+              envoyés à nos partenaires. <strong>Aucun cookie</strong>, aucune adresse IP et aucun identifiant ne sont
+              enregistrés : seul le total par lieu, par jour et par type de clic est conservé.
             </p>
             <p className="m-0 mt-3">
               <strong>Google Analytics 4</strong> (uniquement avec ton accord) nous aide à comprendre quelles pages et quelles

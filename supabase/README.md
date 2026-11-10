@@ -32,7 +32,8 @@ A founder ran `tools/check-applied.sql` and `tools/schema-snapshot.sql` on the l
 | `migrations/20261028090000_news_image.sql` | Run 2026-11-10 (inside the file below). |
 | `migrations/20261101120000_stats_links_news_gallery.sql` | Run by a founder 2026-11-10 (combined file). |
 | `migrations/20261110100000_news_expires_on.sql` | Run by a founder 2026-11-10 (combined file). |
-| `pending/20261110140000_place_pages_leads.sql` | **To run.** Place page fields (website, instagram, facebook, whatsapp, hours), `events.place_id`, and the team-only `kl_leads` table (Backoffice → Prospects). Until it is run, place pages work without those fields and the Prospects tab shows a "run the SQL" notice. |
+| `migrations/20261110140000_place_pages_leads.sql` | Run by a founder 2026-11-10. |
+| `pending/20261110170000_partner_packs_report.sql` | **To run.** Partner packs on places (`partner_pack`, `partner_since`, `partner_until`), anonymous daily counters `place_stats` (written only through `track_place`, readable by the team), team-only `place_report_links`, and `place_report()` for /rapport/<link>. Before it is run, the site works as before: no pack rules, counters fail silently, the report link panel shows a "run the SQL" notice. |
 
 Legacy tables not used by kinshasalabel.com: `dispatches`, `security_alerts` (earlier Kinshasa Portal journalism app), and the public storage bucket `commune-videos`.
 
