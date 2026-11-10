@@ -23,6 +23,7 @@ import {
   leadToPlace, isDue, pitchText, scanToLead, SCAN_SOURCE, leadTemplateCsv, LEAD_TEMPLATE_HELP, type LeadImportRow,
 } from '../../lib/leads';
 import { kinshasaToday } from '../../lib/news';
+import { useUrlState, readParam, writeParams } from '../../lib/urlState';
 import { Button } from '../Button';
 import { IconEdit, IconExternalLink, IconPhone, IconPin, IconPlus, IconSearch, IconTrash } from '../icons';
 
@@ -47,10 +48,21 @@ function download(text: string, name: string) {
 }
 
 export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlaces: () => Promise<void> | void }) {
-  const [tab, setTab] = useState<Tab>('list');
+  // Tab and lead being edited are kept in the URL (?tab=form&edit=12), so a refresh reopens them.
+  const [tab, setTab] = useUrlState<Tab>('tab', 'list', ['list', 'form', 'import'], { clear: ['edit'] });
   const [leads, setLeads] = useState<Lead[] | null>(null);
   const [noTable, setNoTable] = useState(false);
-  const [editing, setEditing] = useState<Lead | null>(null);
+  const [editing, setEditingState] = useState<Lead | null>(null);
+  const setEditing = (l: Lead | null) => {
+    setEditingState(l);
+    writeParams({ edit: l ? String(l.id) : null });
+  };
+  useEffect(() => {
+    const id = readParam('edit');
+    if (tab !== 'form' || !id || editing || !leads) return;
+    const l = leads.find((x) => String(x.id) === id);
+    if (l) setEditingState(l);
+  }, [tab, leads, editing]);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const say = (ok: boolean, text: string) => {
     setMsg({ ok, text });
@@ -203,7 +215,7 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
       {tab === 'list' && leads && (
         <LeadList
           leads={leads}
-          onEdit={(l) => { setEditing(l); setMsg(null); setTab('form'); }}
+          onEdit={(l) => { setTab('form'); setEditing(l); setMsg(null); }}
           onStatus={setStatus}
           onMap={(l) => putOnMap(l)}
           onDelete={remove}
@@ -211,7 +223,7 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
       )}
       {tab === 'form' && (
         <LeadForm
-          key={editing?.id || 'new'}
+          key={editing?.id || (readParam('edit') ? 'wait' : 'new')}
           lead={editing}
           leads={leads || []}
           say={say}

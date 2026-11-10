@@ -10,6 +10,7 @@
 // Everything saves instantly to Supabase; the site reads it on next load.
 'use client';
 
+import { useUrlState } from '../../lib/urlState';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { uploadImage } from '../../lib/upload';
@@ -137,7 +138,7 @@ function bannerStatus(b: FullBanner) {
 
 // ======================================================================
 export function ShowcasePanel() {
-  const [tab, setTab] = useState<'banners' | 'featured' | 'sections'>('banners');
+  const [tab, setTab] = useUrlState('tab', 'banners', ['banners', 'featured', 'sections'] as const);
   const [msg, setMsg] = useState<Msg>(null);
 
   return (

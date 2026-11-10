@@ -5,7 +5,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
-import { canonicalCommune, sameCommune } from '../lib/communes';
+import { canonicalCommune, sameCommune, communeSlug } from '../lib/communes';
+import { readParam, writeParams } from '../lib/urlState';
 import { CATEGORIES, CATEGORY_PATH, PLACE_CATEGORY_IDS, type Category } from '../lib/categories';
 import { PlaceCard, CategoryIcon } from './PlaceCard';
 import { PlaceSheet } from './PlaceSheet';
@@ -15,7 +16,23 @@ import { IconPin, IconArrowRight } from './icons';
 
 export function CategoryClient({ category, initialPlaces }: { category: Category; initialPlaces: any[] }) {
   const [places, setPlaces] = useState<any[]>(initialPlaces);
-  const [commune, setCommune] = useState<string | null>(null);
+  // The chosen commune is in the URL (?commune=gombe): refresh and shared links keep it.
+  const [commune, setCommuneState] = useState<string | null>(null);
+  const setCommune = useCallback((c: string | null) => {
+    setCommuneState(c);
+    writeParams({ commune: c ? communeSlug(c) : null });
+  }, []);
+  useEffect(() => {
+    const sync = () => {
+      const v = readParam('commune');
+      if (!v) return setCommuneState(null);
+      const hit = initialPlaces.map((p) => canonicalCommune(p.commune) || p.commune).find((c) => c && communeSlug(c) === v);
+      setCommuneState(hit || canonicalCommune(v.replace(/-/g, ' ')) || null);
+    };
+    sync();
+    window.addEventListener('popstate', sync);
+    return () => window.removeEventListener('popstate', sync);
+  }, [initialPlaces]);
   const [open, setOpen] = useState<any | null>(null);
 
   useEffect(() => {
