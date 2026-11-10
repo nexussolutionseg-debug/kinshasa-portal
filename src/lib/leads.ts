@@ -242,7 +242,7 @@ export const SCAN_SOURCE = 'Scan quotidien';
 /** One row of the daily scan (Nexus Hub kin_leads.data) → a kl_leads row. */
 export function scanToLead(row: any): (LeadDraft & { created_at: string }) | null {
   const name = String(row?.business || row?.name || '').replace(/\s+/g, ' ').trim().slice(0, 160);
-  if (!name || !row?.id) return null;
+  if (!name || !row?.id || String(row.id).startsWith('kin_test')) return null;
   const s = (v: any) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 500) : null);
   const n = (v: any) => (v === null || v === undefined || v === '' ? null : Number(v));
   const lat = n(row.lat);
