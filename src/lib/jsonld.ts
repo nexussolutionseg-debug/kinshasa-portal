@@ -57,6 +57,8 @@ export function eventsJsonLd(events: any[]) {
     name: e.title,
     description: e.description || undefined,
     startDate: e.event_date || undefined,
+    ...(typeof e.image_url === 'string' && /^https:\/\//.test(e.image_url) ? { image: [e.image_url] } : {}),
+    url: e.id ? `${SITE_URL}/weekend/${e.id}` : undefined,
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location: { '@type': 'Place', name: e.commune ? `${e.commune}, Kinshasa` : 'Kinshasa', address: { '@type': 'PostalAddress', addressLocality: e.commune || 'Kinshasa', addressRegion: 'Kinshasa', addressCountry: 'CD' } },

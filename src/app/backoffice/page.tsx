@@ -14,6 +14,8 @@ import { Button } from '../../components/Button';
 import { SubscribersPanel } from '../../components/backoffice/SubscribersPanel';
 import { KinshasaMark } from '../../components/BrandMark';
 import { NewsPhotos } from '../../components/backoffice/NewsPhotos';
+import { uploadImage } from '../../lib/upload';
+import { WEEKEND_MIN, upcoming } from '../../lib/events';
 
 const COMMUNES = COMMUNE_NAMES;
 
@@ -92,6 +94,10 @@ export default function BackofficePage() {
   const [evCategory, setEvCategory] = useState('');
   const [evDescription, setEvDescription] = useState('');
   const [evDate, setEvDate] = useState('');
+  // Photo (uploaded or pasted https link) + optional ticket/info link (2026-11-10).
+  const [evImage, setEvImage] = useState('');
+  const [evUrl, setEvUrl] = useState('');
+  const [evUploading, setEvUploading] = useState(false);
 
   const fetchEvents = async () => {
     const { data, error } = await supabase.from('events').select('*').order('event_date', { ascending: true });
@@ -107,6 +113,8 @@ export default function BackofficePage() {
     setEvCategory('');
     setEvDescription('');
     setEvDate('');
+    setEvImage('');
+    setEvUrl('');
   };
 
   const startEditingEvent = (evt: any) => {
@@ -116,6 +124,8 @@ export default function BackofficePage() {
     setEvCategory(evt.category || '');
     setEvDescription(evt.description || '');
     setEvDate(evt.event_date || '');
+    setEvImage(evt.image_url || '');
+    setEvUrl(evt.url || '');
     setEventTab('add');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -130,6 +140,8 @@ export default function BackofficePage() {
       category: evCategory.trim() || null,
       description: evDescription.trim(),
       event_date: evDate || null,
+      image_url: /^https:\/\//.test(evImage.trim()) ? evImage.trim() : null,
+      url: /^https?:\/\//.test(evUrl.trim()) ? evUrl.trim() : null,
     };
     try {
       if (editingEventId) {
@@ -389,6 +401,17 @@ export default function BackofficePage() {
             <h2 className="font-display text-xl text-brand-blue mt-0 mb-5 font-semibold">
               Événements — Kin Weekend
             </h2>
+            {(() => {
+              const n = upcoming(eventsList).length;
+              return (
+                <p className={`text-xs leading-relaxed mb-4 rounded-xl px-3 py-2 ${n >= WEEKEND_MIN ? 'bg-green-50 text-green-800' : 'bg-yellow-50 text-yellow-900'}`}>
+                  {n >= WEEKEND_MIN
+                    ? `${n} événements à venir : Kin Weekend est visible sur l’accueil.`
+                    : `${n}/${WEEKEND_MIN} événements à venir. Kin Weekend apparaît sur l’accueil à partir de ${WEEKEND_MIN}. En attendant, le programme est toujours visible sur `}
+                  {n < WEEKEND_MIN && <a href="/weekend" target="_blank" rel="noopener noreferrer" className="font-semibold underline">kinshasalabel.com/weekend</a>}
+                </p>
+              );
+            })()}
             {eventsList.length === 0 ? (
               <p className="text-sm text-brand-muted">Aucun événement enregistré. Ajoutez le premier événement du week-end via l&apos;onglet ci-dessus.</p>
             ) : (
@@ -411,6 +434,9 @@ export default function BackofficePage() {
                       <p className="text-sm text-brand-ink/70 m-0 line-clamp-3 break-words">{item.description}</p>
                     </div>
                     <div className="grid grid-cols-2 sm:flex gap-2 shrink-0">
+                      <a href={`/weekend/${item.id}`} target="_blank" rel="noopener noreferrer" className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-1 h-10 px-3 rounded-full border-2 border-brand-line text-sm font-bold text-brand-ink no-underline">
+                        <IconExternalLink size={13} /> Voir
+                      </a>
                       <Button variant="primary" onClick={() => startEditingEvent(item)}>
                         <IconEdit size={13} /> Éditer
                       </Button>
@@ -463,10 +489,51 @@ export default function BackofficePage() {
 
             <div className="mb-5">
               <label className={labelClass}>Description *</label>
-              <textarea value={evDescription} onChange={(e) => setEvDescription(e.target.value)} required rows={3} className={inputClass} />
+              <textarea value={evDescription} onChange={(e) => setEvDescription(e.target.value)} required rows={6} className={inputClass} />
+              <p className="text-[11px] text-brand-muted mt-1">Le texte complet s’affiche sur la page de l’événement ; les cartes n’en montrent que le début.</p>
             </div>
 
-            <Button type="submit" disabled={submitting} variant="primary" size="lg" fullWidth>
+            <div className="mb-4">
+              <label className={labelClass}>Photo / affiche</label>
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-start">
+                {evImage && /^https:\/\//.test(evImage) && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={evImage} alt="" className="w-full sm:w-40 h-40 sm:h-28 object-cover rounded-xl border border-brand-line shrink-0" />
+                )}
+                <div className="flex-1 flex flex-col gap-2 min-w-0">
+                  <label className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-brand-ink text-white font-bold cursor-pointer w-full sm:w-auto">
+                    {evUploading ? 'Envoi en cours…' : evImage ? 'Changer la photo' : 'Ajouter une photo'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={evUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        e.target.value = '';
+                        if (!file) return;
+                        setEvUploading(true);
+                        setStatusMsg(null);
+                        try { setEvImage(await uploadImage(file, 'events', 1600)); }
+                        catch (err: any) { setStatusMsg({ type: 'error', text: `Échec de l’envoi de la photo : ${err.message || err}` }); }
+                        finally { setEvUploading(false); }
+                      }}
+                    />
+                  </label>
+                  <input type="url" value={evImage} onChange={(e) => setEvImage(e.target.value)} placeholder="…ou colle un lien https:// vers l’image" className={inputClass} />
+                  {evImage && (
+                    <button type="button" onClick={() => setEvImage('')} className="self-start text-xs text-brand-red font-semibold bg-transparent border-0 p-0 cursor-pointer">Retirer la photo</button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <label className={labelClass}>Lien billetterie / infos (optionnel)</label>
+              <input type="url" value={evUrl} onChange={(e) => setEvUrl(e.target.value)} placeholder="https://…" className={inputClass} />
+            </div>
+
+            <Button type="submit" disabled={submitting || evUploading} variant="primary" size="lg" fullWidth>
               {submitting ? 'Enregistrement...' : editingEventId ? 'Enregistrer les Modifications →' : 'Publier l’Événement →'}
             </Button>
           </form>
