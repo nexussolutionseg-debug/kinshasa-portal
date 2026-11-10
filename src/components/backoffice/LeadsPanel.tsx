@@ -20,7 +20,7 @@ import { decodeText, parseCsv } from '../../lib/placeImport';
 import { placeHref, telHref, whatsappHref, socialHref } from '../../lib/places';
 import {
   LEAD_STATUSES, LEAD_KINDS, LEAD_PACKS, statusOf, kindOf, leadKey, mapLeadRows, pickLeadSheet,
-  leadToPlace, isDue, pitchText, scanToLead, SCAN_SOURCE, type LeadImportRow,
+  leadToPlace, isDue, pitchText, scanToLead, SCAN_SOURCE, leadTemplateCsv, LEAD_TEMPLATE_HELP, type LeadImportRow,
 } from '../../lib/leads';
 import { kinshasaToday } from '../../lib/news';
 import { Button } from '../Button';
@@ -660,6 +660,17 @@ function LeadImport({ leads, say, onDone }: { leads: Lead[]; say: (ok: boolean, 
         Adresse, Téléphone, Site web, Facebook, Instagram, E-mail, Lien Google Maps (la position en est tirée), Statut, Offre proposée, Prochaine action, Date de relance,
         Responsable, Notes. Un prospect déjà présent (même nom et commune) est ignoré.
       </p>
+      <div className="rounded-2xl bg-brand-bg p-4 flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-bold m-0">Modèle à remplir</p>
+          <Button type="button" variant="secondary" onClick={() => download(leadTemplateCsv().replace(/^\ufeff/, ''), 'modele-prospects-kinshasa-label.csv')}>
+            Télécharger le modèle
+          </Button>
+        </div>
+        <ul className="m-0 pl-5 text-sm text-brand-muted flex flex-col gap-1">
+          {LEAD_TEMPLATE_HELP.map((t) => <li key={t}>{t}</li>)}
+        </ul>
+      </div>
       <label className="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-brand-line rounded-2xl p-6 text-center cursor-pointer hover:border-brand-blue">
         <IconPlus size={20} />
         <span className="font-bold">{fileName || 'Choisir le fichier'}</span>
