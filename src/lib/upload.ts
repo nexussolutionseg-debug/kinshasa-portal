@@ -18,7 +18,7 @@ async function shrink(file: File, maxWidth: number): Promise<Blob> {
   return blob && blob.size < file.size ? blob : file;
 }
 
-export async function uploadImage(file: File, folder: 'banners' | 'banners-mobile' | 'places' | 'news', maxWidth = 2400): Promise<string> {
+export async function uploadImage(file: File, folder: 'banners' | 'banners-mobile' | 'places' | 'news' | 'events', maxWidth = 2400): Promise<string> {
   if (file.size > 15 * 1024 * 1024) throw new Error('Image trop lourde (max 15 Mo).');
   const body = await shrink(file, maxWidth);
   const ext = body.type === 'image/webp' ? 'webp' : (file.name.split('.').pop() || 'jpg').toLowerCase();

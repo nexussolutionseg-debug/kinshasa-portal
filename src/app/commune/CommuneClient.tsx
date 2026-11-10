@@ -238,7 +238,12 @@ export function CommuneClient({ communeName, initialPlaces, initialEvents, initi
           <section className="rounded-[28px] p-5 md:p-8" style={{ background: 'linear-gradient(135deg,#EFE6FD 0%,#FFF7D1 100%)' }}>
             <Carousel title={`Kin Weekend à ${communeName}`} subtitle="Les sorties au programme dans la commune." itemClassName="w-[82%] sm:w-[46%] lg:w-[32%]">
               {events.map((e) => (
-                <article key={e.id} className="h-full bg-white rounded-2xl border border-brand-line shadow-card p-4">
+                <Link key={e.id} href={`/weekend/${e.id}`} className="block h-full bg-white rounded-2xl border border-brand-line shadow-card overflow-hidden no-underline hover:border-brand-blue transition-colors">
+                  {typeof e.image_url === 'string' && /^https:\/\//.test(e.image_url) && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={e.image_url} alt="" loading="lazy" className="w-full aspect-[16/9] object-cover bg-brand-bg" />
+                  )}
+                  <div className="p-4">
                   <span className="text-[11px] font-extrabold uppercase tracking-wide text-[#7B3FE4]">
                     {[e.category, e.event_date && new Date(e.event_date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Africa/Kinshasa' })]
                       .filter(Boolean)
@@ -246,7 +251,9 @@ export function CommuneClient({ communeName, initialPlaces, initialEvents, initi
                   </span>
                   <h3 className="font-display text-lg font-bold text-brand-ink m-0 mt-1">{e.title}</h3>
                   {e.description && <p className="text-sm text-brand-muted m-0 mt-1 line-clamp-3">{e.description}</p>}
-                </article>
+                  <span className="block pt-2 text-sm font-bold text-brand-blue-deep">Lire la suite →</span>
+                  </div>
+                </Link>
               ))}
             </Carousel>
           </section>

@@ -40,6 +40,12 @@ export async function serverEvents(): Promise<any[]> {
   return safe<any[]>(() => sb.from('events').select('*').order('event_date', { ascending: true }), []);
 }
 
+export async function serverEvent(id: number): Promise<any | null> {
+  const sb = client();
+  if (!sb || !Number.isFinite(id)) return null;
+  return safe<any>(() => sb.from('events').select('*').eq('id', id).maybeSingle(), null);
+}
+
 export async function serverBanners(): Promise<any[]> {
   const sb = client();
   if (!sb) return [];
