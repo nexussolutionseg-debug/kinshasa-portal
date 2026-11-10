@@ -8,7 +8,7 @@ import { TimeAgo } from './TimeAgo';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
-import { type NewsItem } from '../lib/news';
+import { type NewsItem, isNewsActive } from '../lib/news';
 import { sameCommune } from '../lib/communes';
 import { IconExternalLink, IconPin, IconMoney, IconNews, IconClose } from './icons';
 import { LiveDot } from './SiteHeader';
@@ -61,8 +61,9 @@ export function useKinNews(commune?: string | null, initial?: InitialNews) {
       .select('*')
       .order('published_date', { ascending: false })
       .order('id', { ascending: false })
-      .limit(12)
-      .then(({ data }) => !cancelled && setPinned((data || []).map(editorialToItem)));
+      .limit(40)
+      // Expired articles leave the public lists and the ticker by themselves.
+      .then(({ data }) => !cancelled && setPinned((data || []).filter((r) => isNewsActive(r)).slice(0, 12).map(editorialToItem)));
 
     return () => {
       cancelled = true;
