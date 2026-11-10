@@ -20,7 +20,7 @@ import { decodeText, parseCsv } from '../../lib/placeImport';
 import { placeHref, telHref, whatsappHref, socialHref } from '../../lib/places';
 import {
   LEAD_STATUSES, LEAD_KINDS, LEAD_PACKS, statusOf, kindOf, leadKey, mapLeadRows, pickLeadSheet,
-  leadToPlace, isDue, pitchText, type LeadImportRow,
+  leadToPlace, isDue, pitchText, scanToLead, SCAN_SOURCE, type LeadImportRow,
 } from '../../lib/leads';
 import { kinshasaToday } from '../../lib/news';
 import { Button } from '../Button';
@@ -57,19 +57,61 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const load = async () => {
+  const load = async (): Promise<Lead[] | null> => {
     const { data, error } = await supabase.from('kl_leads').select('*').order('updated_at', { ascending: false }).limit(2000);
     if (error) {
       setNoTable(missingTable(error));
       setLeads([]);
       if (!missingTable(error)) say(false, error.message);
-      return;
+      return null;
     }
     setNoTable(false);
     setLeads(data || []);
+    return data || [];
   };
+
+  // Daily lead scan (2026-11-10): new finds are pulled in each time Prospects opens.
+  const [scan, setScan] = useState<{ busy: boolean; text: string }>({ busy: false, text: '' });
+  const syncScan = async (current: Lead[], manual = false) => {
+    setScan({ busy: true, text: '' });
+    try {
+      const scanned = current.filter((l) => String(l.source || '').startsWith(SCAN_SOURCE));
+      // Ask only for finds newer than the last one we have (a day of margin; duplicates are skipped below).
+      const since = scanned.reduce((m, l) => Math.max(m, Date.parse(l.created_at) || 0), 0);
+      const { data: sess } = await supabase.auth.getSession();
+      const r = await fetch(`/api/leads/inbox?since=${Math.max(0, since - 86400000)}`, { headers: { Authorization: `Bearer ${sess.session?.access_token || ''}` } });
+      const j = await r.json();
+      if (!j.ok) {
+        setScan({ busy: false, text: j.reason === 'not-configured' ? 'Scan quotidien : ajoutez KIN_LEADS_KEY dans Vercel pour le relier.' : manual ? 'Scan quotidien indisponible pour le moment.' : '' });
+        return;
+      }
+      const knownSources = new Set(current.map((l) => String(l.source || '')));
+      const knownKeys = new Set([...current.map((l) => leadKey(l.name, l.commune)), ...places.map((p) => leadKey(p.name, p.commune))]);
+      const fresh: any[] = [];
+      for (const row of j.leads || []) {
+        const lead = scanToLead(row);
+        if (!lead || knownSources.has(lead.source || '')) continue;
+        const k = leadKey(lead.name, lead.commune);
+        if (knownKeys.has(k)) continue;
+        knownKeys.add(k);
+        fresh.push(lead);
+      }
+      if (fresh.length) {
+        const { error } = await supabase.from('kl_leads').insert(fresh);
+        if (error) throw error;
+        await load();
+      }
+      setScan({ busy: false, text: fresh.length ? `${fresh.length} nouveau(x) prospect(s) du scan quotidien.` : manual ? 'Aucun nouveau prospect du scan pour l’instant.' : '' });
+    } catch (e: any) {
+      setScan({ busy: false, text: `Scan quotidien : ${e.message || 'erreur'}` });
+    }
+  };
+
   useEffect(() => {
-    load();
+    load().then((ls) => {
+      if (ls) syncScan(ls);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const placesHavePageFields = places.some((p) => 'website' in p);
@@ -143,6 +185,14 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
 
       {msg && (
         <p className={`m-0 rounded-2xl px-4 py-3 text-sm font-semibold ${msg.ok ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>{msg.text}</p>
+      )}
+      {(scan.text || leads) && !noTable && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-brand-bg px-4 py-2.5 text-sm">
+          <span className="font-semibold">{scan.busy ? 'Scan quotidien : vérification…' : scan.text || 'Scan quotidien : 5 restaurants et hôtels vérifiés chaque matin.'}</span>
+          <button type="button" disabled={scan.busy} onClick={() => leads && syncScan(leads, true)} className="h-9 px-4 rounded-full border-2 border-brand-line bg-white font-bold cursor-pointer">
+            Récupérer le scan
+          </button>
+        </div>
       )}
       {noTable && (
         <p className="m-0 rounded-2xl px-4 py-3 text-sm bg-yellow-50 text-yellow-900">
@@ -275,6 +325,7 @@ function LeadList({
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="text-[11px] font-extrabold uppercase tracking-wide text-brand-muted">{kindOf(l.kind).label}</span>
                     {l.commune && <span className="text-xs font-semibold text-brand-blue-deep inline-flex items-center gap-1"><IconPin size={11} /> {l.commune}</span>}
+                    {String(l.source || '').startsWith(SCAN_SOURCE) && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-blue-soft text-brand-blue-deep">Scan quotidien</span>}
                     {l.lat == null && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-yellow-soft text-brand-ink">Sans position</span>}
                     {l.pack && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-bg border border-brand-line">{LEAD_PACKS.find((p) => p.id === l.pack)?.label}</span>}
                   </div>
