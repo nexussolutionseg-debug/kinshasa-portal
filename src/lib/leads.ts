@@ -94,10 +94,11 @@ const FIELDS: Record<string, string[]> = {
   commune: ['commune'],
   name: ['nom', 'name', 'etablissement', 'lieu', 'entreprise', 'business', 'nomdeletablissement'],
   kind: ['type', 'kind', 'categorie', 'secteur', 'activite'],
+  // 'Sous-type' is matched by place_type below
   place_type: ['soustype', 'typedelieu', 'typedetablissement', 'genre'],
   cuisine: ['cuisine', 'specialite'],
   address: ['adresse', 'address', 'adressezone', 'zone', 'repere'],
-  position: ['position', 'gps', 'coordonnees', 'pluscode', 'positiongpsoupluscode'],
+  position: ['position', 'gps', 'coordonnees', 'pluscode', 'positiongpsoupluscode', 'positiongpsouliendecarte'],
   lat: ['latitude', 'lat'],
   lng: ['longitude', 'lng', 'lon'],
   maps: ['liengooglemaps', 'googlemaps', 'maps', 'lienmaps', 'carte'],
@@ -273,4 +274,33 @@ export function scanToLead(row: any): (LeadDraft & { created_at: string }) | nul
     source: `${SCAN_SOURCE} · ${String(row.id).slice(0, 60)}`,
     created_at: new Date(Number.isFinite(created) && created > 0 ? created : Date.now()).toISOString(),
   };
+}
+
+// ---------- import template (2026-11-10) -----------------------------------------
+export const LEAD_TEMPLATE_HEADERS = [
+  'Nom', 'Commune', 'Type', 'Sous-type', 'Cuisine', 'Adresse', 'Position (GPS ou lien de carte)', 'Téléphone', 'E-mail',
+  'Site web', 'Instagram', 'Facebook', 'Statut', 'Offre proposée', 'Prochaine action', 'Date de relance', 'Responsable', 'Notes',
+];
+
+export const LEAD_TEMPLATE_EXAMPLES: string[][] = [
+  ['Chez Ntemba', 'Kalamu', 'Restaurant', 'Restaurant-terrasse', 'congolaise', 'Av. Kanda-Kanda, Matonge', '-4.3301, 15.3102', '+243 81 234 5678', '',
+    '', '@chez.ntemba', '', 'Nouveau', '', 'Premier contact', '15/11/2026', 'Cherif', 'Exemple : à supprimer'],
+  ['Hôtel Exemple', 'Gombe', 'Hôtel', 'Hôtel 4 étoiles', '', 'Bd du 30 Juin', '', '', 'contact@exemple.cd',
+    'www.exemple.cd', '', 'facebook.com/hotelexemple', 'Contacté', 'Pack Site', 'Envoyer l’offre', '20/11/2026', '', 'Exemple : à supprimer'],
+];
+
+export const LEAD_TEMPLATE_HELP = [
+  'Une ligne par établissement. Seule la colonne « Nom » est obligatoire.',
+  'Type : Restaurant, Bar, Café, Hôtel, Appartement, Sortie, Commerce ou Autre.',
+  'Position : « -4.3217, 15.3125 », un plus code (M79J+6H) ou un lien de carte. Vide = à placer plus tard.',
+  'Statut : Nouveau, Contacté, Intéressé, Proposition envoyée, Partenaire ou Pas intéressé (vide = Nouveau).',
+  'Offre proposée : Pack Page, Pack Site ou Pack Site + Réseaux. Date de relance : JJ/MM/AAAA.',
+  'Supprimez les 2 lignes d’exemple avant l’import. Un établissement déjà présent (même nom et commune) est ignoré.',
+];
+
+/** CSV template (";" + BOM so French Excel opens it with accents). */
+export function leadTemplateCsv(): string {
+  const esc = (v: string) => (/[;"\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+  const lines = [LEAD_TEMPLATE_HEADERS, ...LEAD_TEMPLATE_EXAMPLES].map((r) => r.map(esc).join(';'));
+  return '\ufeff' + lines.join('\r\n') + '\r\n';
 }
