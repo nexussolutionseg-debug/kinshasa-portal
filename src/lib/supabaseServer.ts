@@ -34,6 +34,22 @@ export async function serverPlaces(filter?: { vertical?: string }): Promise<any[
   return rows.filter((p) => p.published !== false);
 }
 
+/** One published place, or null. */
+export async function serverPlace(id: number): Promise<any | null> {
+  const sb = client();
+  if (!sb || !Number.isFinite(id)) return null;
+  const p = await safe<any>(() => sb.from('places').select('*').eq('id', id).maybeSingle(), null);
+  return p && p.published !== false ? p : null;
+}
+
+/** Upcoming events attached to a place (events.place_id; [] before that SQL). */
+export async function serverPlaceEvents(placeId: number): Promise<any[]> {
+  const sb = client();
+  if (!sb) return [];
+  const today = new Date(Date.now() + 3600000).toISOString().slice(0, 10);
+  return safe<any[]>(() => sb.from('events').select('*').eq('place_id', placeId).gte('event_date', today).order('event_date', { ascending: true }).limit(12), []);
+}
+
 export async function serverEvents(): Promise<any[]> {
   const sb = client();
   if (!sb) return [];

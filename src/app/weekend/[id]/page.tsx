@@ -8,7 +8,8 @@ import { notFound } from 'next/navigation';
 import { SiteHeader } from '../../../components/SiteHeader';
 import { SiteTicker } from '../../../components/SiteTicker';
 import { SiteFooter } from '../../../components/SiteFooter';
-import { serverEvent } from '../../../lib/supabaseServer';
+import { serverEvent, serverPlace } from '../../../lib/supabaseServer';
+import { placeHref } from '../../../lib/places';
 import { communeHref, canonicalCommune } from '../../../lib/communes';
 import { eventsJsonLd, ldJson } from '../../../lib/jsonld';
 import { withUtm } from '../../../lib/utm';
@@ -43,6 +44,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
   const url = `${SITE}/weekend/${e.id}`;
   const share = `https://wa.me/?text=${encodeURIComponent(`${e.title} — Kin Weekend\n${url}`)}`;
   const past = e.event_date && new Date(`${String(e.event_date).slice(0, 10)}T23:59:59`) < new Date();
+  const place = e.place_id ? await serverPlace(Number(e.place_id)) : null;
   const link = typeof e.url === 'string' && /^https?:\/\//.test(e.url) ? e.url : null;
 
   return (
@@ -69,6 +71,12 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         {img && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={img} alt={e.title} className="w-full max-h-[70vh] object-contain rounded-3xl bg-brand-bg border border-brand-line mb-6" />
+        )}
+        {place && (
+          <p className="m-0 mb-5 text-base">
+            <strong>Lieu :</strong>{' '}
+            <Link href={placeHref(place)} className="text-brand-blue-deep font-bold">{place.name}{place.address ? `, ${place.address}` : ''} →</Link>
+          </p>
         )}
         {e.description && (
           <div className="text-[17px] md:text-lg text-brand-ink/85 leading-relaxed whitespace-pre-line break-words">{e.description}</div>

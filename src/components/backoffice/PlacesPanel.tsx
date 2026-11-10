@@ -21,6 +21,7 @@ import {
 } from '../../lib/placeImport';
 import communesGeo from '../../data/communes.json';
 import { Button } from '../Button';
+import { placeHref } from '../../lib/places';
 import { IconEdit, IconExternalLink, IconPin, IconPlus, IconSearch, IconTrash, IconWarning } from '../icons';
 
 type Place = Record<string, any>;
@@ -38,7 +39,7 @@ const chip = (on: boolean) =>
 
 const EMPTY = {
   name: '', commune: 'Gombe', vertical: 'kin_places', place_type: '', address: '', position: '', description: '',
-  budget: '', phone: '', google_rating: '', google_reviews: '', google_maps_url: '', image_url: '', published: true, verification: '',
+  budget: '', phone: '', whatsapp: '', website: '', instagram: '', facebook: '', hours: '', google_rating: '', google_reviews: '', google_maps_url: '', image_url: '', published: true, verification: '',
 };
 type Form = typeof EMPTY;
 
@@ -228,13 +229,16 @@ function PlaceList({ places, reload, onEdit, say }: { places: Place[]; reload: (
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-[1fr_1fr_auto] gap-2 mt-3">
+                <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 mt-3">
                   <button type="button" onClick={() => onEdit(p)} className="h-10 rounded-xl border border-brand-line text-sm font-bold inline-flex items-center justify-center gap-1.5 hover:border-brand-blue cursor-pointer">
                     <IconEdit size={14} /> Modifier
                   </button>
                   <button type="button" disabled={busy} onClick={() => setPublished([p.id], !live)} className={`h-10 rounded-xl text-sm font-bold cursor-pointer ${live ? 'border border-brand-line hover:border-brand-blue' : 'bg-brand-blue text-white'}`}>
                     {live ? 'Masquer' : 'Afficher'}
                   </button>
+                  <a href={placeHref(p as any)} target="_blank" rel="noopener noreferrer" aria-label={`Voir la page de ${p.name}`} title={live ? 'Voir la page' : 'Page masquée : visible seulement une fois le lieu affiché'} className="h-10 w-10 rounded-xl border border-brand-line inline-flex items-center justify-center text-brand-ink hover:border-brand-blue">
+                    <IconExternalLink size={15} />
+                  </a>
                   <button type="button" disabled={busy} onClick={() => remove([p.id])} aria-label={`Supprimer ${p.name}`} className="h-10 w-10 rounded-xl border border-brand-line inline-flex items-center justify-center text-brand-danger hover:border-brand-danger cursor-pointer">
                     <IconTrash size={15} />
                   </button>
@@ -271,6 +275,8 @@ function PlaceForm({ place, onDone, onCancel, say }: { place: Place | null; onDo
           vertical: place.vertical || 'kin_places', place_type: place.place_type || '', address: place.address || '',
           position: place.lat && place.lng ? `${Number(place.lat).toFixed(6)}, ${Number(place.lng).toFixed(6)}` : '',
           description: place.description || '', budget: place.budget || '', phone: place.phone || '',
+          whatsapp: (place as any).whatsapp || '', website: (place as any).website || '', instagram: (place as any).instagram || '',
+          facebook: (place as any).facebook || '', hours: (place as any).hours || '',
           google_rating: place.google_rating != null ? String(place.google_rating).replace('.', ',') : '',
           google_reviews: place.google_reviews != null ? String(place.google_reviews) : '',
           google_maps_url: place.google_maps_url || '', image_url: place.image_url || '',
@@ -339,6 +345,17 @@ function PlaceForm({ place, onDone, onCancel, say }: { place: Place | null; onDo
       published: f.published,
       verification: f.verification.trim() || null,
       ...(place ? {} : { is_label_recommended: true }),
+      // Page fields (2026-11-10): only sent once the columns exist or when filled,
+      // so places still save before supabase/pending/20261110140000_place_pages_leads.sql.
+      ...((place && 'website' in (place as any)) || [f.whatsapp, f.website, f.instagram, f.facebook, f.hours].some((v) => v.trim())
+        ? {
+            whatsapp: f.whatsapp.trim() || null,
+            website: f.website.trim() || null,
+            instagram: f.instagram.trim() || null,
+            facebook: f.facebook.trim() || null,
+            hours: f.hours.trim() || null,
+          }
+        : {}),
     };
     setSaving(true);
     const { error } = place
@@ -452,6 +469,26 @@ function PlaceForm({ place, onDone, onCancel, say }: { place: Place | null; onDo
         <div>
           <label className={label} htmlFor="pl-phone">Téléphone</label>
           <input id="pl-phone" type="tel" value={f.phone} onChange={(e) => set('phone', e.target.value)} className={input} placeholder="+243 …" />
+        </div>
+        <div>
+          <label className={label} htmlFor="pl-wa">WhatsApp (si différent)</label>
+          <input id="pl-wa" type="tel" value={f.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} className={input} placeholder="+243 …" />
+        </div>
+        <div>
+          <label className={label} htmlFor="pl-web">Site web</label>
+          <input id="pl-web" value={f.website} onChange={(e) => set('website', e.target.value)} className={input} placeholder="www.exemple.cd" />
+        </div>
+        <div>
+          <label className={label} htmlFor="pl-ig">Instagram</label>
+          <input id="pl-ig" value={f.instagram} onChange={(e) => set('instagram', e.target.value)} className={input} placeholder="@nomdulieu" />
+        </div>
+        <div>
+          <label className={label} htmlFor="pl-fb">Facebook</label>
+          <input id="pl-fb" value={f.facebook} onChange={(e) => set('facebook', e.target.value)} className={input} placeholder="lien ou nom de la page" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className={label} htmlFor="pl-hours">Horaires</label>
+          <textarea id="pl-hours" rows={2} value={f.hours} onChange={(e) => set('hours', e.target.value)} className={`${input} h-auto py-2.5 resize-y`} placeholder={'ex : Lun–Ven 11h–23h\nSam–Dim 12h–1h'} />
         </div>
         <div>
           <label className={label} htmlFor="pl-maps">Lien Google Maps</label>

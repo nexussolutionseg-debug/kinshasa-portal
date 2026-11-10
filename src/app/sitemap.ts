@@ -2,7 +2,8 @@ import type { MetadataRoute } from 'next';
 import { SITE_URL } from '../lib/utm';
 import { COMMUNE_NAMES, communeHref } from '../lib/communes';
 import { CATEGORY_PATH, PLACE_CATEGORY_IDS } from '../lib/categories';
-import { serverNews } from '../lib/supabaseServer';
+import { serverNews, serverPlaces } from '../lib/supabaseServer';
+import { placeHref } from '../lib/places';
 
 export const revalidate = 3600;
 
@@ -19,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency,
     priority,
   });
-  const articles = await serverNews(200);
+  const [articles, places] = await Promise.all([serverNews(200), serverPlaces()]);
   return [
     page('/', 1, 'daily'),
     page('/actualite', 0.9, 'hourly'),
@@ -32,6 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page('/contact', 0.4, 'monthly'),
     page('/devenir-partenaire', 0.5, 'monthly'),
     page('/politique-de-confidentialite', 0.2, 'monthly'),
+    ...places.map((p) => ({ ...page(placeHref(p), 0.6, 'weekly'), lastModified: new Date(p.created_at || now) })),
     ...articles.map((a) => ({ ...page(`/actualite/article/${a.id}`, 0.6, 'monthly'), lastModified: new Date(a.created_at || a.published_date || now) })),
   ];
 }

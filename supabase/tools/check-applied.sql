@@ -19,4 +19,20 @@ select 'places_import (2026-10-07)',
        (exists (select 1 from information_schema.columns
                 where table_schema = 'public' and table_name = 'places' and column_name = 'published')
         and exists (select 1 from information_schema.columns
-                    where table_schema = 'public' and table_name = 'places' and column_name = 'google_rating'));
+                    where table_schema = 'public' and table_name = 'places' and column_name = 'google_rating'))
+union all
+select 'stats_links_news_gallery (2026-11-01)',
+       (to_regclass('public.stats_links') is not null
+        and exists (select 1 from information_schema.columns
+                    where table_schema = 'public' and table_name = 'news' and column_name = 'images'))
+union all
+select 'news_expires_on (2026-11-10)',
+       exists (select 1 from information_schema.columns
+               where table_schema = 'public' and table_name = 'news' and column_name = 'expires_on')
+union all
+select 'place_pages_leads (2026-11-10)',
+       (to_regclass('public.kl_leads') is not null
+        and exists (select 1 from information_schema.columns
+                    where table_schema = 'public' and table_name = 'places' and column_name = 'hours')
+        and exists (select 1 from information_schema.columns
+                    where table_schema = 'public' and table_name = 'events' and column_name = 'place_id'));
