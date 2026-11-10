@@ -17,7 +17,7 @@ The live project is in **Cherif's Supabase account**. Developers (and Claude) ha
 
 Code that depends on a pending change must keep working before it is applied (the site falls back gracefully), so the order "merge code → run SQL" is always safe.
 
-## Status (verified 2026-10-08)
+## Status (verified 2026-10-08; updated 2026-11-10)
 
 A founder ran `tools/check-applied.sql` and `tools/schema-snapshot.sql` on the live project (the result is in `tools/snapshot-2026-10-08.json`). Replaying every file in `migrations/`, in order, on an empty Postgres rebuilds exactly the live tables and columns.
 
@@ -28,9 +28,11 @@ A founder ran `tools/check-applied.sql` and `tools/schema-snapshot.sql` on the l
 | `migrations/20261004180000_reviews_moderation.sql` | Applied ✔ |
 | `migrations/20261007090000_places_import.sql` | Applied ✔ |
 | `migrations/20261008190000_tighten_access.sql` | Applied ✔ (2026-10-08, confirmed by `tools/check-access.sql`: all checks true). |
-| `pending/20261008180000_lock_legacy_dispatches.sql` | **To run (founders' decision, 2026-10-08).** The old `dispatches` table (earlier journalism portal, unused by this site) accepts inserts from anyone without login; afterwards only team accounts can add rows. Then run `tools/check-access.sql` (the last line checks it). |
-| `pending/20261028090000_news_image.sql` | Included in the file below. You don't need to run it separately; running it as well does no harm. |
-| `pending/20261101120000_stats_links_news_gallery.sql` | **To run.** Partner links for Kin Stats (`stats_links`, readable and changeable by the team only; visitors can only check a link through `stats_link_open`). Several photos per « À la une » article (`news.images`, with `news.image_url` as the cover). Until it is run, the dashboard works, but partner links can't be created and articles keep one photo. |
+| `migrations/20261008180000_lock_legacy_dispatches.sql` | Run by a founder 2026-11-10 (combined file). Confirm with `tools/check-access.sql`. |
+| `migrations/20261028090000_news_image.sql` | Run 2026-11-10 (inside the file below). |
+| `migrations/20261101120000_stats_links_news_gallery.sql` | Run by a founder 2026-11-10 (combined file). |
+| `migrations/20261110100000_news_expires_on.sql` | Run by a founder 2026-11-10 (combined file). |
+| `pending/20261110140000_place_pages_leads.sql` | **To run.** Place page fields (website, instagram, facebook, whatsapp, hours), `events.place_id`, and the team-only `kl_leads` table (Backoffice → Prospects). Until it is run, place pages work without those fields and the Prospects tab shows a "run the SQL" notice. |
 
 Legacy tables not used by kinshasalabel.com: `dispatches`, `security_alerts` (earlier Kinshasa Portal journalism app), and the public storage bucket `commune-videos`.
 

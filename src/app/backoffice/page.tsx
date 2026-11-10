@@ -3,12 +3,13 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock, IconSparkle, IconPin, IconCalendar, IconNews, IconMail, IconChat, IconChart } from '../../components/icons';
+import { IconHome, IconEdit, IconTrash, IconPlus, IconExternalLink, IconClock, IconSparkle, IconPin, IconCalendar, IconNews, IconMail, IconChat, IconChart, IconUser } from '../../components/icons';
 import { StatsDashboard } from '../../components/stats/StatsDashboard';
 import { ReviewsPanel } from '../../components/backoffice/ReviewsPanel';
 import { ShowcasePanel } from '../../components/backoffice/ShowcasePanel';
 import { DashboardHome } from '../../components/backoffice/DashboardHome';
 import { PlacesPanel } from '../../components/backoffice/PlacesPanel';
+import { LeadsPanel } from '../../components/backoffice/LeadsPanel';
 import { COMMUNE_NAMES } from '../../lib/communes';
 import { Button } from '../../components/Button';
 import { SubscribersPanel } from '../../components/backoffice/SubscribersPanel';
@@ -64,7 +65,7 @@ export default function BackofficePage() {
   };
 
   // Which content type the backoffice is managing right now.
-  const [section, setSection] = useState<'home' | 'stats' | 'places' | 'events' | 'news' | 'showcase' | 'reviews' | 'subscribers'>('home');
+  const [section, setSection] = useState<'home' | 'stats' | 'places' | 'leads' | 'events' | 'news' | 'showcase' | 'reviews' | 'subscribers'>('home');
 
   const [submitting, setSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -99,6 +100,9 @@ export default function BackofficePage() {
   const [evImage, setEvImage] = useState('');
   const [evUrl, setEvUrl] = useState('');
   const [evUploading, setEvUploading] = useState(false);
+  // Optional link to a place (events.place_id, 2026-11-10): the event then shows on the place's page.
+  const [evPlaceId, setEvPlaceId] = useState('');
+  const eventsHavePlace = eventsList.some((r: any) => 'place_id' in r);
 
   const fetchEvents = async () => {
     const { data, error } = await supabase.from('events').select('*').order('event_date', { ascending: true });
@@ -116,6 +120,7 @@ export default function BackofficePage() {
     setEvDate('');
     setEvImage('');
     setEvUrl('');
+    setEvPlaceId('');
   };
 
   const startEditingEvent = (evt: any) => {
@@ -127,6 +132,7 @@ export default function BackofficePage() {
     setEvDate(evt.event_date || '');
     setEvImage(evt.image_url || '');
     setEvUrl(evt.url || '');
+    setEvPlaceId(evt.place_id ? String(evt.place_id) : '');
     setEventTab('add');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -143,6 +149,7 @@ export default function BackofficePage() {
       event_date: evDate || null,
       image_url: /^https:\/\//.test(evImage.trim()) ? evImage.trim() : null,
       url: /^https?:\/\//.test(evUrl.trim()) ? evUrl.trim() : null,
+      ...(eventsHavePlace || evPlaceId ? { place_id: evPlaceId ? Number(evPlaceId) : null } : {}),
     };
     try {
       if (editingEventId) {
@@ -359,6 +366,7 @@ export default function BackofficePage() {
             ['stats', 'Statistiques', IconChart],
             ['showcase', 'Vitrine (accueil)', IconSparkle],
             ['places', 'Lieux', IconPin],
+            ['leads', 'Prospects', IconUser],
             ['events', 'Kin Weekend', IconCalendar],
             ['news', 'À la une', IconNews],
             ['reviews', 'Avis', IconChat],
@@ -395,6 +403,8 @@ export default function BackofficePage() {
         {section === 'places' && (
           <PlacesPanel key={placesStart.n} places={placesList} reload={fetchPlaces} startWith={placesStart.tab} />
         )}
+
+        {section === 'leads' && <LeadsPanel places={placesList} reloadPlaces={fetchPlaces} />}
 
         {/* ÉVÉNEMENTS SECTION */}
         {section === 'events' && (
@@ -487,6 +497,25 @@ export default function BackofficePage() {
                 <select value={evCommune} onChange={(e) => setEvCommune(e.target.value)} className={inputClass}>
                   {COMMUNES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
+              </div>
+              <div>
+                <label className={labelClass}>Lieu (facultatif)</label>
+                <select
+                  value={evPlaceId}
+                  onChange={(e) => {
+                    setEvPlaceId(e.target.value);
+                    const pl = placesList.find((x: any) => String(x.id) === e.target.value);
+                    if (pl?.commune && COMMUNES.includes(pl.commune)) setEvCommune(pl.commune);
+                  }}
+                  className={inputClass}
+                >
+                  <option value="">Aucun lieu précis</option>
+                  {[...placesList]
+                    .filter((x: any) => x.published !== false)
+                    .sort((a: any, b: any) => String(a.name).localeCompare(String(b.name), 'fr'))
+                    .map((x: any) => <option key={x.id} value={x.id}>{x.name} ({x.commune})</option>)}
+                </select>
+                <p className="text-[11px] text-brand-muted mt-1">L’événement s’affiche aussi sur la page du lieu.</p>
               </div>
               <div>
                 <label className={labelClass}>Catégorie</label>
