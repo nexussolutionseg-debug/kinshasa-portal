@@ -338,6 +338,30 @@ export function parseFeed(xml: string, source: NewsSource): NewsItem[] {
 /** Headlines older than this are dropped (section feeds can hold years-old posts). */
 export const NEWS_MAX_AGE_DAYS = 21;
 
+/**
+ * « À la une » auto-expiry (2026-11-10). An article stops showing on the
+ * public site (Kin Actualité, homepage, commune pages, top ticker, search)
+ * the day after its `expires_on` date. Without one, it expires
+ * NEWS_MAX_AGE_DAYS after its publication date, the same rule as the live
+ * headlines. Nothing is deleted: the team still sees it in the backoffice
+ * (marked « Expiré ») and its own page keeps working for shared links.
+ */
+export function newsExpiryDate(row: { expires_on?: string | null; published_date?: string | null }): string | null {
+  if (row.expires_on) return String(row.expires_on).slice(0, 10);
+  if (!row.published_date) return null;
+  const d = new Date(`${String(row.published_date).slice(0, 10)}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + NEWS_MAX_AGE_DAYS);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Today in Kinshasa (UTC+1), as YYYY-MM-DD. */
+export const kinshasaToday = (now = Date.now()) => new Date(now + 3600000).toISOString().slice(0, 10);
+
+export function isNewsActive(row: { expires_on?: string | null; published_date?: string | null }, now = Date.now()): boolean {
+  const end = newsExpiryDate(row);
+  return !end || end >= kinshasaToday(now);
+}
+
 export function filterKinshasa(items: NewsItem[], opts: { kinshasaSection?: boolean; now?: number } = {}): NewsItem[] {
   const oldest = (opts.now ?? Date.now()) - NEWS_MAX_AGE_DAYS * 86400000;
   return items

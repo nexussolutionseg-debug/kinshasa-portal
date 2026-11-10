@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { SiteHeader } from '../../components/SiteHeader';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SearchBox } from './SearchBox';
+import { isNewsActive } from '../../lib/news';
 import { serverPlaces, serverEvents, serverNews } from '../../lib/supabaseServer';
 import { getNewsFeedSafe } from '../../lib/newsFeed';
 import { searchAll } from '../../lib/search';
@@ -34,7 +35,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const hasQuery = q.trim().length >= 2;
   const r = hasQuery
     ? await Promise.all([serverPlaces(), serverEvents(), serverNews(100), getNewsFeedSafe(6000)]).then(([places, events, articles, feed]) =>
-        searchAll(q, { places, events, articles, headlines: feed?.items || [] })
+        searchAll(q, { places, events, articles: articles.filter((a) => isNewsActive(a)), headlines: feed?.items || [] })
       )
     : null;
 

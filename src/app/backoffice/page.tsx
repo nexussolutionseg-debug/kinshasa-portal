@@ -16,6 +16,7 @@ import { KinshasaMark } from '../../components/BrandMark';
 import { NewsPhotos } from '../../components/backoffice/NewsPhotos';
 import { uploadImage } from '../../lib/upload';
 import { WEEKEND_MIN, upcoming } from '../../lib/events';
+import { isNewsActive, newsExpiryDate, NEWS_MAX_AGE_DAYS } from '../../lib/news';
 
 const COMMUNES = COMMUNE_NAMES;
 
@@ -189,6 +190,7 @@ export default function BackofficePage() {
   const [nwSourceNote, setNwSourceNote] = useState('');
   const [nwLinkUrl, setNwLinkUrl] = useState('');
   const [nwDate, setNwDate] = useState('');
+  const [nwExpires, setNwExpires] = useState('');
   // Photos of the article: the first one is the cover (news.image_url), the
   // full ordered list goes in news.images (several photos, 2026-11-01).
   const [nwImages, setNwImages] = useState<string[]>([]);
@@ -196,6 +198,8 @@ export default function BackofficePage() {
   const [nwUploading, setNwUploading] = useState(false);
   // True once the database has the news.images column (pending SQL applied).
   const newsHasGallery = newsList.some((r) => Array.isArray(r.images));
+  // True once the database has news.expires_on (same pending SQL file).
+  const newsHasExpiry = newsList.some((r) => 'expires_on' in r);
   const fetchNewsItems = async () => {
     const { data, error } = await supabase.from('news').select('*').order('published_date', { ascending: false });
     if (!error && data) setNewsList(data);
@@ -209,6 +213,7 @@ export default function BackofficePage() {
     setNwSourceNote('');
     setNwLinkUrl('');
     setNwDate('');
+    setNwExpires('');
     setNwImages([]);
     setNwHadImage(false);
   };
@@ -221,6 +226,7 @@ export default function BackofficePage() {
     setNwSourceNote(item.source_note || '');
     setNwLinkUrl(item.link_url || '');
     setNwDate(item.published_date || '');
+    setNwExpires(item.expires_on || '');
     const imgs: string[] = Array.isArray(item.images) && item.images.length ? item.images : item.image_url ? [item.image_url] : [];
     setNwImages(imgs);
     setNwHadImage(imgs.length > 0);
@@ -243,7 +249,13 @@ export default function BackofficePage() {
       // the columns exist (supabase/pending/20261101120000_stats_links_news_gallery.sql).
       ...(nwImages.length || nwHadImage ? { image_url: nwImages[0] || null } : {}),
       ...(newsHasGallery || nwImages.length > 1 ? { images: nwImages } : {}),
+      ...(newsHasExpiry || nwExpires ? { expires_on: nwExpires || null } : {}),
     };
+    if (nwExpires && nwExpires < payload.published_date) {
+      setSubmitting(false);
+      setStatusMsg({ type: 'error', text: 'La date de retrait doit être après la date de publication.' });
+      return;
+    }
     try {
       if (editingNewsId) {
         const { error } = await supabase.from('news').update(payload).eq('id', editingNewsId);
@@ -573,6 +585,11 @@ export default function BackofficePage() {
                         <span className="inline-flex items-center gap-1 text-[11px] text-brand-muted">
                           <IconClock size={11} /> {item.published_date}
                         </span>
+                        {isNewsActive(item) ? (
+                          <span className="text-[11px] text-brand-muted">· en ligne jusqu’au {newsExpiryDate(item)}</span>
+                        ) : (
+                          <span className="text-[11px] font-bold text-white bg-brand-muted px-2 py-0.5 rounded-full">Expiré</span>
+                        )}
                         {(Array.isArray(item.images) && item.images.length > 0 ? item.images.length : item.image_url ? 1 : 0) > 0 && (
                           <span className="text-[11px] font-bold text-brand-ink bg-white border border-brand-line px-2 py-0.5 rounded-full">
                             {Array.isArray(item.images) && item.images.length > 1 ? `${item.images.length} photos` : '1 photo'}
@@ -635,6 +652,16 @@ export default function BackofficePage() {
               <div>
                 <label className={labelClass}>Date de publication</label>
                 <input type="date" value={nwDate} onChange={(e) => setNwDate(e.target.value)} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Retirer du site après le</label>
+                <input type="date" value={nwExpires} min={nwDate || undefined} disabled={newsList.length > 0 && !newsHasExpiry} onChange={(e) => setNwExpires(e.target.value)} className={inputClass} />
+                {newsList.length > 0 && !newsHasExpiry && (
+                  <p className="text-[11px] text-yellow-900 bg-yellow-50 rounded-lg px-2 py-1 mt-1">Disponible après le SQL 20261110100000_news_expires_on.sql (Supabase).</p>
+                )}
+                <p className="text-[11px] text-brand-muted mt-1">
+                  Ex. : la date de l’événement annoncé. Vide = retiré {NEWS_MAX_AGE_DAYS} jours après la publication. L’article disparaît de l’accueil, de Kin Actualité et du bandeau défilant ; il reste ici.
+                </p>
               </div>
             </div>
 
