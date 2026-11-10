@@ -235,3 +235,42 @@ export function pitchText(lead: { name: string; kind?: string }): string {
   const what = lead.kind === 'hebergement' ? 'votre établissement' : lead.kind === 'restauration' ? 'votre restaurant' : 'votre adresse';
   return `Bonjour ${lead.name}, je vous contacte de la part de KINSHASA LABEL (www.kinshasalabel.com), le guide des bonnes adresses de Kinshasa. Nous aimerions présenter ${what} sur notre site et sur Instagram @kinshasalabel. Puis-je vous envoyer notre offre partenaires ?`;
 }
+
+/** Prefix of kl_leads.source for leads that came from the daily scan; the hub id follows it. */
+export const SCAN_SOURCE = 'Scan quotidien';
+
+/** One row of the daily scan (Nexus Hub kin_leads.data) → a kl_leads row. */
+export function scanToLead(row: any): (LeadDraft & { created_at: string }) | null {
+  const name = String(row?.business || row?.name || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+  if (!name || !row?.id) return null;
+  const s = (v: any) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 500) : null);
+  const n = (v: any) => (v === null || v === undefined || v === '' ? null : Number(v));
+  const lat = n(row.lat);
+  const lng = n(row.lng);
+  const okPos = lat !== null && lng !== null && Number.isFinite(lat) && Number.isFinite(lng) && lat > -5.2 && lat < -3.9 && lng > 15 && lng < 16.6;
+  const kind = (LEAD_KINDS.some((k) => k.id === row.kind) ? row.kind : toKind(String(row.kind || row.niche || ''))) || 'autre';
+  const created = Number(row.createdAt);
+  return {
+    name,
+    commune: canonicalCommune(row.commune) || null,
+    kind: kind as LeadKind,
+    place_type: s(row.place_type),
+    cuisine: s(row.cuisine),
+    address: s(row.address || row.area),
+    lat: okPos ? lat : null,
+    lng: okPos ? lng : null,
+    phone: s(row.phone),
+    email: s(row.email),
+    website: s(row.website),
+    facebook: s(row.facebook),
+    instagram: s(row.instagram),
+    status: 'nouveau',
+    pack: null,
+    next_action: 'Premier contact',
+    next_date: null,
+    owner: null,
+    notes: s(row.notes),
+    source: `${SCAN_SOURCE} · ${String(row.id).slice(0, 60)}`,
+    created_at: new Date(Number.isFinite(created) && created > 0 ? created : Date.now()).toISOString(),
+  };
+}

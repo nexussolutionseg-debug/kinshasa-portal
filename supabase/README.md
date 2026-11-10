@@ -33,7 +33,9 @@ A founder ran `tools/check-applied.sql` and `tools/schema-snapshot.sql` on the l
 | `migrations/20261101120000_stats_links_news_gallery.sql` | Run by a founder 2026-11-10 (combined file). |
 | `migrations/20261110100000_news_expires_on.sql` | Run by a founder 2026-11-10 (combined file). |
 | `migrations/20261110140000_place_pages_leads.sql` | Run by a founder 2026-11-10. |
-| `pending/20261110170000_partner_packs_report.sql` | **To run.** Partner packs on places (`partner_pack`, `partner_since`, `partner_until`), anonymous daily counters `place_stats` (written only through `track_place`, readable by the team), team-only `place_report_links`, and `place_report()` for /rapport/<link>. Before it is run, the site works as before: no pack rules, counters fail silently, the report link panel shows a "run the SQL" notice. |
+| `migrations/20261110170000_partner_packs_report.sql` | Run by a founder 2026-11-10. |
+
+Daily lead scan (2026-11-10): no change to this database. The scan's finds wait in the agency's Nexus Hub (table `kin_leads`, read through `kin_leads_export(key)`); the backoffice adds them to `kl_leads` with the team member's session. Setting: `KIN_LEADS_KEY` in Vercel.
 
 Legacy tables not used by kinshasalabel.com: `dispatches`, `security_alerts` (earlier Kinshasa Portal journalism app), and the public storage bucket `commune-videos`.
 
