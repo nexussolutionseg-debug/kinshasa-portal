@@ -39,7 +39,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className="bg-brand-bg text-brand-ink pb-16 lg:pb-0">
+      <body className="bg-brand-bg text-brand-ink pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
         {children}
         <MobileTabBar />
         {/* Vercel Web Analytics — page views, referrers, devices, no cookies. */}

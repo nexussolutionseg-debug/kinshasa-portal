@@ -20,7 +20,7 @@ import { decodeText, parseCsv } from '../../lib/placeImport';
 import { placeHref, telHref, whatsappHref, socialHref } from '../../lib/places';
 import {
   LEAD_STATUSES, LEAD_KINDS, LEAD_PACKS, statusOf, kindOf, leadKey, mapLeadRows, pickLeadSheet,
-  leadToPlace, isDue, pitchText, scanToLead, SCAN_SOURCE, leadTemplateCsv, LEAD_TEMPLATE_HELP, type LeadImportRow,
+  leadToPlace, isDue, pitchText, scanToLead, SCAN_SOURCE, inquiryToLead, FORM_SOURCE, leadTemplateCsv, LEAD_TEMPLATE_HELP, type LeadImportRow,
 } from '../../lib/leads';
 import { kinshasaToday } from '../../lib/news';
 import { useUrlState, readParam, writeParams } from '../../lib/urlState';
@@ -119,9 +119,32 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
     }
   };
 
+  // « Deviens partenaire » requests (2026-11-12): each one becomes a lead to call back.
+  const syncInquiries = async (current: Lead[]): Promise<number> => {
+    const { data, error } = await supabase.from('partner_inquiries').select('*').order('created_at', { ascending: false }).limit(500);
+    if (error || !data?.length) return 0;
+    const known = new Set(current.map((l) => String(l.source || '')));
+    let added = 0;
+    for (const q of data) {
+      const lead = inquiryToLead(q, kinshasaToday());
+      if (!lead || known.has(lead.source)) continue;
+      // One by one: a name already in Prospects must not block the others.
+      let r = await supabase.from('kl_leads').insert([lead]);
+      if (r.error && /duplicate|23505/i.test(`${r.error.code} ${r.error.message}`)) {
+        r = await supabase.from('kl_leads').insert([{ ...lead, name: `${lead.name} (demande du site)`.slice(0, 160) }]);
+      }
+      if (!r.error) added++;
+    }
+    return added;
+  };
+
   useEffect(() => {
-    load().then((ls) => {
-      if (ls) syncScan(ls);
+    load().then(async (ls) => {
+      if (!ls) return;
+      const n = await syncInquiries(ls);
+      const fresh = n ? await load() : ls;
+      if (n) say(true, `${n} nouvelle(s) demande(s) reçue(s) via « Deviens partenaire » : à rappeler.`);
+      if (fresh) syncScan(fresh);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -337,6 +360,7 @@ function LeadList({
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="text-[11px] font-extrabold uppercase tracking-wide text-brand-muted">{kindOf(l.kind).label}</span>
                     {l.commune && <span className="text-xs font-semibold text-brand-blue-deep inline-flex items-center gap-1"><IconPin size={11} /> {l.commune}</span>}
+                    {String(l.source || '').startsWith(FORM_SOURCE) && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-red text-white">Demande du site</span>}
                     {String(l.source || '').startsWith(SCAN_SOURCE) && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-blue-soft text-brand-blue-deep">Scan quotidien</span>}
                     {l.lat == null && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-yellow-soft text-brand-ink">Sans position</span>}
                     {l.pack && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-bg border border-brand-line">{LEAD_PACKS.find((p) => p.id === l.pack)?.label}</span>}

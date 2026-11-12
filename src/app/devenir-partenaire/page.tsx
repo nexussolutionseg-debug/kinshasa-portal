@@ -5,10 +5,9 @@ import { SiteHeader } from '../../components/SiteHeader';
 import { SiteTicker } from '../../components/SiteTicker';
 import { SiteFooter } from '../../components/SiteFooter';
 import { Button } from '../../components/Button';
-import { supabase } from '../../lib/supabase';
 
 const inputClass =
-  'w-full box-border px-3.5 py-2.5 bg-brand-bg border border-brand-line text-brand-ink rounded-lg text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-red';
+  'w-full box-border px-3.5 py-2.5 bg-brand-bg border border-brand-line text-brand-ink rounded-lg text-[16px] md:text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-red';
 const labelClass = 'block text-[11px] text-brand-muted uppercase font-bold mb-1.5';
 
 export default function BecomePartnerPage() {
@@ -25,22 +24,25 @@ export default function BecomePartnerPage() {
     setStatus('loading');
     setErrorMsg('');
 
-    const { error } = await supabase.from('partner_inquiries').insert([
-      {
-        company_name: companyName.trim(),
-        contact_name: contactName.trim() || null,
-        email: email.trim(),
-        phone: phone.trim() || null,
-        message: message.trim() || null,
-      },
-    ]);
-
-    if (error) {
+    // Saved + e-mailed to the team by /api/partner (2026-11-12).
+    const hp = (e.currentTarget as HTMLFormElement).querySelector<HTMLInputElement>('input[name="website"]')?.value || '';
+    try {
+      const r = await fetch('/api/partner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_name: companyName, contact_name: contactName, email, phone, message, website: hp }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) {
+        setStatus('error');
+        setErrorMsg(j.error || 'Envoi impossible pour le moment.');
+        return;
+      }
+      setStatus('success');
+    } catch {
       setStatus('error');
-      setErrorMsg(error.message);
-      return;
+      setErrorMsg('Pas de connexion. Réessaie dans un instant.');
     }
-    setStatus('success');
   };
 
   return (
@@ -64,7 +66,9 @@ export default function BecomePartnerPage() {
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="bg-brand-surface border border-brand-line rounded-2xl p-6 flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="relative bg-brand-surface border border-brand-line rounded-2xl p-6 flex flex-col gap-4">
+            {/* Honeypot: hidden from people, bots fill it. */}
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] w-px h-px opacity-0" />
             <div>
               <label className={labelClass}>Nom de l&apos;entreprise / organisation *</label>
               <input required value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder="ex: Nexus Solutions" />
