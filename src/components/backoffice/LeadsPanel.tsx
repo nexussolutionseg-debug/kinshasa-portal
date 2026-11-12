@@ -25,6 +25,7 @@ import {
 import { kinshasaToday } from '../../lib/news';
 import { useUrlState, readParam, writeParams } from '../../lib/urlState';
 import { Button } from '../Button';
+import { PositionPicker } from './PositionPicker';
 import { IconEdit, IconExternalLink, IconPhone, IconPin, IconPlus, IconSearch, IconTrash } from '../icons';
 
 type Lead = Record<string, any>;
@@ -156,8 +157,14 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
     placesHavePacks && lead.status === 'partenaire' && lead.pack ? { partner_pack: lead.pack, partner_since: kinshasaToday() } : {};
 
   /** Create the place from the lead (or link the existing one) and remember it on the lead. */
+  // No position yet → the content creator places it on the map first (2026-11-12).
+  const [picking, setPicking] = useState<Lead | null>(null);
   const putOnMap = async (lead: Lead, quiet = false): Promise<boolean> => {
     if (lead.place_id) return true;
+    if (!quiet && (lead.lat == null || lead.lng == null) && !places.some((p) => leadKey(p.name, p.commune) === leadKey(lead.name, lead.commune))) {
+      setPicking(lead);
+      return false;
+    }
     const key = leadKey(lead.name, lead.commune);
     const existing = places.find((p) => leadKey(p.name, p.commune) === key);
     let placeId: number | null = existing?.id ?? null;
@@ -168,7 +175,6 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
       };
       if (Object.keys(upd).length) await supabase.from('places').update(upd).eq('id', existing.id);
     } else {
-      if ((lead.lat == null || lead.lng == null) && !quiet && !confirm(`« ${lead.name} » n’a pas de position : il apparaîtra sur sa commune, sans épingle sur la carte. Continuer ?`)) return false;
       const { data, error } = await supabase.from('places').insert([{ ...leadToPlace(lead, placesHavePageFields), ...packFields(lead) }]).select('id').single();
       if (error) {
         say(false, `Impossible de créer le lieu : ${error.message}`);
@@ -235,6 +241,22 @@ export function LeadsPanel({ places, reloadPlaces }: { places: any[]; reloadPlac
         </p>
       )}
 
+      {picking && (
+        <PositionPicker
+          title={picking.name}
+          commune={picking.commune}
+          query={[picking.address, picking.name].filter(Boolean)[0] || ''}
+          onClose={() => setPicking(null)}
+          onPick={async (pos) => {
+            const lead: Lead = { ...(picking as Lead), ...pos };
+            setPicking(null);
+            const { error } = await supabase.from('kl_leads').update(pos).eq('id', lead.id);
+            if (error) return say(false, error.message);
+            await putOnMap(lead, true);
+            say(true, `« ${lead.name} » est sur la carte, avec sa page.`);
+          }}
+        />
+      )}
       {tab === 'list' && leads && (
         <LeadList
           leads={leads}
@@ -285,10 +307,12 @@ function LeadList({
   const [shown, setShown] = useState(40);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { due: 0 };
+    const c: Record<string, number> = { due: 0, form: 0, nopos: 0 };
     for (const l of leads) {
       c[l.status] = (c[l.status] || 0) + 1;
       if (isDue(l, today)) c.due++;
+      if (String(l.source || '').startsWith(FORM_SOURCE)) c.form++;
+      if (l.lat == null && !l.place_id) c.nopos++;
     }
     return c;
   }, [leads, today]);
@@ -296,7 +320,12 @@ function LeadList({
   const list = useMemo(() => {
     const n = q.trim().toLowerCase();
     return leads
-      .filter((l) => (status === 'all' ? true : status === 'due' ? isDue(l, today) : l.status === status))
+      .filter((l) =>
+        status === 'all' ? true
+        : status === 'due' ? isDue(l, today)
+        : status === 'form' ? String(l.source || '').startsWith(FORM_SOURCE)
+        : status === 'nopos' ? l.lat == null && !l.place_id
+        : l.status === status)
       .filter((l) => kind === 'all' || l.kind === kind)
       .filter((l) => commune === 'all' || l.commune === commune)
       .filter((l) => !n || [l.name, l.address, l.phone, l.notes, l.owner, l.cuisine].some((v) => String(v || '').toLowerCase().includes(n)))
@@ -322,6 +351,8 @@ function LeadList({
       <div className="flex gap-2 overflow-x-auto pb-1">
         <button type="button" className={chip(status === 'all')} onClick={() => setStatusFilter('all')}>Tous ({leads.length})</button>
         <button type="button" className={chip(status === 'due')} onClick={() => setStatusFilter('due')}>À relancer ({counts.due})</button>
+        <button type="button" className={chip(status === 'form')} onClick={() => setStatusFilter('form')}>Demandes du site ({counts.form})</button>
+        <button type="button" className={chip(status === 'nopos')} onClick={() => setStatusFilter('nopos')}>Sans position ({counts.nopos})</button>
         {LEAD_STATUSES.map((s) => (
           <button key={s.id} type="button" className={chip(status === s.id)} onClick={() => setStatusFilter(s.id)}>
             {s.label} ({counts[s.id] || 0})
@@ -452,6 +483,7 @@ function LeadForm({
   const [saving, setSaving] = useState(false);
   const [osm, setOsm] = useState<{ busy: boolean; results: any[]; error: string }>({ busy: false, results: [], error: '' });
   const pos = parsePosition(f.position);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const searchOsm = async () => {
     if (f.name.trim().length < 2) return setOsm({ busy: false, results: [], error: 'Tapez d’abord le nom.' });
@@ -493,6 +525,19 @@ function LeadForm({
 
   return (
     <form onSubmit={save} className="bg-white rounded-3xl border border-brand-line p-4 md:p-6 flex flex-col gap-4">
+      {pickerOpen && (
+        <PositionPicker
+          title={f.name || 'le prospect'}
+          commune={f.commune}
+          query={f.address || f.name}
+          initial={pos}
+          onClose={() => setPickerOpen(false)}
+          onPick={(p) => {
+            setF((x) => ({ ...x, position: `${p.lat}, ${p.lng}` }));
+            setPickerOpen(false);
+          }}
+        />
+      )}
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-display text-xl md:text-2xl font-extrabold m-0 break-words min-w-0">{lead ? `Modifier : ${lead.name}` : 'Nouveau prospect'}</h2>
         <Button type="button" variant="ghost" onClick={onCancel}>Annuler</Button>
@@ -534,6 +579,7 @@ function LeadForm({
             <Button type="button" variant="secondary" onClick={searchOsm} disabled={osm.busy}>
               {osm.busy ? 'Recherche…' : 'Chercher sur OpenStreetMap'}
             </Button>
+            <Button type="button" variant="primary" onClick={() => setPickerOpen(true)}>Placer sur la carte</Button>
           </div>
           {pos && (
             <p className="text-[11px] text-brand-muted mt-1 mb-0">
