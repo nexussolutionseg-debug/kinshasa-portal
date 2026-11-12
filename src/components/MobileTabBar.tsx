@@ -3,6 +3,7 @@
 // for, plus a center "Kin Actu" button with a live dot.
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { IconHome, IconMap, IconNews, IconCalendar, IconBuilding } from './icons';
@@ -19,13 +20,54 @@ const TABS = [
 export function MobileTabBar() {
   const pathname = usePathname();
   const weekendOn = useWeekendOn(); // Weekend tab only with enough events (lib/events.ts)
+  // 2026-11-12: the bar slides away while scrolling down and while typing in a
+  // field (so it never covers what you are reading or filling in), and comes
+  // back when scrolling up or at the bottom of the page.
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    let typing = false;
+    const isField = (el: Element | null) => !!el && (el.matches('input, textarea, select') || (el as HTMLElement).isContentEditable);
+    const onScroll = () => {
+      const y = window.scrollY;
+      const atBottom = window.innerHeight + y >= document.documentElement.scrollHeight - 8;
+      if (!typing) {
+        if (atBottom || y < 80) setHidden(false);
+        else if (Math.abs(y - last) > 6) setHidden(y > last);
+      }
+      last = y;
+    };
+    const onFocusIn = (e: FocusEvent) => {
+      if (isField(e.target as Element)) {
+        typing = true;
+        setHidden(true);
+      }
+    };
+    const onFocusOut = () => {
+      setTimeout(() => {
+        if (!isField(document.activeElement)) {
+          typing = false;
+          setHidden(false);
+        }
+      }, 50);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('focusin', onFocusIn);
+    document.addEventListener('focusout', onFocusOut);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('focusout', onFocusOut);
+    };
+  }, []);
+  useEffect(() => setHidden(false), [pathname]);
   if (pathname?.startsWith('/backoffice') || pathname?.startsWith('/login') || pathname?.startsWith('/stats') || pathname?.startsWith('/rapport')) return null;
   const tabs = TABS.filter((t) => !t.weekend || weekendOn);
 
   return (
     <nav
       aria-label="Navigation rapide"
-      className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur border-t border-brand-line pb-[env(safe-area-inset-bottom)]"
+      className={`lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur border-t border-brand-line pb-[env(safe-area-inset-bottom)] transition-transform duration-200 ${hidden ? 'translate-y-full' : 'translate-y-0'}`}
     >
       <ul className={`grid ${tabs.length === 5 ? 'grid-cols-5' : 'grid-cols-4'} list-none m-0 p-0`}>
         {tabs.map(({ href, label, Icon, live }) => {

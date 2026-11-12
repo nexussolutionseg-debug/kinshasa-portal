@@ -304,3 +304,27 @@ export function leadTemplateCsv(): string {
   const lines = [LEAD_TEMPLATE_HEADERS, ...LEAD_TEMPLATE_EXAMPLES].map((r) => r.map(esc).join(';'));
   return '\ufeff' + lines.join('\r\n') + '\r\n';
 }
+
+/** Prefix of kl_leads.source for « Deviens partenaire » requests; the request id follows it. */
+export const FORM_SOURCE = 'Demande du site';
+
+/** One « Deviens partenaire » request (partner_inquiries) → a kl_leads row: a warm lead to call back. */
+export function inquiryToLead(q: any, today: string) {
+  const name = String(q?.company_name || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+  if (!name || q?.id == null) return null;
+  const who = q.contact_name ? `Contact : ${String(q.contact_name).trim()}. ` : '';
+  const msg = q.message ? `Message : ${String(q.message).trim()}` : 'Pas de message.';
+  return {
+    name,
+    commune: null,
+    kind: 'autre',
+    phone: q.phone || null,
+    email: q.email || null,
+    status: 'interesse',
+    next_action: 'Rappeler : demande reçue via « Deviens partenaire »',
+    next_date: today,
+    notes: `${who}${msg}`.slice(0, 2000),
+    source: `${FORM_SOURCE} · ${q.id}`,
+    created_at: q.created_at || new Date().toISOString(),
+  };
+}
