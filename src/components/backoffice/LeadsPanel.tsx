@@ -12,6 +12,8 @@
 // (supabase/pending/20261110140000_place_pages_leads.sql).
 'use client';
 
+import { resolvePosition } from '../../lib/mapLink';
+import { isShortMapLink } from '../../lib/geo';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { COMMUNE_NAMES } from '../../lib/communes';
@@ -480,6 +482,19 @@ function LeadForm({
       : EMPTY
   );
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }));
+  // A Google Maps short share link (maps.app.goo.gl/…) is read into GPS as soon as it is pasted.
+  const [linkMsg, setLinkMsg] = useState('');
+  const onPositionInput = async (v: string) => {
+    set('position', v);
+    setLinkMsg('');
+    if (!isShortMapLink(v)) return;
+    setLinkMsg('Lecture du lien Google Maps…');
+    const r = await resolvePosition(v);
+    if (r && 'lat' in r) {
+      set('position', `${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`);
+      setLinkMsg('Position lue depuis Google Maps ✓');
+    } else setLinkMsg(r && 'error' in r ? r.error : 'Lien non reconnu.');
+  };
   const [saving, setSaving] = useState(false);
   const [osm, setOsm] = useState<{ busy: boolean; results: any[]; error: string }>({ busy: false, results: [], error: '' });
   const pos = parsePosition(f.position);
@@ -575,12 +590,13 @@ function LeadForm({
         <div className="sm:col-span-2">
           <label className={label} htmlFor="ld-pos">Position sur la carte</label>
           <div className="flex flex-col sm:flex-row gap-2">
-            <input id="ld-pos" value={f.position} onChange={(e) => set('position', e.target.value)} className={input} placeholder="-4.3217, 15.3125 · plus code · lien de carte" />
+            <input id="ld-pos" value={f.position} onChange={(e) => onPositionInput(e.target.value)} className={input} placeholder="Lien Google Maps · -4.3217, 15.3125 · plus code" />
             <Button type="button" variant="secondary" onClick={searchOsm} disabled={osm.busy}>
               {osm.busy ? 'Recherche…' : 'Chercher sur OpenStreetMap'}
             </Button>
             <Button type="button" variant="primary" onClick={() => setPickerOpen(true)}>Placer sur la carte</Button>
           </div>
+          {linkMsg && <p className="text-xs font-semibold text-brand-blue-deep mt-1 mb-0">{linkMsg}</p>}
           {pos && (
             <p className="text-[11px] text-brand-muted mt-1 mb-0">
               Position reconnue : {pos.lat.toFixed(5)}, {pos.lng.toFixed(5)} ·{' '}

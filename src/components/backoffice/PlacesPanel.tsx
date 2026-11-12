@@ -9,6 +9,8 @@
 // Needs supabase/places-import.sql for the new fields.
 'use client';
 
+import { resolvePosition } from '../../lib/mapLink';
+import { isShortMapLink } from '../../lib/geo';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { CATEGORIES, categoryOf } from '../../lib/categories';
@@ -314,6 +316,19 @@ function PlaceForm({ place, onDone, onCancel, say }: { place: Place | null; onDo
   const [uploading, setUploading] = useState(false);
   const nameRef = useRef<HTMLInputElement | null>(null);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }));
+  // A Google Maps short share link (maps.app.goo.gl/…) is read into GPS as soon as it is pasted.
+  const [linkMsg, setLinkMsg] = useState('');
+  const onPositionInput = async (v: string) => {
+    set('position', v);
+    setLinkMsg('');
+    if (!isShortMapLink(v)) return;
+    setLinkMsg('Lecture du lien Google Maps…');
+    const r = await resolvePosition(v);
+    if (r && 'lat' in r) {
+      set('position', `${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`);
+      setLinkMsg('Position lue depuis Google Maps ✓');
+    } else setLinkMsg(r && 'error' in r ? r.error : 'Lien non reconnu.');
+  };
 
   const pos = parsePosition(f.position) || (!f.position ? parsePosition(f.google_maps_url) : null);
   const posCommune = pos ? communeAt(pos.lat, pos.lng, communesGeo as any) : null;
@@ -454,7 +469,8 @@ function PlaceForm({ place, onDone, onCancel, say }: { place: Place | null; onDo
 
       <div>
         <label className={label} htmlFor="pl-pos">Position sur la carte</label>
-        <input id="pl-pos" value={f.position} onChange={(e) => set('position', e.target.value)} className={input} placeholder="-4.3217, 15.3125 · plus code M79J+6H · ou lien Google Maps" />
+        <input id="pl-pos" value={f.position} onChange={(e) => onPositionInput(e.target.value)} className={input} placeholder="-4.3217, 15.3125 · plus code M79J+6H · ou lien Google Maps" />
+            {linkMsg && <span className="block text-xs font-semibold text-brand-blue-deep mt-1">{linkMsg}</span>}
         <p className={`text-xs mt-1.5 mb-0 flex items-start gap-1 ${f.position && !pos ? 'text-brand-red-dark font-semibold' : 'text-brand-muted'}`}>
           {pos ? (
             <>
