@@ -90,8 +90,9 @@ export function parsePosition(input: string | null | undefined): { lat: number; 
   const s = String(input).trim();
   if (!s) return null;
   const tries: RegExp[] = [
-    /@(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
+    // The place's own pin (!3d…!4d…) beats the map centre (@…) in Google links.
     /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,
+    /@(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
     /[?&](?:q|query|ll|center)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/i,
     /^(-?\d{1,2}[.,]\d+)\s*[,; ]\s*(-?\d{1,3}[.,]\d+)$/,
   ];
@@ -106,4 +107,14 @@ export function parsePosition(input: string | null | undefined): { lat: number; 
   const pc = decodePlusCode(s);
   if (pc && inKinshasa(pc.lat, pc.lng)) return pc;
   return null;
+}
+
+/** A Google Maps share link that hides its coordinates (maps.app.goo.gl, goo.gl/maps, g.co/kgs). */
+export function isShortMapLink(input: string | null | undefined): boolean {
+  return /^(https?:\/\/)?(maps\.app\.goo\.gl|goo\.gl\/maps|g\.co\/kgs)\//i.test(String(input || '').trim());
+}
+
+/** Google Maps search for a business, to find it and copy its share link (no API, free). */
+export function googleMapsSearchUrl(name: string, commune?: string | null): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([name, commune, 'Kinshasa'].filter(Boolean).join(', '))}`;
 }

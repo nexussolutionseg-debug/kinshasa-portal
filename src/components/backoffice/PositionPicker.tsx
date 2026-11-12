@@ -5,6 +5,8 @@
 // GPS when standing at the place. Free: Esri tiles + OpenStreetMap search.
 'use client';
 
+import { resolvePosition } from '../../lib/mapLink';
+import { googleMapsSearchUrl } from '../../lib/geo';
 import { useEffect, useRef, useState } from 'react';
 import maplibregl from '../../lib/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -68,6 +70,20 @@ export function PositionPicker({
   const [q, setQ] = useState(query || '');
   const [search, setSearch] = useState<{ busy: boolean; results: any[]; msg: string }>({ busy: false, results: [], msg: '' });
   const [gps, setGps] = useState('');
+  // Google Maps (2026-11-12): find the place there, Share → Copy link, paste it here.
+  const [gLink, setGLink] = useState('');
+  const [gMsg, setGMsg] = useState('');
+  const onGoogleLink = async (v: string) => {
+    setGLink(v);
+    setGMsg('');
+    if (v.trim().length < 8) return;
+    setGMsg('Lecture du lien…');
+    const r = await resolvePosition(v);
+    if (r && 'lat' in r) {
+      place(r.lng, r.lat, true);
+      setGMsg('Position de Google Maps placée ✓ Vérifie l’épingle puis valide.');
+    } else setGMsg(r && 'error' in r ? r.error : 'Ce lien ne contient pas de position. Ouvre la fiche du lieu dans Google Maps, puis Partager → Copier le lien.');
+  };
 
   const place = (lng: number, lat: number, fly = false) => {
     const m = map.current;
@@ -183,6 +199,24 @@ export function PositionPicker({
             </ul>
           )}
           {search.msg && <p className="text-xs text-brand-muted m-0">{search.msg}</p>}
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center rounded-xl bg-brand-bg p-2">
+            <a
+              href={googleMapsSearchUrl(title, commune)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 inline-flex items-center justify-center h-10 px-4 rounded-full bg-white border border-brand-line font-bold text-sm text-brand-ink no-underline"
+            >
+              1. Trouver sur Google Maps ↗
+            </a>
+            <input
+              value={gLink}
+              onChange={(e) => onGoogleLink(e.target.value)}
+              placeholder="2. Partager → Copier le lien, puis collez-le ici"
+              className="flex-1 min-w-0 h-10 px-3 border border-brand-line rounded-xl text-[16px] md:text-sm bg-white"
+              aria-label="Lien Google Maps du lieu"
+            />
+          </div>
+          {gMsg && <p className="text-xs font-semibold text-brand-blue-deep m-0">{gMsg}</p>}
         </div>
 
         <div className="relative flex-1 min-h-[45vh] md:min-h-[460px]">
