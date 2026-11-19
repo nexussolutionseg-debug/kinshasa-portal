@@ -7,6 +7,7 @@
 // (default: BREVO_SENDER_EMAIL, else contact@kinshasalabel.com).
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { PACK_CHOICE_LABEL } from '../../../lib/partners';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +38,16 @@ export async function POST(req: Request) {
   const contact = str(data.contact_name, 200);
   const email = str(data.email, 254).toLowerCase();
   const phone = str(data.phone, 40);
-  const message = str(data.message, 4000);
+  const note = str(data.message, 4000);
+  // Pack choice + visitor source (utm_*) ride in the message, so no new columns are needed (2026-11-19).
+  const packLabel = typeof data.pack === 'string' ? PACK_CHOICE_LABEL[data.pack] || '' : '';
+  const src = data.source && typeof data.source === 'object' ? (data.source as Record<string, unknown>) : {};
+  const srcText = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content']
+    .map((k) => str(src[k], 80).replace(/[^\w.\- ]/g, ''))
+    .filter(Boolean)
+    .join(' / ');
+  const head = [packLabel && `Pack souhaité : ${packLabel}`, srcText && `Source : ${srcText}`].filter(Boolean).join('\n');
+  const message = [head, note].filter(Boolean).join('\n\n');
   if (!company || !EMAIL_RE.test(email)) return NextResponse.json({ ok: false, error: 'Nom de l’entreprise et e-mail valides requis.' }, { status: 400 });
 
   const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
@@ -65,13 +75,15 @@ export async function POST(req: Request) {
       ['Contact', contact || '—'],
       ['E-mail', email],
       ['Téléphone', phone || '—'],
+      ['Pack', packLabel || '—'],
+      ['Source', srcText || 'Directe / inconnue'],
     ];
     const html = `<div style="font-family:Arial,sans-serif;color:#0B2545;max-width:560px">
 <h2 style="margin:0 0 12px">Nouvelle demande « Deviens partenaire »</h2>
 <table style="border-collapse:collapse;width:100%">${rows.map(([k, v]) => `<tr><td style="padding:6px 8px;color:#6B7C95;width:120px">${k}</td><td style="padding:6px 8px"><b>${esc(v)}</b></td></tr>`).join('')}</table>
-<p style="white-space:pre-line;background:#F5F8FE;padding:12px;border-radius:8px">${esc(message || '(pas de message)')}</p>
+<p style="white-space:pre-line;background:#F5F8FE;padding:12px;border-radius:8px">${esc(note || '(pas de message)')}</p>
 <p>Elle est aussi dans le backoffice : <a href="https://www.kinshasalabel.com/backoffice?s=leads">Prospects</a> (badge « Demande du site »). Répondre à cet e-mail écrit directement au partenaire.</p></div>`;
-    const text = `Nouvelle demande « Deviens partenaire »\n\n${rows.map(([k, v]) => `${k} : ${v}`).join('\n')}\n\n${message || '(pas de message)'}\n\nBackoffice → Prospects : https://www.kinshasalabel.com/backoffice?s=leads`;
+    const text = `Nouvelle demande « Deviens partenaire »\n\n${rows.map(([k, v]) => `${k} : ${v}`).join('\n')}\n\n${note || '(pas de message)'}\n\nBackoffice → Prospects : https://www.kinshasalabel.com/backoffice?s=leads`;
     try {
       const r = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
@@ -80,7 +92,7 @@ export async function POST(req: Request) {
           sender: { name: process.env.BREVO_SENDER_NAME || 'Kinshasa Label', email: sender },
           to: [{ email: to, name: 'Équipe Kinshasa Label' }],
           replyTo: { email, name: contact || company },
-          subject: `Demande partenaire : ${company}`,
+          subject: `Demande partenaire : ${company}${packLabel && packLabel !== PACK_CHOICE_LABEL.inconnu ? ` (${packLabel})` : ''}`,
           htmlContent: html,
           textContent: text,
           tags: ['demande-partenaire'],

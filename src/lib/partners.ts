@@ -43,3 +43,41 @@ export function featuredWithPartners<T extends { id: any; featured?: boolean; fe
   const partners = partnersFirst(places.filter((p) => !ids.has(p.id) && activePack(p as any)?.featured));
   return [...picked, ...partners].slice(0, max);
 }
+
+/** What each pack sells, shown on /devenir-partenaire (2026-11-19).
+ *  Prices = the « Offre Partenaires » deck (proposed 2026-11-10). Change them here only. */
+export const PACK_OFFERS: { id: PackId; name: string; tagline: string; setup: number; monthly: number; popular?: boolean; perks: string[] }[] = [
+  {
+    id: 'page',
+    name: 'Pack Page',
+    tagline: 'Être trouvé sur la carte de Kinshasa',
+    setup: 49,
+    monthly: 15,
+    perks: ['Ta page dédiée sur Kinshasa Label', 'Ton point sur la carte de ta commune', 'Boutons appel, WhatsApp et itinéraire', '1 événement Kin Weekend par mois'],
+  },
+  {
+    id: 'site',
+    name: 'Pack Site',
+    tagline: 'Passer devant les autres',
+    setup: 99,
+    monthly: 49,
+    popular: true,
+    perks: ['Tout le Pack Page', 'Place dans les « Coups de cœur » de l’accueil', 'Bannière sur l’accueil 1 semaine par mois', '1 article « À la une » par trimestre', 'Événements Kin Weekend illimités', 'Rapport de visites chaque mois'],
+  },
+  {
+    id: 'site_reseaux',
+    name: 'Pack Site + Réseaux',
+    tagline: 'Toute la visibilité, site et réseaux',
+    setup: 199,
+    monthly: 149,
+    perks: ['Tout le Pack Site', 'Publications sur notre Instagram', 'Mise en avant dans la newsletter', '1 article « À la une » par mois', 'Bannière sur l’accueil 2 semaines par mois'],
+  },
+];
+
+/** Labels for the « Pack souhaité » line the partner form adds to a request. */
+export const PACK_CHOICE_LABEL: Record<string, string> = {
+  page: 'Pack Page',
+  site: 'Pack Site',
+  site_reseaux: 'Pack Site + Réseaux',
+  inconnu: 'Pas encore décidé',
+};

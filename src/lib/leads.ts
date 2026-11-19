@@ -320,6 +320,7 @@ export function inquiryToLead(q: any, today: string) {
     kind: 'autre',
     phone: q.phone || null,
     email: q.email || null,
+    pack: toPack(String(q.message || '').match(/^Pack souhaité : (.+)$/m)?.[1] || ''),
     status: 'interesse',
     next_action: 'Rappeler : demande reçue via « Deviens partenaire »',
     next_date: today,
